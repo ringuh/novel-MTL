@@ -7,11 +7,15 @@ import NovelIndex from './components/novel_index'
 import PageNotFound from './components/page_not_found'
 import Footer from './components/page_footer'
 import Header from './components/page_header'
+import Login from './components/login'
+
+
 
 function App() {
   return (
     <div className="App">
-      <Header/>
+      {/* <Header/> */}
+      {<Login></Login>}
       <h3>Tervetuloa</h3>
       	<BrowserRouter>
       		<Switch>
