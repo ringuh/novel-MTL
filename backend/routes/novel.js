@@ -21,42 +21,43 @@ var termination = chalk.bold.magenta;
 
 
 router.get("/", (req, res) => {
-    console.log("hei /novel pohja")
-    
+  console.log("hei /novel pohja")
 
-    mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
-    const db = mongoose.connection;
-    db.once('open', function() {
-    	Novel.find({}, "id name image_url description", { sort: "name" }, function(err, novels) {
-    		if (err) {
-                console.log(termination(err.message))               
-               	res.json({ error: err.message })
-            } else {
-            	
-            	console.log(connected("SUCCESS"))       
-                res.json(novels)
-            }
 
-           mongoose.disconnect() 
-    	});
+  mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
+  const db = mongoose.connection;
+  db.once('open', function () {
+    Novel.find({}, "id name image_url description", { sort: "name" }, function (err, novels) {
+      if (err) {
+        console.log(termination(err.message))
+        res.json({ error: err.message })
+      } else {
+
+        console.log(connected("SUCCESS"))
+        res.json(novels)
+      }
+
+      mongoose.disconnect()
     });
+  });
 
 
-    db.once('disconnected', function() {
-        console.log(disconnected("Mongoose connection is disconnected"), 
-        	mongoose.connection.readyState);
-    	if(!res.headersSent)
-    		res.json({ error: "Database disconnected"})
-    });
+  db.once('disconnected', function () {
+    console.log(disconnected("Mongoose connection is disconnected"),
+      mongoose.connection.readyState);
+    if (!res.headersSent)
+      res.json({ error: "Database disconnected" })
+  });
 
 });
 
 
 router.get("/1", (req, res) => {
-    console.log("hei /novel /1")
-    res.send("hei 1")
-    
+  console.log("hei /novel /1")
+  res.send("hei 1")
+
 });
+
 
 /*router.put("/novel", (req, res) => {
     console.log("hei /novel /1")
@@ -65,88 +66,137 @@ router.get("/1", (req, res) => {
 });*/
 
 
-router.route(["/add", "/:id"])
-    .get(function(req, res, next) {
-        console.log("this one",)
-        console.log(req.params)
-        
-        mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
-        const db = mongoose.connection;
+router.route(["/create", "/:id"])
+  .get(function (req, res, next) {
+    console.log("get")
+    console.log(req.params)
 
-        db.once('open', function() {
-            console.log("Connection Successful!", mongoose.connection.readyState);
+    mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
+    const db = mongoose.connection;
 
-            Novel.findOne({_id: req.params.id}, function(err, novel) {
-    		if (err) {
-                console.log(termination(err.message))               
-               	res.json({ error: err.message })
-            } else {
-            	
-            	console.log(connected("SUCCESS"))       
-                res.json(novel)
-            }
+    db.once('open', function () {
+      console.log("Connection Successful!", mongoose.connection.readyState);
 
-           mongoose.disconnect() 
-    	});
+      Novel.findOne({ _id: req.params.id }, function (err, novel) {
+        if (err) {
+          console.log(termination(err.message))
+          res.json({ error: err.message })
+        } else {
 
-        });
+          console.log(connected("SUCCESS"))
+          res.json(novel)
+        }
 
-        db.once('disconnected', function() {
-            console.log(disconnected("Mongoose connection is disconnected"), 
-            	mongoose.connection.readyState);
-        	if(!res.headersSent)
-        		res.json({ error: "Database disconnected"})
-        	
-        });
-
-
-    })
-    .post(function(req, res, next) {
-       
-        console.log("/edit post")
-        console.log(req.body)
-
-
-        mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
-        const db = mongoose.connection;
-        
-        
-
-
-        db.once('open', function() {
-            console.log("Connection Successful!", mongoose.connection.readyState);
-
-            Novel.create(req.body, function(err, small) {
-                if (err) {
-                    console.log(termination(err.message))
-                    
-                    
-                    console.log("first", res.headersSent)
-                   
-                   	res.json({ error: err.message })
-                   	
-
-                } else {
-                	console.log(connected("SUCCESS"))       
-                    res.json({ message: "Novel saved succesfully", id: small._id })
-                }
-
-               mongoose.disconnect() 
-            });
-
-        });
-
-        db.once('disconnected', function() {
-            console.log(disconnected("Mongoose connection is disconnected"), 
-            	mongoose.connection.readyState);
-        	if(!res.headersSent)
-        		res.json({ error: "Database disconnected"})
-        	
-        });
-
-        
+        mongoose.disconnect()
+      });
 
     });
+
+    db.once('disconnected', function () {
+      console.log(disconnected("Mongoose connection is disconnected"),
+        mongoose.connection.readyState);
+      if (!res.headersSent)
+        res.json({ error: "Database disconnected" })
+
+    });
+
+
+  })
+  .post(function (req, res, next) {
+
+    console.log("/edit post")
+    console.log(req.body)
+    console.log(req.params)
+    console.log("----------------------------")
+
+
+    if (req.body._id !== req.params.id)
+      return res.json({ error: "/:id the path doesn't match '_id' of post" })
+
+
+    mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
+    const db = mongoose.connection;
+
+
+    db.once('open', function () {
+      console.log("Connection Successful!", mongoose.connection.readyState);
+
+      if (!req.params.id)
+        Novel.create(req.body)
+          .then((novel) => {
+            return res.json({ message: "Novel saved succesfully", id: novel._id })
+          }).catch((err) => {
+            return res.json({ error: err.message })
+          })
+          .finally(() => mongoose.disconnect())
+      else
+        Novel.findOne({ _id: req.params.id })
+          .then((novel) => {
+            if (!novel)
+              throw { message: `Novels with _id ${req.params.id} not found` }
+            console.log("!", novel)
+
+            novel.name = req.body.name
+            novel.description = req.body.description
+            novel.raw_directory = req.body.raw_directory
+            novel.raw_url = req.body.raw_url
+
+            novel.save()
+              .then((i) => res.json(i))
+              .catch((err) => res.json({ error: err.message }))
+              .finally(() => mongoose.disconnect())
+          })
+          .catch((err) => {
+            mongoose.disconnect()
+            return res.json({ error: err.message })
+          })
+
+
+
+      /* 
+      Novel.create(req.body, function (err, small) {
+          if (err) {
+            console.log(termination(err.message))
+            return res.json({ error: err.message })
+          } else {
+            console.log(connected("SUCCESS"))
+            return res.json({ message: "Novel saved succesfully", id: small._id })
+          }
+
+          mongoose.disconnect()
+        })
+      
+      Novel.create(req.body, function(err, small) {
+          if (err) {
+              console.log(termination(err.message))
+              
+              
+              console.log("first", res.headersSent)
+             
+                res.json({ error: err.message })
+             	
+
+          } else {
+            console.log(connected("SUCCESS"))       
+              res.json({ message: "Novel saved succesfully", id: small._id })
+          }
+
+         mongoose.disconnect() 
+      }); */
+
+    });
+
+    db.once('disconnected', function () {
+      console.log(disconnected("Mongoose connection is disconnected"),
+        mongoose.connection.readyState);
+      if (!res.headersSent)
+        res.json({ error: "Database disconnected" })
+
+    });
+
+
+
+  });
 
 
 /*
@@ -186,19 +236,19 @@ try {
 MongoClient.connect(connectionStr, mongoOptions, function(err, client) {
    assert.equal(null, err);
    const db = client.db('db');
-      
+
    //Step 1: declare promise
-      
+
     var myPromise = () => {
        return new Promise((resolve, reject) => {
-        
+
           db
           .collection('your_collection')
           .find({id: 123})
           .limit(1)
           .toArray(function(err, data) {
-             err 
-                ? reject(err) 
+             err
+                ? reject(err)
                 : resolve(data[0]);
            });
        });

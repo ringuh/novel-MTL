@@ -5,7 +5,7 @@ import NovelEditor from './novel_editor'
 class NovelIndex extends Component {
     constructor(props) {
         super(props);
-        console.log(props)
+        console.log("Novel index", props)
         this.state = {
             novels: [],
         };
@@ -26,35 +26,19 @@ class NovelIndex extends Component {
     }
 
     componentDidMount() {
-        console.log(this.props.match.url, this.props.location.pathname)
+        //console.log(this.props.match.url, this.props.location.pathname)
+        // dont fetch if not on main page
         if(this.props.match.url != this.props.location.pathname)
-            return console.log("dont fetch")
+            return true
         fetch('/novel')
         .then(response => response.json())
         .then(data => this.setState({ novels: data }));
         
     }
 
-    testi(){
-        this.setState(
-        {
-            value: "changed content"
-        })
-
-        fetch('/novel'/*, {
-      headers : { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-       }
-
-    }*/)
-        .then(response => response.json())
-        .then(data => console.log({ data }));
-         
-        
-    }
 
     render() {
+        
         return (
 <div>
 <h2> novellisivut {this.props.match.path} </h2>
@@ -66,7 +50,7 @@ class NovelIndex extends Component {
     
     <Route exact path={this.props.match.path}
         render={() => <div>
-            <Link className="hei" to={`${this.props.match.path}/add`} >New novel</Link>
+            <Link className="" to={`${this.props.match.path}/add`} >New novel</Link>
             <h2>Novel listing</h2>
             <ul>
             {this.state.novels.map(({ name, _id }) => (

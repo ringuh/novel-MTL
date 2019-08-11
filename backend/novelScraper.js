@@ -14,7 +14,7 @@ const htmlToText = require('html-to-text');
 })*/
 
 var defNovel = [{
-	url: "https://www.lewenxiaoshuo.com/books/xinhunwuai_tizuiqianqi/34621639.html",
+	url: "https://www.lewenxiaoshuo.com/books/xinhunwuai_tizuiqianqi/34622958.html",
 	next: ".bottem1>a:last",
 	title: ".bookname > h1",
 	content: "#content",
