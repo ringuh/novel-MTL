@@ -8,16 +8,16 @@ import NovelIndex from './components/novel_index'
 import PageNotFound from './components/page_not_found'
 import Footer from './components/page_footer'
 import Header from './components/page_header'
+import Container from '@material-ui/core/Container'
 
-import Login from './components/login'
 
 
 
 function App() {
   return (
-    <div className="App">
-      {/* <Header/> */}
-      {<Login></Login>}
+    <Container className="App" maxWidth="lg">
+      <Header/>
+      
       <h3>Tervetuloa</h3>
       	<BrowserRouter>
       		<Switch>
@@ -27,7 +27,7 @@ function App() {
         	</Switch>
         </BrowserRouter>
       	<Footer/>
-    </div>
+    </Container>
   );
 }
 

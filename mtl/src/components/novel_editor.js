@@ -1,32 +1,36 @@
 import React, { Component } from 'react';
 import { BrowserRouter, Switch, Route, Link, Redirect } from 'react-router-dom';
 import axios from 'axios';
+import ChapterList from './chapter_list'
 import Button from '@material-ui/core/Button';
 import ReactCrop from 'react-image-crop';
+import { withStyles } from '@material-ui/core/styles';
 import 'react-image-crop/dist/ReactCrop.css';
-import FormGroup from '@material-ui/core/FormGroup';
-import FormControl from '@material-ui/core/FormControl';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import Input from '@material-ui/core/Input';
-import InputLabel from '@material-ui/core/InputLabel';
-import TextareaAutosize from '@material-ui/core/TextareaAutosize';
 import TextField from '@material-ui/core/TextField';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import SaveIcon from '@material-ui/icons/Save';
+import EditIcon from '@material-ui/icons/Edit';
+import GetAppIcon from '@material-ui/icons/GetAppOutlined'
+import { Grid, Paper, Avatar, Box, Container } from '@material-ui/core';
 
 
 
 const styles = {
-    form: {
-        width: "100%",
-        maxWidth: "600px",
-        margin: "auto"
+    transparentBar: {
+      backgroundColor: 'transparent !important',
+      boxShadow: 'none',
+      paddingTop: '25px',
+      color: '#FFFFFF'
     },
-    textField: {
-        width: "100%"
-    },
-};
+    avatar: {
+        display: "block",
+        maxWidth:"100%",
+        maxHeight:"100%",
+        width: "auto",
+        height: "auto",
+    }
+  };
 
 
 class NovelEditor extends Component {
@@ -39,7 +43,7 @@ class NovelEditor extends Component {
                 name: "",
                 description: "",
             },
-            edit: true
+
         };
 
         this.formChange = this.formChange.bind(this);
@@ -54,23 +58,18 @@ class NovelEditor extends Component {
             type: "text"
         },
         {
-            name: "description",
-            label: "Description",
-            type: "text",
-            multi: true
-        },
-        {
-            name: "raw_directory",
+            name: "raw_url",
             label: "Novel raw url",
             type: "url",
             placeholder: "eg. https://www.lewenxiaoshuo.com/books/gandiehenaxieganerzi/"
         },
         {
-            name: "raw_url",
-            label: "Url of first RAW chapter",
-            type: "url",
-            placeholder: "eg. https://www.lewenxiaoshuo.com/books/gandiehenaxieganerzi/6461352.html"
-        }
+            name: "description",
+            label: "Description",
+            type: "text",
+            multi: true
+        },
+
     ]
 
 
@@ -114,10 +113,13 @@ class NovelEditor extends Component {
     componentDidMount() {
         if (!this.state.id) return false
         document.title = "Fetching novel"
-        console.log("y")
+
         fetch(`/novel/${this.state.id}`)
             .then(response => response.json())
-            .then(data => this.setState({ novel: data }));
+            .then(data => this.setState({
+                novel: data,
+                edit: data.raw_url ? false : true
+            }));
 
     }
 
@@ -127,10 +129,8 @@ class NovelEditor extends Component {
 
 
 
-
-
     render() {
-
+        const { classes } = this.props;
 
         if (this.state.redirect) {
             return <Redirect to={`./${this.state.redirect}`} />
@@ -142,63 +142,87 @@ class NovelEditor extends Component {
             )
 
 
-        if (!this.state.edit) {
-            return (
-                <div>
-                    <title>Edit this</title>
-                    <Button color="primary" onClick={() => this.setState({ edit: true })}>
-                        Edit
-                    </Button>
-                    <h1><em>{this.state.id}</em></h1>
-                    <h3>{this.state.name}</h3>
-
-                </div>)
-        }
-
-
-
+        // the edit view
         return (
-            <form
-                onSubmit={this.handleSubmit}
-                autoComplete="off">
+            <Container>
+                <Paper>
+                    <Box component="form" p={2}
+                        onSubmit={this.handleSubmit}
+                        autoComplete="off" >
+                        <Grid container>
+                            <Grid item xs={2}>
+                                <img className={classes.avatar} 
+                                    alt={this.state.novel.name}
+                                    src={this.state.novel.image_url} />
+                            </Grid>
+                            <Grid container item xs={9}>
+                                {this.fields.map((field) =>
+                                    <Grid item xs={12} key={field.name} >
+                                        <TextField
+                                            autoComplete="off"
+                                            variant="outlined"
+                                            name={field.name}
+                                            multiline={field.multi ? true : false}
+                                            rows={field.multi ? "5" : ""}
+                                            rowsMax={field.multi ? "20" : ""}
+                                            type={field.type}
+                                            placeholder={field.placeholder}
+                                            label={field.label}
+                                            value={this.state.novel[field.name] || ""}
+                                            onChange={this.formChange}
+                                            //helperText={this.state.novel[field.name].message || ""}
+                                            //error={this.state.}
+                                            margin="normal"
+                                            disabled={this.state.progress || !this.state.edit}
+                                            fullWidth
+                                        ></TextField>
+                                    </Grid>
+                                )}
+                                <Grid container item xs={10}>
+                                    {(() => {
+                                        if (this.state.progress)
+                                            return (<Grid item xs><CircularProgress color="secondary" /></Grid>)
+                                        else if (this.state.edit)
+                                            return (
+                                                <Grid container>
+                                                    <Grid item xs>
+                                                        <Button type="submit">
+                                                            <SaveIcon fontSize="inherit" />
+                                                            Save
+                                                    </Button>
+                                                    </Grid>
+                                                    <Grid item xs>
+                                                        <Button onClick={() => this.setState({ edit: false })}
+                                                            color="secondary">
+                                                            Cancel
+                                                    </Button>
+                                                    </Grid>
+                                                </Grid>
+                                            )
+                                    })()}
+                                </Grid>
+                            </Grid>
+                            <Grid item xs={1}>
+                                <Button onClick={() => this.setState({ edit: !this.state.edit })}
+                                    color="secondary">
+                                    <EditIcon color="primary" fontSize="large" />
+                                </Button>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Button onClick={() => this.setState({ edit: !this.state.edit })}
+                                    color="secondary">
+                                    <GetAppIcon color="primary" fontSize="large" />
+                                    Initialize novel
+                            </Button>
+                            </Grid>
+                        </Grid>
+                    </Box>
+                </Paper>
 
-                {this.fields.map((field) =>
-                    <TextField
-                        autoComplete="off"
-                        key={field.name}
-                        variant="outlined"
-                        name={field.name}
-                        multiline={field.multi ? true : false}
-                        rows={field.multi ? "5" : ""}
-                        rowsMax={field.multi ? "20" : ""}
-                        type={field.type}
-                        placeholder={field.placeholder}
-                        label={field.label}
-                        value={this.state.novel[field.name] || ""}
-                        onChange={this.formChange}
-                        //helperText={this.state.novel[field.name].message || ""}
-                        //error={this.state.}
-                        margin="normal"
-                        disabled={this.state.progress}
-                        fullWidth
-                    ></TextField>
-                )}
-                {(() => {
-                    if (this.state.progress) 
-                        return (<CircularProgress color="secondary" />)
-                    else
-                        return(<Button type="submit">
-                            <SaveIcon fontSize="inherit" />
-                            Save
-                        </Button>)
-                })()}
-
-
-            </form>
-
-
+                <ChapterList novel={this.props.match.params.id}/>
+            </Container>
         );
     }
 }
 
-export default NovelEditor;
+export default withStyles(styles)(NovelEditor);
