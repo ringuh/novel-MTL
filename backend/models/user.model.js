@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const User = new mongoose.Schema({
   name: { 
   	type: String, 
-  	required: false, 
+  	sparse: true, 
   	unique: true
   },
   googleId: {
@@ -11,9 +11,12 @@ const User = new mongoose.Schema({
     required: true,
     unique: true
   },
-
+  icon: { 
+    type: String,
+    trim: true
+  },
   user_class: { type: String },
-  date_created: { type: Date, required: true },
+
   last_login: { type: Date, required: false },
 }, {
   timestamps: true,

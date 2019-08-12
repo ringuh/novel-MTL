@@ -23,33 +23,66 @@ var termination = chalk.bold.magenta;
 
 mongoose.connect(ServerConf.database, ServerConf.db_options);
 
-mongoose.connection.on('connected', function(){
-	console.log(connected("Mongoose default connection is open to ", uri));
-
+mongoose.connection.on('connected', function () {
+	console.log(connected("Mongoose default connection is open to ", ServerConf.database));
 	createDB();
-
 });
 
-mongoose.connection.on('error', function(err){
-	console.log(error("Mongoose default connection has occured "+err+" error"));
+mongoose.connection.on('error', function (err) {
+	console.log(error("Mongoose default connection has occured " + err + " error"));
 });
 
-mongoose.connection.on('disconnected', function(){
+mongoose.connection.on('disconnected', function () {
 	console.log(disconnected("Mongoose default connection is disconnected"));
 });
 
 // program exit
-process.on('SIGINT', function(){
-	mongoose.connection.close(function(){
+process.on('SIGINT', function () {
+	mongoose.connection.close(function () {
 		console.log(termination("Mongoose default connection is disconnected due to application termination"));
 		process.exit(0)
 	});
 });
 
-var createDB = () =>{
+var createDB = () => {
 	console.log("creating db")
+	let Raw = require('./models/raw.model')
 	let Novel = require("./models/novel.model")
 	let User = require('./models/user.model')
+	let Chapter = require('./models/chapter.model')
+	let Term = require('./models/term.model')
+
+	Novel.collection.drop();
+	User.collection.drop();
+	Chapter.collection.drop();
+	Term.collection.drop();
+	console.log("dropped tables")
+
+	const raws = [{
+		url: "https://www.lewenxiaoshuo.com/books/xinhunwuai_tizuiqianqi/34622958.html",
+		next: ".bottem1>a:last",
+		title: ".bookname > h1",
+		content: "#content",
+		root: {
+			image_url: "#fmimg > img",
+			description: "#intro",
+			catalog: null,
+			chapters: "#list > dl > dd > a"
+		}
+	},{
+		url: "https://www.kenshu.cc/xiaoshuo/30192/75481194/",
+		next: ".articlebtn>a:eq(3)",
+		title: ".article-title",
+		content: ".article-con",
+		root: {
+			image_url: ".bigpic > img",
+			description: ".book-intro > div:eq(0)",
+			catalog: "a.catalogbtn",
+			chapters: "ul.chapter-list > li > span > a"
+		}
+	}]
+
+
 
 	const userList = [{
 		googleId: "113424763475073319026",
@@ -58,18 +91,45 @@ var createDB = () =>{
 	}]
 
 	const novelList = [{
-		
+		name: "gandiehenaxieganerzi",
+		raw_url: "https://www.lewenxiaoshuo.com/books/gandiehenaxieganerzi/",
+		description: "Zheng Xian's greatest achievement in his life was to build a castle and keep his dry sons in it properly."
+	}, {
+		name: "weilaizhidangmabuyi",
+		raw_url: "https://www.lewenxiaoshuo.com/books/weilaizhidangmabuyi/",
+		description: null,
+	},
+	{
+		name: "农女要翻天：夫君，求压倒",
+		raw_url: "https://www.kenshu.cc/xiaoshuo/37805/",
+		description: null,
 	}]
 
-	Novel.create({ name: 'small' }, function (err, small) {
-		console.log(err)
+	const termList = [{
+		string: "robbed",
+		prompt: true,
+		terms: [{ value: "killed" }, { value: "attacked" }]
+	}]
+
+
+	userList.forEach((i) => {
+		console.log(i.name)
 	});
 
-	Novel.find((err, todos) => {
-		console.log(err)
-		console.log(todos)
-	})
+	novelList.forEach((i) => {
+		var n = Novel.create((i)).then((nov) => {
+			console.log(nov.name)
+		})
 
-	//mongoose.disconnect();
+	});
+
+	termList.forEach((i) => {
+		Term.create((i)).then((term) => console.log("term created"))
+	});
+
+
+	setTimeout(() => {
+		mongoose.disconnect();
+	}, 10000);
 };
 

@@ -1,3 +1,4 @@
+const Scraper = require('../module/scraper')
 const router = require('express').Router()
 const mongoose = require('mongoose');
 mongoose.Promise = require('bluebird'); // removes deprecated messages
@@ -7,75 +8,58 @@ const slugify = require('slugify')
 router.use(require('express').json())
 
 let Novel = require("../models/novel.model")
+let Chapter = require("../models/chapter.model")
 
 var connected = chalk.bold.cyan;
 var error = chalk.bold.yellow;
 var disconnected = chalk.bold.red;
 var termination = chalk.bold.magenta;
 
-/*router.route('/').get((req, res) => {
-  Exercise.find()
-    .then(exercises => res.json(exercises))
-    .catch(err => res.status(400).json('Error: ' + err));
-});*/
+const BuildConnection = (db, req, res) => {
+  console.log(req.originalUrl, req.method)
+  console.log(res.params)
+  mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
+  db = mongoose.connection
 
+  db.once('disconnected', function () {
+    console.log(disconnected(`${req.originalUrl} connection is disconnected`),
+      mongoose.connection.readyState);
+  });
+
+  res.on('finish', function () {
+    console.log(`${req.originalUrl} response finished`)
+    mongoose.disconnect()
+  });
+
+  return db
+}; 
 
 router.get("/", (req, res) => {
-  console.log("hei /novel pohja")
+  let db = null
+  db = BuildConnection(db, req, res);
 
 
-  mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
-  const db = mongoose.connection;
   db.once('open', function () {
     Novel.find({}, "id name image_url description", { sort: "name" }, function (err, novels) {
       if (err) {
         console.log(termination(err.message))
         res.json({ error: err.message })
       } else {
-
-        console.log(connected("SUCCESS"))
         res.json(novels)
       }
-
-      mongoose.disconnect()
     });
   });
-
-
-  db.once('disconnected', function () {
-    console.log(disconnected("Mongoose connection is disconnected"),
-      mongoose.connection.readyState);
-    if (!res.headersSent)
-      res.json({ error: "Database disconnected" })
-  });
-
 });
-
-
-router.get("/1", (req, res) => {
-  console.log("hei /novel /1")
-  res.send("hei 1")
-
-});
-
-
-/*router.put("/novel", (req, res) => {
-    console.log("hei /novel /1")
-    res.send("hei 1")
-    
-});*/
-
 
 router.route(["/create", "/:id"])
   .get(function (req, res, next) {
-    console.log("get")
-    console.log(req.params)
 
-    mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
-    const db = mongoose.connection;
+    let db = null
+    db = BuildConnection(db, req, res);
+
+
 
     db.once('open', function () {
-      console.log("Connection Successful!", mongoose.connection.readyState);
 
       Novel.findOne({ _id: req.params.id }, function (err, novel) {
         if (err) {
@@ -86,40 +70,19 @@ router.route(["/create", "/:id"])
           console.log(connected("SUCCESS"))
           res.json(novel)
         }
-
-        mongoose.disconnect()
       });
 
     });
-
-    db.once('disconnected', function () {
-      console.log(disconnected("Mongoose connection is disconnected"),
-        mongoose.connection.readyState);
-      if (!res.headersSent)
-        res.json({ error: "Database disconnected" })
-
-    });
-
-
   })
   .post(function (req, res, next) {
-
-    console.log("/edit post")
-    console.log(req.body)
-    console.log(req.params)
-    console.log("----------------------------")
-
 
     if (req.body._id !== req.params.id)
       return res.json({ error: "/:id the path doesn't match '_id' of post" })
 
-
-    mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
-    const db = mongoose.connection;
-
+    let db = null
+    db = BuildConnection(db, req, res);
 
     db.once('open', function () {
-      console.log("Connection Successful!", mongoose.connection.readyState);
 
       if (!req.params.id)
         Novel.create(req.body)
@@ -128,13 +91,11 @@ router.route(["/create", "/:id"])
           }).catch((err) => {
             return res.json({ error: err.message })
           })
-          .finally(() => mongoose.disconnect())
       else
         Novel.findOne({ _id: req.params.id })
           .then((novel) => {
             if (!novel)
               throw { message: `Novels with _id ${req.params.id} not found` }
-            console.log("!", novel)
 
             novel.name = req.body.name
             novel.description = req.body.description
@@ -144,45 +105,57 @@ router.route(["/create", "/:id"])
             novel.save()
               .then((i) => res.json(i))
               .catch((err) => res.json({ error: err.message }))
-              .finally(() => mongoose.disconnect())
           })
           .catch((err) => {
-            mongoose.disconnect()
             return res.json({ error: err.message })
           })
+    });
+  });
 
 
 
-      /* 
-      Novel.create(req.body, function (err, small) {
-          if (err) {
-            console.log(termination(err.message))
-            return res.json({ error: err.message })
-          } else {
-            console.log(connected("SUCCESS"))
-            return res.json({ message: "Novel saved succesfully", id: small._id })
-          }
+router.route("/:id/chapters")
+  .get(function (req, res, next) {
 
-          mongoose.disconnect()
+    let db = null
+    db = BuildConnection(db, req, res);
+
+
+    db.once('open', function () {
+
+      Chapter.find({ novelId: req.params.id, type: "raw" })
+        .then((chapters) => {
+          console.log(chapters)
+          return res.json(chapters)
         })
-      
-      Novel.create(req.body, function(err, small) {
-          if (err) {
-              console.log(termination(err.message))
-              
-              
-              console.log("first", res.headersSent)
-             
-                res.json({ error: err.message })
-             	
+        .catch((err) => {
+          console.log(err)
+          return res.json({ error: err.message })
+        })
 
-          } else {
-            console.log(connected("SUCCESS"))       
-              res.json({ message: "Novel saved succesfully", id: small._id })
-          }
+    });
 
-         mongoose.disconnect() 
-      }); */
+  })
+  .post(function (req, res, next) {
+    const Scraper = require('../module/scraper')
+    console.log(":id/chapters post")
+    console.log(req.body)
+    console.log(req.params.id)
+    console.log("----------------------------")
+
+    Scraper.Init(req.params.id, req.body.chapterId)
+
+
+
+    res.json({im: "back"})
+    return true
+    mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
+    const db = mongoose.connection;
+
+
+    db.once('open', function () {
+      console.log("Connection Successful!", mongoose.connection.readyState);
+
 
     });
 
@@ -199,67 +172,10 @@ router.route(["/create", "/:id"])
   });
 
 
-/*
-app.route(["/events", "/events/:id"])
-
-app.route('/events')
-  .all(function (req, res, next) {
-    // runs for all HTTP verbs first
-    // think of it as route specific middleware!
-  })
-  .get(function (req, res, next) {
-    res.json({})
-  })
-  .post(function (req, res, next) {
-    // maybe add a new event...
-  })
-
-UserRouter.route('/create').post(function (req, res) {
-  const user = new User(req.body);
-  user.save()
-    .then(user => {
-      res.json('User added successfully');
-    })
-    .catch(err => {
-      res.status(400).send("unable to save to database");
-    });
-});
 
 
-  */
+
+
 
 module.exports = router;
 
-
-/*router.post('/api/get_data', async (req, res, next) => {
-try {
-MongoClient.connect(connectionStr, mongoOptions, function(err, client) {
-   assert.equal(null, err);
-   const db = client.db('db');
-
-   //Step 1: declare promise
-
-    var myPromise = () => {
-       return new Promise((resolve, reject) => {
-
-          db
-          .collection('your_collection')
-          .find({id: 123})
-          .limit(1)
-          .toArray(function(err, data) {
-             err
-                ? reject(err)
-                : resolve(data[0]);
-           });
-       });
-    };
-   //await myPromise
-   var result = await myPromise();
-   //continue execution
-   client.close();
-   res.json(result);
-}); //end mongo client
-} catch (e) {
-   next(e)
-}
-});*/
