@@ -52,6 +52,7 @@ var createDB = () => {
 	let Chapter = require('./models/chapter.model')
 	let Term = require('./models/term.model')
 
+	Raw.collection.drop()
 	Novel.collection.drop();
 	User.collection.drop();
 	Chapter.collection.drop();
@@ -63,6 +64,7 @@ var createDB = () => {
 		next: ".bottem1>a:last",
 		title: ".bookname > h1",
 		content: "#content",
+		regex: "lewenxiaoshuo\.com\/books\/.*\/(?!0).*\.html",
 		root: {
 			image_url: "#fmimg > img",
 			description: "#intro",
@@ -74,6 +76,7 @@ var createDB = () => {
 		next: ".articlebtn>a:eq(3)",
 		title: ".article-title",
 		content: ".article-con",
+		regex: "kenshu\.cc\/xiaoshuo\/.*\/(?!0).*\/",
 		root: {
 			image_url: ".bigpic > img",
 			description: ".book-intro > div:eq(0)",
@@ -111,6 +114,9 @@ var createDB = () => {
 		terms: [{ value: "killed" }, { value: "attacked" }]
 	}]
 
+	raws.forEach((i) => {
+		Raw.create((i)).then((raw) => console.log("raw created"))
+	});
 
 	userList.forEach((i) => {
 		console.log(i.name)

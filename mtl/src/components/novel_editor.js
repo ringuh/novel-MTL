@@ -219,7 +219,8 @@ class NovelEditor extends Component {
                     </Box>
                 </Paper>
 
-                <ChapterList novel={this.props.match.params.id}/>
+                {/* <ChapterList novel={this.props.match.params.id}/> */}
+                <Route path={this.props.match.path} component={ChapterList}/>
             </Container>
         );
     }

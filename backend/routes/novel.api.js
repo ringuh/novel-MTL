@@ -28,7 +28,7 @@ const BuildConnection = (db, req, res) => {
 
   res.on('finish', function () {
     console.log(`${req.originalUrl} response finished`)
-    mongoose.disconnect()
+    //mongoose.disconnect()
   });
 
   return db
@@ -125,7 +125,6 @@ router.route("/:id/chapters")
 
       Chapter.find({ novelId: req.params.id, type: "raw" })
         .then((chapters) => {
-          console.log(chapters)
           return res.json(chapters)
         })
         .catch((err) => {
@@ -143,7 +142,7 @@ router.route("/:id/chapters")
     console.log(req.params.id)
     console.log("----------------------------")
 
-    Scraper.Init(req.params.id, req.body.chapterId)
+    //Scraper.Init(req.params.id, req.body.chapterId)
 
 
 

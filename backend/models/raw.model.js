@@ -16,8 +16,8 @@ const Raw = new mongoose.Schema({
     next: { type: String },
     title: { type: String },
     content: { type: String },
-    error: { type: String },
-    root: [RootSchema],
+    regex: { type: String },
+    root: RootSchema,
     
 },{
     timestamps: true,

@@ -3,8 +3,9 @@ import { BrowserRouter, Switch, Route, Link, Redirect } from 'react-router-dom';
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import {
-    Box, Container, Grid, List, Button,
-    Paper, Typography, TextField, ButtonGroup
+    Box, Container, Grid, Button,
+    Paper, Typography, TextField, ButtonGroup,
+    List, ListItem, Divider, ListItemText
 } from '@material-ui/core'
 import LinearProgress from '@material-ui/core/LinearProgress';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -28,11 +29,11 @@ const styles = {
 class ChapterList extends Component {
     constructor(props) {
         super(props);
-        console.log("novel editor", props)
+        console.log("chapter list", props)
         this.state = {
-            id: props.novel,
-            chapterId: -1,
-            edit: true
+            id: props.match.params.id,
+            edit: true,
+            wsFeed: []
         };
 
         this.handleChange = this.handleChange.bind(this);
@@ -46,40 +47,84 @@ class ChapterList extends Component {
 
     }
 
-    handleSubmit(event) {
+    handleSubmit(chapterId, limit, overwrite) {
+        console.log(chapterId, this.state)
+        console.log(this.connection.readyState)
 
-        console.log(event, this.state)
+        if(this.connection.readyState > 1)
+        {
+            this.initWS()
 
-        var subm = async () => {
-            
-            this.setState({ progress: true })
-            let res = await axios.post(`/novel/${this.state.id}/chapters`, 
-                { chapterId: this.state.chapterId });
+            setTimeout(()=> this.handleSubmit(chapterId, limit, overwrite), 2000);
+            return true
+        }
 
-            console.log(res.data)
-            console.log(res.data.error || res.data.message)
+        this.connection.send(JSON.stringify({
+            cmd: "scrape",
+            novelId: this.state.id,
+            chapterId: chapterId,
+            limit: limit,
+            overwrite: overwrite
+        }))
+        
+    }
 
-            if (res.data._id) {
-                /* setTimeout(() => this.setState({
-                    novel: res.data,
-                    progress: false,
-                    edit: false
-                }), 1000) */
-            }
+    writeConsole(line) {
+        this.setState({ wsFeed: [line.toString(), ...this.state.wsFeed] })
+        
+    }
 
+    initWS() {
+        window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+        this.connection = new WebSocket('ws://127.0.0.1:1337');
+        this.connection.onopen = () => {
+            // connection is opened and ready to use
+            console.log("WS connection is open")
+            this.writeConsole("Websocket ready")
+
+            this.connection.send(JSON.stringify({ msg: "message to server" }))
         };
 
-        subm();
+        this.connection.onerror = (error) => console.log("WS", error)
 
-        event.preventDefault();
+        this.connection.onmessage = (message) => {
+            try {
+                console.log("received message", message)
+                
+                var json = JSON.parse(message.data);
+                console.log(json)
+                this.writeConsole(json.msg)
+
+                if(json.command == "reload_chapters")
+                    this.fetchChapters()
+
+            } catch (e) {
+                console.log(e)
+                return;
+            }
+            // handle incoming message
+
+
+            console.log(message)
+        };
+    }
+
+    fetchChapters() {
+        fetch(`/novel/${this.state.id}/chapters`, { chapter: this.state.chapterId })
+            .then(response => response.json())
+            .then(data => this.setState({
+                chapters: data,
+                chapterId: data.length > 0 ? data[data.length - 1]._id : this.state.chapterId
+            }));
     }
 
     componentDidMount() {
-        fetch(`/novel/${this.state.id}/chapters`, {chapter: this.state.chapterId})
-            .then(response => response.json())
-            .then(data => this.setState({
-                chapters: data
-            }));
+        this.fetchChapters()
+
+
+        this.initWS()
+
     }
 
     componentDidUpdate() {
@@ -103,8 +148,8 @@ class ChapterList extends Component {
 
         return (
             <Container>
-                <h3>chapterlist</h3>
-                <Box component="form">
+
+                {/* <Box component="form">
                     <ButtonGroup size="small">
                         <Button>
                             <TextField
@@ -124,15 +169,17 @@ class ChapterList extends Component {
                                 margin="dense"
                                 variant="outlined"
                             >
-                                <option value={-1}>
-                                    Initialize from RAW directory
-                        </option>
-                                {[{ value: 1, label: 'A' }].map(option => (
-                                    <option key={option.value}
-                                        value={option.value}>
-                                        {option.label}
+                                {this.state.chapters.reverse().map(chap => (
+                                    <option key={chap._id}
+                                        value={chap._id}>
+                                        {chap.id}. {chap.url}
                                     </option>
                                 ))}
+                                <option value={-1}>
+                                    Initialize from RAW directory
+                                </option>
+
+
                             </TextField>
                         </Button>
                         <Button xs={4}
@@ -142,6 +189,63 @@ class ChapterList extends Component {
                             <CloudDownloadIcon />
                         </Button>
                     </ButtonGroup>
+                </Box> */}
+
+                <Box m={2}>
+                    <Button xs={4}
+                        color="primary"
+                        size="medium"
+                        onClick={()=> this.handleSubmit(-1)}>
+                        <CloudDownloadIcon color="secondary"/>
+                        <Box ml={1}>
+                        {(this.state.chapters.length === 0) ?
+                                ("Initialize from RAW directory"):
+                                ("Scrape from the latest chapter")
+
+                        }</Box>
+                        
+                    </Button>
+                </Box>
+
+                <Box m={2}>
+
+                    <TextField multiline fullWidth
+                        ref={this.consoleBox}
+                        label="Console"
+                        variant="outlined"
+                        rows={4}
+                        value={this.state.wsFeed.join('\n')} />
+                </Box>
+
+                <Box>
+                    <List className="">
+                        {this.state.chapters.map((chapter) => (
+                            <a href={`${this.props.match.path}/${chapter._id}`} key={chapter._id}>
+                                <ListItem alignItems="flex-start" >
+                                    <ListItemText
+                                        primary={chapter.url}
+                                        secondary={
+                                            <React.Fragment>
+                                                <Typography
+                                                    component="span"
+                                                    variant="body2"
+                                                    className=""
+                                                    color="textPrimary"
+                                                >
+                                                    {chapter.content}
+                                                </Typography>
+                                                {" — I'll be in your neighborhood doing errands this…"}
+                                            </React.Fragment>
+                                        }
+                                    />
+
+                                </ListItem>
+                                <Divider variant="inset" component="li" />
+                            </a>
+                        ))}
+
+
+                    </List>
                 </Box>
                 <Typography variant="h5">
                     {JSON.stringify(this.state.chapters)}

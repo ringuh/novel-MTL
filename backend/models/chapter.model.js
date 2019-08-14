@@ -12,7 +12,6 @@ const Chapter = new mongoose.Schema({
     },
     id: { 
         type: Number,
-        default: 1,
     },
     type: {
         type: String,
@@ -32,6 +31,9 @@ const Chapter = new mongoose.Schema({
         type: String,
         trim: true
     },
+    regex: {
+        type: String
+    }
 },{
     timestamps: true,
 });
