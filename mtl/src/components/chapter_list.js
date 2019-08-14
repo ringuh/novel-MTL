@@ -40,6 +40,16 @@ class ChapterList extends Component {
         this.handleSubmit = this.handleSubmit.bind(this);
 
     }
+
+    generateTranslateString(){
+        let str = {
+            url: `http://localhost:${global.ServerConf.server_port}/novel/${this.state.id}/chapter`,
+            chapterId: -1,
+            limit: 100
+        }
+        this.setState({translateString: JSON.stringify(str) })
+    }
+
     handleChange(e) {
         console.log(e.target.value)
         this.setState({ chapterId: e.target.value })
@@ -111,7 +121,7 @@ class ChapterList extends Component {
     }
 
     fetchChapters() {
-        fetch(`/novel/${this.state.id}/chapters`, { chapter: this.state.chapterId })
+        fetch(`/novel/${this.state.id}/chapter`, { chapter: this.state.chapterId })
             .then(response => response.json())
             .then(data => this.setState({
                 chapters: data,
@@ -121,7 +131,7 @@ class ChapterList extends Component {
 
     componentDidMount() {
         this.fetchChapters()
-
+        this.generateTranslateString()
 
         this.initWS()
 
@@ -216,6 +226,15 @@ class ChapterList extends Component {
                         rows={4}
                         value={this.state.wsFeed.join('\n')} />
                 </Box>
+                
+                <Box m={2}>
+                    <TextField multiline fullWidth
+                        label="Console"
+                        variant="outlined"
+                        rows={2}
+                        value={this.state.translateString} />
+                </Box>
+
 
                 <Box>
                     <List className="">

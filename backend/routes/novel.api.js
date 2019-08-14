@@ -17,9 +17,12 @@ var termination = chalk.bold.magenta;
 
 const BuildConnection = (db, req, res) => {
   console.log(req.originalUrl, req.method)
-  console.log(res.params)
-  mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
+  console.log(res.params, mongoose.connection.readyState, "state")
+
   db = mongoose.connection
+
+  mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
+
 
   db.once('disconnected', function () {
     console.log(disconnected(`${req.originalUrl} connection is disconnected`),
@@ -32,7 +35,7 @@ const BuildConnection = (db, req, res) => {
   });
 
   return db
-}; 
+};
 
 router.get("/", (req, res) => {
   let db = null
@@ -114,7 +117,7 @@ router.route(["/create", "/:id"])
 
 
 
-router.route("/:id/chapters")
+router.route(["/:id/chapter"])
   .get(function (req, res, next) {
 
     let db = null
@@ -124,7 +127,9 @@ router.route("/:id/chapters")
     db.once('open', function () {
 
       Chapter.find({ novelId: req.params.id, type: "raw" })
+        .select("id url title updatedAt createdAt novelId")
         .then((chapters) => {
+          console.log(chapters)
           return res.json(chapters)
         })
         .catch((err) => {
@@ -146,7 +151,7 @@ router.route("/:id/chapters")
 
 
 
-    res.json({im: "back"})
+    res.json({ im: "back" })
     return true
     mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
     const db = mongoose.connection;
@@ -166,11 +171,51 @@ router.route("/:id/chapters")
 
     });
 
+  
+    
+
 
 
   });
 
 
+  router.route(["/:novelId/chapter/:chapterId"])
+  .get(function (req, res, next) {
+
+    let db = null
+    db = BuildConnection(db, req, res);
+
+
+    db.once('open', function () {
+
+      Chapter.findById(req.params.chapterId)
+        .select("id url title content")
+        .then((chapter) => {
+          return res.json(chapter)
+        })
+        .catch((err) => {
+          console.log(err)
+          return res.json({ error: err.message })
+        })
+
+    });
+
+  })
+  .post(function (req, res, next) {
+    const Scraper = require('../module/scraper')
+    console.log(":novelId/chapter/:chapterId post")
+    console.log(req.body)
+    console.log(req.params.id)
+    console.log("----------------------------")
+
+    //Scraper.Init(req.params.id, req.body.chapterId)
+
+
+
+    res.json({ im: "back" })
+    return true
+
+  });
 
 
 

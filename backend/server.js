@@ -21,6 +21,6 @@ app.listen(global.ServerConf.server_port, () => {
 app.use('/static', express.static(path.join(__dirname, 'static')))
 app.use("/auth", require("./routes/login.api"))
 app.use("/novel", require("./routes/novel.api"))
-//app.use("/novel", require("./routes/novel"))
+//app.use("/chapter", require("./routes/chapter.api"))
 
 module.exports = app;

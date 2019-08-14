@@ -111,8 +111,10 @@ module.exports = (data, connection) => {
     }
 
     // initialize database
-    mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
     const db = mongoose.connection
+    if(db.readyState !== 1)
+        mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
+    
     db.once('disconnected', () => {
         console.log(disconnected(`Scraper connection is disconnected`),
             mongoose.connection.readyState);
