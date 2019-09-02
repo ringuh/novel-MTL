@@ -43,36 +43,33 @@ class ChapterList extends Component {
 
     generateTranslateString(){
         let str = {
-            url: `http://localhost:${global.ServerConf.server_port}/novel/${this.state.id}/chapter`,
-            chapterId: -1,
+            url: `${global.config.server.url}:${global.config.server.port}/novel/${this.state.id}/chapter`,
+            chapter_id: -1,
             limit: 100
         }
         this.setState({translateString: JSON.stringify(str) })
     }
 
     handleChange(e) {
-        console.log(e.target.value)
-        this.setState({ chapterId: e.target.value })
+        //this.setState({ chapterId: e.target.value })
 
 
     }
 
-    handleSubmit(chapterId, limit, overwrite) {
-        console.log(chapterId, this.state)
-        console.log(this.connection.readyState)
+    handleSubmit(chapter_id, limit, overwrite) {
 
         if(this.connection.readyState > 1)
         {
             this.initWS()
 
-            setTimeout(()=> this.handleSubmit(chapterId, limit, overwrite), 2000);
+            setTimeout(()=> this.handleSubmit(chapter_id, limit, overwrite), 2000);
             return true
         }
 
         this.connection.send(JSON.stringify({
             cmd: "scrape",
-            novelId: this.state.id,
-            chapterId: chapterId,
+            novel_id: this.state.id,
+            chapter_id: chapter_id,
             limit: limit,
             overwrite: overwrite
         }))
@@ -90,20 +87,15 @@ class ChapterList extends Component {
         this.connection = new WebSocket('ws://127.0.0.1:1337');
         this.connection.onopen = () => {
             // connection is opened and ready to use
-            console.log("WS connection is open")
             this.writeConsole("Websocket ready")
-
-            this.connection.send(JSON.stringify({ msg: "message to server" }))
         };
 
         this.connection.onerror = (error) => console.log("WS", error)
 
         this.connection.onmessage = (message) => {
-            try {
-                console.log("received message", message)
-                
+            try {                
                 var json = JSON.parse(message.data);
-                console.log(json)
+                
                 this.writeConsole(json.msg)
 
                 if(json.command == "reload_chapters")
@@ -114,9 +106,6 @@ class ChapterList extends Component {
                 return;
             }
             // handle incoming message
-
-
-            console.log(message)
         };
     }
 
@@ -125,8 +114,8 @@ class ChapterList extends Component {
             .then(response => response.json())
             .then(data => this.setState({
                 chapters: data,
-                chapterId: data.length > 0 ? data[data.length - 1]._id : this.state.chapterId
-            }));
+                chapterId: data.length > 0 ? data[data.length - 1].id : this.state.chapterId
+            }))//.then(()=> console.log(this.state.chapters))
     }
 
     componentDidMount() {
@@ -158,49 +147,6 @@ class ChapterList extends Component {
 
         return (
             <Container>
-
-                {/* <Box component="form">
-                    <ButtonGroup size="small">
-                        <Button>
-                            <TextField
-                                id="outlined-select-currency-native"
-                                select
-                                label="Download RAW"
-                                className={classes.textField}
-                                value={this.state.chapterId}
-                                onChange={this.handleChange}
-                                SelectProps={{
-                                    native: true,
-                                    MenuProps: {
-                                        className: classes.menu,
-                                    },
-                                }}
-                                helperText="Select which chapter to download from"
-                                margin="dense"
-                                variant="outlined"
-                            >
-                                {this.state.chapters.reverse().map(chap => (
-                                    <option key={chap._id}
-                                        value={chap._id}>
-                                        {chap.id}. {chap.url}
-                                    </option>
-                                ))}
-                                <option value={-1}>
-                                    Initialize from RAW directory
-                                </option>
-
-
-                            </TextField>
-                        </Button>
-                        <Button xs={4}
-                            color="primary"
-                            size="small"
-                            onClick={this.handleSubmit}>
-                            <CloudDownloadIcon />
-                        </Button>
-                    </ButtonGroup>
-                </Box> */}
-
                 <Box m={2}>
                     <Button xs={4}
                         color="primary"
@@ -239,7 +185,7 @@ class ChapterList extends Component {
                 <Box>
                     <List className="">
                         {this.state.chapters.map((chapter) => (
-                            <a href={`${this.props.match.path}/${chapter._id}`} key={chapter._id}>
+                            <a href={`${this.props.match.path}/${chapter.id}`} key={chapter.id}>
                                 <ListItem alignItems="flex-start" >
                                     <ListItemText
                                         primary={chapter.url}

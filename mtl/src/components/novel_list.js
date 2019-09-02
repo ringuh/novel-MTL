@@ -44,9 +44,9 @@ class NovelList extends Component {
             <div>
                 <h2>Novel listing</h2>
                 <ul>
-                    {this.state.novels.map(({ name, _id }) => (
-                        <li key={_id}>
-                            <Link to={`${this.props.match.path}/${_id}`}>{name}</Link>
+                    {this.state.novels.map(({ name, id }) => (
+                        <li key={id}>
+                            <Link to={`${this.props.match.path}/${id}`}>{name}</Link>
                         </li>
                     ))}
                 </ul>
@@ -54,7 +54,7 @@ class NovelList extends Component {
 
                 <List className="">
                 {this.state.novels.map((novel) => (
-                    <a href={`${this.props.match.path}/${novel._id}`} key={novel._id}>
+                    <a href={`${this.props.match.path}/${novel.id}`} key={novel.id}>
                     <ListItem alignItems="flex-start" >
                         <ListItemAvatar>
                             <Avatar alt={novel.name} src={novel.image_url} />

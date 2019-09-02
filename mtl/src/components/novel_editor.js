@@ -208,13 +208,7 @@ class NovelEditor extends Component {
                                     <EditIcon color="primary" fontSize="large" />
                                 </Button>
                             </Grid>
-                            <Grid item xs={12}>
-                                <Button onClick={() => this.setState({ edit: !this.state.edit })}
-                                    color="secondary">
-                                    <GetAppIcon color="primary" fontSize="large" />
-                                    Initialize novel
-                            </Button>
-                            </Grid>
+                           
                         </Grid>
                     </Box>
                 </Paper>

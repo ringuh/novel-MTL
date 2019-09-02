@@ -7,7 +7,7 @@ import * as serviceWorker from './serviceWorker';
 const config = require('./config.json');
 const environment = process.env.NODE_ENV || 'development';
 const environmentConfig = config[environment];
-global.ServerConf = require('lodash').merge(config.development, environmentConfig);
+global.config = require('lodash').merge(config.development, environmentConfig);
 
 
 ReactDOM.render(<App />, document.getElementById('root'));
