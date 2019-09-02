@@ -3,12 +3,14 @@ module.exports = {
         let connections = []
         var WebSocketServer = require('websocket').server;
         var http = require('http');
-        const scraper = require("./scraper2")
-        console.log("loaded websockets")
+        
+        const scraper = require("./scraper")
+        
         var server = http.createServer((request, response) => {
             // process HTTP request. Since we're writing just WebSockets
             // server we don't have to implement anything.
         });
+
         server.listen(1337, () => { console.log("listening to ws") });
 
         // create the server
@@ -18,19 +20,19 @@ module.exports = {
 
         // WebSocket server
         wsServer.on('request', (request) => {
-            var connection = request.accept(null, request.origin);
+            var websocket = request.accept(null, request.origin);
             //connections.push(connection)
-            connection.on('message', function (message) {
+            websocket.on('message', function (message) {
                 var msg = message.type === 'utf8' ? JSON.parse(message.utf8Data): {}
                 
                 if(msg.cmd == "scrape")
-                    scraper(msg, connection)
+                    scraper(msg, websocket)
 
-                connection.sendUTF(JSON.stringify({ msg: "reply from WS. Sockets "+ connections.length, data: msg }))
+                //websocket.sendUTF(JSON.stringify({ msg: "reply from WS. Sockets "+ connections.length, data: msg }))
                 
             });
 
-            connection.on('close', function (connection) {
+            websocket.on('close', function (connection) {
                 // close user connection
                 console.log("WS connection closed")
             });

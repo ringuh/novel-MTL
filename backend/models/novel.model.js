@@ -1,31 +1,55 @@
-const mongoose = require('mongoose');
+module.exports = function (seq, type) {
 
-const Novel = new mongoose.Schema({
-	name: {
-		type: String,
-		unique: true,
-		required: true,
-		minlength: 3,
-		trim: true
+	const Novel = seq.define('Novel', {
+		id: {
+			type: type.INTEGER,
+			autoIncrement: true,
+			primaryKey: true,
+		},
+		name: {
+			type: type.STRING,
+			unique: { args: true, msg: "Novel name already in use" },
+			allowNull: false,
+			trim: true,
+			//slugify: true
+		},
+		alias: { // slugified version of the name
+			type: type.STRING,
+			unique: { args: true, msg: "Novel alias needs to be unique" },
+			trim: true,
+			slugify: true
+		},
+		image_url: {
+			type: type.STRING,
+			defaultValue: "/static/dist/default.jpg"
+		}, // image of the book
+		raw_url: {
+			type: type.STRING,
+			validate: {
+				isUrl: true
+			},
+			trim: true
+		}, // URL to the book
+		description: {
+			type: type.STRING,
+			validate: {
+				len: [0,500]
+			},
+			cut: 500,
+			trim: true
+		},
 	},
-	alias: { // slugified version of the name
-		type: String,
-		unique: true,
-		minlength: 3,
-		trim: true,
-		sparse: true
-	},
-	image_url: { 
-		type: String,
-		default: "/static/dist/default.jpg"
-	}, // image of the book
-	raw_url: { type: String, trim: true }, // URL to the book
-	description: { type: String, maxlength: 1000, trim: true },
-},
-{
-	timestamps: true,
-});
+		{
+			timestamps: true,
+		});
 
+	Novel.associate = models => {
+		Novel.belongsTo(models.User, {
+			//onDelete: "CASCADE",
+			foreignKey: 'user_id',
+		})
+	};
+	
+	return Novel
+}
 
-
-module.exports = mongoose.model('Novel', Novel);

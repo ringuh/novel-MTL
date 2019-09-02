@@ -1,26 +1,31 @@
-const mongoose = require('mongoose');
+module.exports = function (seq, type) {
+  const User = seq.define('User', {
+    id: {
+      type: type.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    name: {
+      type: type.STRING,
+      unique: true
+    },
+    googleId: {
+      type: type.STRING,
+      allowNull: false,
+      unique: true
+    },
+    icon: {
+      type: type.STRING,
+      defaultValue: "/static/dist/default.jpg"
+    },
+    role: { type: type.STRING },
+    last_login: { type: type.DATE },
+  }, { timestamps: true });
 
-const User = new mongoose.Schema({
-  name: { 
-  	type: String, 
-  	sparse: true, 
-  	unique: true
-  },
-  googleId: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  icon: { 
-    type: String,
-    trim: true
-  },
-  user_class: { type: String },
+  User.associate = function (models) {
+    //User.hasMany(models.Novel, { as: 'Novels' });
+  };
 
-  last_login: { type: Date, required: false },
-}, {
-  timestamps: true,
-});
-
-module.exports = mongoose.model('User', User);
+  return User
+}
 

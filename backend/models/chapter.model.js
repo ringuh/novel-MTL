@@ -1,42 +1,43 @@
-const mongoose = require('mongoose');
+module.exports = (sequelize, type) => {
 
-const Chapter = new mongoose.Schema({
-    novelId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Novel',
-        required: true
-    },
-    chapterId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Chapter',
-    },
-    id: { 
-        type: Number,
-    },
-    type: {
-        type: String,
-        default: "raw",
-    },
-    url: {
-        type: String,
-        minlength: 10,
-        trim: true,
-    },
+    const Chapter = sequelize.define('Chapter', {
+        id: {
+            type: type.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+        },
+        url: {
+            type: type.STRING,
+            trim: true,
+            validate: {
+                isUrl: true
+            }
+        },
+        order: { type: type.INTEGER },
+        raw: { type: type.JSON },
+        title: {
+            type: type.STRING,
+        },
+        sogou: {
+            type: type.STRING,
+        },
+        baidu: {
+            type: type.STRING,
+        },
+        proofread: {
+            type: type.STRING,
+        }
+    }, {
+            timestamps: true,
+        });
 
-    title: {
-        type: String,
-        trim: true
-    },
-    content: {
-        type: String,
-        trim: true
-    },
-    regex: {
-        type: String
-    }
-},{
-    timestamps: true,
-});
-
-module.exports = mongoose.model('Chapter', Chapter);
+    Chapter.associate = models => {
+        Chapter.belongsTo(models.Novel, {
+            onDelete: "CASCADE",
+            foreignKey: 'novel_id',
+            allowNull: false
+        })
+    };
+    return Chapter
+}
 

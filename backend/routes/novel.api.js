@@ -1,220 +1,124 @@
 const Scraper = require('../module/scraper')
 const router = require('express').Router()
-const mongoose = require('mongoose');
-mongoose.Promise = require('bluebird'); // removes deprecated messages
-var chalk = require('chalk'); // colors
+const chalk = require('chalk'); // colors
 const slugify = require('slugify')
 
 router.use(require('express').json())
 
-let Novel = require("../models/novel.model")
-let Chapter = require("../models/chapter.model")
-
-var connected = chalk.bold.cyan;
-var error = chalk.bold.yellow;
-var disconnected = chalk.bold.red;
-var termination = chalk.bold.magenta;
-
-const BuildConnection = (db, req, res) => {
-  console.log(req.originalUrl, req.method)
-  console.log(res.params, mongoose.connection.readyState, "state")
-
-  db = mongoose.connection
-
-  mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
 
 
-  db.once('disconnected', function () {
-    console.log(disconnected(`${req.originalUrl} connection is disconnected`),
-      mongoose.connection.readyState);
-  });
+const { cyan, yellow, red, blue } = chalk.bold;
+const { Novel, Chapter } = require('../models')
 
-  res.on('finish', function () {
-    console.log(`${req.originalUrl} response finished`)
-    //mongoose.disconnect()
-  });
-
-  return db
-};
 
 router.get("/", (req, res) => {
-  let db = null
-  db = BuildConnection(db, req, res);
 
-
-  db.once('open', function () {
-    Novel.find({}, "id name image_url description", { sort: "name" }, function (err, novels) {
-      if (err) {
-        console.log(termination(err.message))
-        res.json({ error: err.message })
-      } else {
-        res.json(novels)
-      }
-    });
-  });
-});
+  Novel.findAll({
+    attributes: ["id", "name", "image_url", "description"],
+    order: ['name']
+  }).then(novels => {
+    res.json(novels)
+  }).catch(err => {
+    console.log(red(err.message))
+    res.json({ error: err.message })
+  })
+})
 
 router.route(["/create", "/:id"])
   .get(function (req, res, next) {
+    Novel.findOne({ where: { id: req.params.id } })
+      .then(novel => res.json(novel))
+      .catch(err => {
+        console.log(red(err.message))
+        res.json({ error: err.message })
+      })
+  }).post(function (req, res, next) {
 
-    let db = null
-    db = BuildConnection(db, req, res);
-
-
-
-    db.once('open', function () {
-
-      Novel.findOne({ _id: req.params.id }, function (err, novel) {
-        if (err) {
-          console.log(termination(err.message))
-          res.json({ error: err.message })
-        } else {
-
-          console.log(connected("SUCCESS"))
-          res.json(novel)
-        }
-      });
-
-    });
-  })
-  .post(function (req, res, next) {
-
-    if (req.body._id !== req.params.id)
+    if (req.body.id !== req.params.id)
       return res.json({ error: "/:id the path doesn't match '_id' of post" })
+    console.log("create now")
+    console.log(req.params, req.body)
 
-    let db = null
-    db = BuildConnection(db, req, res);
-
-    db.once('open', function () {
-
-      if (!req.params.id)
-        Novel.create(req.body)
-          .then((novel) => {
-            return res.json({ message: "Novel saved succesfully", id: novel._id })
-          }).catch((err) => {
-            return res.json({ error: err.message })
-          })
-      else
-        Novel.findOne({ _id: req.params.id })
-          .then((novel) => {
-            if (!novel)
-              throw { message: `Novels with _id ${req.params.id} not found` }
-
-            novel.name = req.body.name
-            novel.description = req.body.description
-            novel.raw_directory = req.body.raw_directory
-            novel.raw_url = req.body.raw_url
-
-            novel.save()
-              .then((i) => res.json(i))
-              .catch((err) => res.json({ error: err.message }))
-          })
-          .catch((err) => {
-            return res.json({ error: err.message })
-          })
-    });
+    let where = {
+      where: {},
+      defaults: {
+        name: req.body.name,
+        decription: req.body.decription,
+        raw_directory: req.body.raw_directory,
+        raw_url: req.body.raw_url,
+      }
+    }
+    if (req.params.id)
+      Novel.findByPk(req.params.id).then((novel) => {
+        if (!novel)
+          return res.json({ error: `Novel by ID ${req.params.id} not found` })
+        novel.name = req.body.name
+        novel.decription = req.body.decription
+        novel.raw_directory = req.body.raw_directory
+        novel.raw_url = req.body.raw_url
+        novel.save().then(novel => res.json(novel))
+      }).catch(err => {
+        console.log(red(err.message))
+        res.json({ error: err.message })
+      });
+    else
+      Novel.create({
+        name: req.body.name,
+        decription: req.body.decription,
+        raw_directory: req.body.raw_directory,
+        raw_url: req.body.raw_url,
+      }).then(novel =>
+        res.json({ message: `Novel ${novel.name} created succesfully`, id: novel.id })
+      ).catch(err => {
+        console.log(red(err.message))
+        res.json({ error: err.message })
+      });
   });
 
 
 
-router.route(["/:id/chapter"])
+router.route("/:id/chapter")
   .get(function (req, res, next) {
+    console.log("/chapter/", req.body, req.params)
 
-    let db = null
-    db = BuildConnection(db, req, res);
-
-
-    db.once('open', function () {
-
-      Chapter.find({ novelId: req.params.id, type: "raw" })
-        .select("id url title updatedAt createdAt novelId")
-        .then((chapters) => {
-          console.log(chapters)
-          return res.json(chapters)
-        })
-        .catch((err) => {
-          console.log(err)
-          return res.json({ error: err.message })
-        })
-
-    });
-
-  })
-  .post(function (req, res, next) {
-    const Scraper = require('../module/scraper')
-    console.log(":id/chapters post")
-    console.log(req.body)
-    console.log(req.params.id)
-    console.log("----------------------------")
-
-    //Scraper.Init(req.params.id, req.body.chapterId)
-
-
-
-    res.json({ im: "back" })
-    return true
-    mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
-    const db = mongoose.connection;
-
-
-    db.once('open', function () {
-      console.log("Connection Successful!", mongoose.connection.readyState);
-
-
-    });
-
-    db.once('disconnected', function () {
-      console.log(disconnected("Mongoose connection is disconnected"),
-        mongoose.connection.readyState);
-      if (!res.headersSent)
-        res.json({ error: "Database disconnected" })
-
-    });
-
-  
-    
-
-
-
+    Chapter.findAll({
+      where: { novel_id: req.params.id },
+      attributes: ["id", "novel_id", "url", "title", "updatedAt", "createdAt"]
+    }).then((chapters) => {
+      return res.json(chapters)
+    })
+      .catch((err) => {
+        return res.json({ error: err.message })
+      })
   });
 
 
-  router.route(["/:novelId/chapter/:chapterId"])
+router.route(["/:novel_id/chapter/:chapter_id"])
   .get(function (req, res, next) {
 
-    let db = null
-    db = BuildConnection(db, req, res);
+    console.log("get", req.body, req.params)
+    Chapter.findOne({
+      where: { id: parseInt(req.params.chapter_id) },
+      attributes: ['id', 'url', 'raw']
+    }).then((chapter) => {
+      return res.json(chapter)
+    }).catch((err) => {
+      console.log(red(err))
+      return res.json({ error: err.message })
+    })
 
+  }).post(function (req, res, next){
+    console.log("post req", req.body)
+    Chapter.findOne({
+      where: { id: parseInt(req.params.chapter_id) },
+    }).then((chapter) => {
+      
+    }).catch((err) => {
+      console.log(red(err))
+      return res.json({ error: err.message })
+    })
 
-    db.once('open', function () {
-
-      Chapter.findById(req.params.chapterId)
-        .select("id url title content")
-        .then((chapter) => {
-          return res.json(chapter)
-        })
-        .catch((err) => {
-          console.log(err)
-          return res.json({ error: err.message })
-        })
-
-    });
-
-  })
-  .post(function (req, res, next) {
-    const Scraper = require('../module/scraper')
-    console.log(":novelId/chapter/:chapterId post")
-    console.log(req.body)
-    console.log(req.params.id)
-    console.log("----------------------------")
-
-    //Scraper.Init(req.params.id, req.body.chapterId)
-
-
-
-    res.json({ im: "back" })
-    return true
-
+    return res.send("hei")
   });
 
 

@@ -1,27 +1,39 @@
-const mongoose = require('mongoose');
+module.exports = function (seq, type) {
 
-const RootSchema = new mongoose.Schema({ 
-    image_url: { type: String },
-    description: { type: String },
-    catalog: { type: String },
-    chapters: { type: String },
-})
 
-const Raw = new mongoose.Schema({
-    url: { 
-        type: String,
-        minlength: 1,
-        trim: true,
-    },
-    next: { type: String },
-    title: { type: String },
-    content: { type: String },
-    regex: { type: String },
-    root: RootSchema,
-    
-},{
-    timestamps: true,
-});
+    /* 
+    ROOT:{   
+        image_url: { type: String },
+        description: { type: String },
+        catalog: { type: String },
+        chapters: { type: String }
+   } 
+   */
 
-module.exports = mongoose.model('Raw', Raw);
+    const Raw = seq.define('Raw', {
+        url: {
+            type: type.STRING,
+        },
+        next: {
+            type: type.STRING
+        },
+        title: {
+            type: type.STRING
+        },
+        content: {
+            type: type.STRING
+        },
+        regex: {
+            type: type.STRING
+        },
+        root: {
+            type: type.JSON
+        },
+
+    }, {
+            timestamps: true,
+        });
+
+    return Raw
+}
 

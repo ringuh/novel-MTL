@@ -1,10 +1,4 @@
-const mongoose = require('mongoose');
-mongoose.Promise = require('bluebird'); // removes deprecated messages
 var chalk = require('chalk'); // colors
-
-
-
-
 const config = require('../mtl/src/config.json');
 const environment = process.env.NODE_ENV || 'development';
 const environmentConfig = config[environment];
@@ -13,51 +7,14 @@ const ServerConf = require('lodash').merge(config.development, environmentConfig
 //require database URL from properties file
 //var dbURL = require('./property').db;
 
-var connected = chalk.bold.cyan;
-var error = chalk.bold.yellow;
-var disconnected = chalk.bold.red;
-var termination = chalk.bold.magenta;
+var { cyan, yellow, red, blue } = chalk.bold; 
 
 
+var createDB = async () => {
+	
+	const { Raw, User, Novel } = require('./models')
 
-
-mongoose.connect(ServerConf.database, ServerConf.db_options);
-
-mongoose.connection.on('connected', function () {
-	console.log(connected("Mongoose default connection is open to ", ServerConf.database));
-	createDB();
-});
-
-mongoose.connection.on('error', function (err) {
-	console.log(error("Mongoose default connection has occured " + err + " error"));
-});
-
-mongoose.connection.on('disconnected', function () {
-	console.log(disconnected("Mongoose default connection is disconnected"));
-});
-
-// program exit
-process.on('SIGINT', function () {
-	mongoose.connection.close(function () {
-		console.log(termination("Mongoose default connection is disconnected due to application termination"));
-		process.exit(0)
-	});
-});
-
-var createDB = () => {
-	console.log("creating db")
-	let Raw = require('./models/raw.model')
-	let Novel = require("./models/novel.model")
-	let User = require('./models/user.model')
-	let Chapter = require('./models/chapter.model')
-	let Term = require('./models/term.model')
-
-	Raw.collection.drop()
-	Novel.collection.drop();
-	User.collection.drop();
-	Chapter.collection.drop();
-	Term.collection.drop();
-	console.log("dropped tables")
+	
 
 	const raws = [{
 		url: "https://www.lewenxiaoshuo.com/books/xinhunwuai_tizuiqianqi/34622958.html",
@@ -90,7 +47,7 @@ var createDB = () => {
 	const userList = [{
 		googleId: "113424763475073319026",
 		name: "pienirinkula",
-		user_class: "admin",
+		role: "admin",
 	}]
 
 	const novelList = [{
@@ -115,27 +72,26 @@ var createDB = () => {
 	}]
 
 	raws.forEach((i) => {
-		Raw.create((i)).then((raw) => console.log("raw created"))
+		Raw.create((i))
 	});
-
+	
 	userList.forEach((i) => {
-		console.log(i.name)
+		User.create(i)
 	});
-
+	
 	novelList.forEach((i) => {
 		var n = Novel.create((i)).then((nov) => {
-			console.log(nov.name)
+			//console.log(nov.name)
 		})
 
 	});
 
+	return true
 	termList.forEach((i) => {
 		Term.create((i)).then((term) => console.log("term created"))
 	});
 
 
-	setTimeout(() => {
-		mongoose.disconnect();
-	}, 10000);
 };
 
+module.exports = createDB

@@ -1,200 +1,165 @@
-const router = require('express').Router()
-const mongoose = require('mongoose');
-mongoose.Promise = require('bluebird'); // removes deprecated messages
-var chalk = require('chalk'); // colors
+const chalk = require('chalk'); // colors
 const cheerioAdv = require('cheerio-advanced-selectors'); // adds :last, :eq(index), :first
 const cheerio = cheerioAdv.wrap(require('cheerio'));
 const readability = require('node-readability-cheerio')
 const htmlToText = require('html-to-text');
 const urlTool = require('url')
 
-router.use(require('express').json())
+const { cyan, yellow, red, blue } = chalk.bold;
 
-var connected = chalk.bold.cyan;
-var error = chalk.bold.yellow;
-var disconnected = chalk.bold.red;
-var termination = chalk.bold.magenta;
+const { Novel, Chapter, Raw } = require("../models")
 
 
-let Novel = require("../models/novel.model")
-let Chapter = require("../models/chapter.model")
+const GetRaw = async (url) => {
+    // finds the correct RAW-parser based on your URL
+
+    return new Promise((resolve, reject) => {
+        Raw.findAll({}).then((raws) =>
+            resolve(raws.find(raw => {
+                var a = urlTool.parse(raw.url)
+                var b = urlTool.parse(url)
+
+                return a.hostname == b.hostname
+            })))
+    })
+}
+
+const GetChapter = async (novel, chapter_id) => {
+    let whereStr = chapter_id === -1 ?
+    { novel_id: novel.id }: { id: chapter_id, novel_id: novel.id }
+    let orderArr = [
+        ["order", "desc"],
+        ["id", "desc"]
+    ]
+    console.log(whereStr)
+    return Chapter.findOne({
+        where: whereStr,
+        order: orderArr
+    }).catch((err) => {
+        console.log(red(err.message))
+        throw err
+    })
+}
+
+const ReadDom = async (url) => {
+    // due issues with chinese encoding this double parses the DOM.
+    // first reads DOM through readability for encoding 
+    // and re-parses the result through cheerio for usability
+    return new Promise((resolve, reject) => {
+        readability.read(url, async function (err, $) {
+            if (err) reject(err)
+            resolve(cheerio.load($("html").html(), { decodeEntities: false }))
+        })
+    })
+}
 
 
+const Scraper = async (data, connection) => {
+    console.log(data)
+    const sendJson = (json) => {
+        // send through websocket as JSON string
+        if (!connection) return false
+        try {
+            if (typeof (json) == "string")
+                json = { msg: json }
+            connection.sendUTF(JSON.stringify(json))
+        }
+        catch (error) { console.log(red("SendJson error:", error)) }
 
-
-
-
-
-class Scraper {
-
-    constructor() {
-
+        return json
     }
 
-    static async GetNovel(novelId) {
+    const Init = async () => {
+        const novel = await Novel.findByPk(data.novel_id)
+        if (!novel) return sendJson("Novel not found")
 
-        var res = Novel.findOne({ _id: novelId })
-            //.then((novel) => novel)
-            .catch((err) => {
-                console.log(termination(err.message))
-                throw err
-            })
-
-        return res
-
-    }
-
-    static async GetChapter(chapterId) {
-
-        var res = Chapter.findOne({ _id: chapterId })
-            //.then((chapter) => chapter)
-            .catch((err) => {
-                console.log(termination(err.message))
-                throw err
-            })
-        
-        return res
-
+        const chapter = await GetChapter(novel, data.chapter_id)
+        console.log(chapter ? chapter.id: "chapter not found")
+        if (!chapter && data.chapter_id === -1) return ScrapeRoot(novel)
+        else if (chapter) return ScrapeChapter(chapter, data.limit)
     }
 
 
 
-    static GetRules(url) {
-        return raws.find(raw => {
-            var a = urlTool.parse(raw.url)
-            var b = urlTool.parse(url)
 
-            return a.hostname == b.hostname
-        });
-    }
-
-    static Init(novelId, chapterId) {
-        console.log("init", novelId, chapterId)
-        mongoose.connect(global.ServerConf.database, global.ServerConf.db_options)
-        const db = mongoose.connection
-
-        db.once('disconnected', function () {
-            console.log(disconnected(`Scraper connection is disconnected`),
-                mongoose.connection.readyState);
-        });
-
-        db.once('open', () => {
-            let n = this.GetNovel(novelId)
-            let c = this.GetChapter(chapterId)
-            n.then((novel) => {
-                if (chapterId == -1)
-                    this.ParseRoot(novel)
-                    .finally(() => mongoose.disconnect())
-                else
-                    c.then((chapter) => this.ParseChapter(chapter))
-                console.log("exit db.once")
-            })
+    const ScrapeRoot = async (novel) => {
+        // get the parser template for this website
+        const raw = await GetRaw(novel.raw_url)
+        if (!raw) return sendJson(`Parser template not found for ${novel.raw_url}`)
 
 
-        });
+        // parse the DOM
+        let $ = await ReadDom(novel.raw_url)
+        let image = $(raw.root.image_url).attr('src')
+        let desc = htmlToText.fromString($(raw.root.description).html())
 
-    }
+        // if raw.root exists presume that novel name and chapter-list are on separate page
+        if (raw.root.catalog)
+            $ = await ReadDom(urlTool.resolve(
+                novel.raw_url, $(raw.root.catalog).attr("href")))
+        // parse the URL for the first chapter
+        let next = $(raw.root.chapters).attr("href")
+        next = urlTool.resolve(novel.raw_url, next)
 
-    static ParseRoot(novel) {
-        
-        return new Promise((resolve, reject) => {
-        const raw = this.GetRules(novel.raw_url)
-        console.log(raw)
-        if (!raw) return false
-
-        
-
-        readability.read(novel.raw_url, async function (err, $$) {
-            if (err) { throw err }
-            // switch to cheerio after fixing encoding.
-            let $ = cheerio.load($$("html").html(), { decodeEntities: false });
+        // check the chapter URL against regex
+        let pattern = new RegExp(raw.regex, "i")
+        if (next.match(pattern))
+            Chapter.findOrCreate({
+                where: { novel_id: novel.id, url: next }
+            }).then(([chapter, created]) => {
+                if (!created) throw { "msg": "Initial chapter already exists" }
 
 
-            let image = $(raw.root.image_url).attr('src')
-            let desc = htmlToText.fromString($(raw.root.description).html())
-            let next = $(raw.root.chapters).attr("href")
-            
-
-            const GetNext = new Promise((resolve, reject) => {
-                if (raw.root.catalog) {
-                    var tmpUrl = urlTool.resolve(novel.raw_url, $(raw.root.catalog).attr("href"))
-                    readability.read(tmpUrl, async function (err, $$$) {
-                        $ = cheerio.load($$$("html").html(), { decodeEntities: false });
-                        next = $(raw.root.chapters).attr("href")
-                        resolve(next)
-
-                    })
-                }
-                else{
-                    resolve(next)
-                }
-            })
-
-            next = await GetNext
-
-            next = urlTool.resolve(novel.raw_url, next)
-            console.log(next)
-            const CreateChapter = await Chapter.findOne({
-                novelId: novel._id,
-                type: 'raw',
-                url: next
-            }).then((chapter) => {
-                if(chapter) throw { "error": "already exists"}
-                console.log("creating")
-                    Chapter.create({
-                        novelId: novel._id,
-                        url: next
-                    }).then((chap) => console.log("create chapter no catalog"));
-            }).catch((err) => console.log(err)).finally(()=>{
+                // initialize the descriptions if chapter was created
                 novel.image_url = image
                 novel.description = novel.description || desc
                 novel.save()
-                console.log("save novel")
-            })
+
+                sendJson({ command: "reload_chapters", msg: "Novel initialized. Reloading chapters" })
+            }).catch((err) => sendJson(err))
+    }
+
+    const ScrapeChapter = async (chapter, limit = 5) => {
+        console.log(limit, "scrape chapter", chapter.url)
+         // get the parser template for this website
+        const raw = await GetRaw(chapter.url)
+        if (!raw) return sendJson(`Parser template not found for ${chapter.url}`)
+
+        // parse the DOM
+        let $ = await ReadDom(chapter.url)
+
+        let title = htmlToText.fromString($(raw.title).html())
+        let content = htmlToText.fromString($(raw.content).html())
+        let next = urlTool.resolve(chapter.url, $(raw.next).attr("href"))
+        let pattern = new RegExp(raw.regex, "i")
+
+        chapter.raw = {
+            title: title,
+            content: content,
+            next: next
+        }
+        chapter.save()
+
+        // check if the next chapter matches the regex
+        if (!next.match(pattern)) return sendJson(`Regex for next chapter doesn't match ${next}`)
+
+        Chapter.findOrCreate({
+            where: { novel_id: chapter.novel_id, url: next }
+        }).then(([chapter, created]) => {
+            if(created) sendJson({ command: "reload_chapters", msg: `Added new chapter ${next} (+${limit})` })
+            if(limit > 0) // delay the parsing speed to avoid issues with being detected
+                setTimeout(()=> ScrapeChapter(chapter, --limit), 1000)
+        }).catch((err) => sendJson(err))
+
+
             
-            CreateChapter
-
-        
-            resolve(true)
-        });
-    });
-}
-
-    static ParseChapter(chapter) {
-    console.log("parsing!", chapter)
-
-    return true
-    readability.read(chapter.url, function (err, $$) {
-        if (err) { throw err }
-        // switch to cheerio after fixing encoding.
-        const $ = cheerio.load($$("html").html(), { decodeEntities: false });
 
 
-        let title = htmlToText.fromString($(chapter.title).html())
-        let content = htmlToText.fromString($(chapter.content).html())
-        const next = $(chapter.next).attr("href")
+    };
 
 
-
-        let tmpStr = title + "\n\n" +
-            content +
-            "\n\n-------------------\n" +
-            next + "\n\n";
-
-        fs.appendFile(tmpFile, tmpStr, function (err) {
-            if (err) throw err;
-        });
-        count++;
-
-
-
-        if (count > max_parse) return true
-        ParseChapter({ ...chapter, url: urlTool.resolve(chapter.url, next) });
-    });
+    Init()
 
 }
-}
 
-module.exports = Scraper;
-
-
+module.exports = Scraper

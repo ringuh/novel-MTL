@@ -1,5 +1,3 @@
-const mongoose = require('mongoose');
-mongoose.Promise = require('bluebird'); // removes deprecated messages
 const chalk = require('chalk'); // colors
 const cheerioAdv = require('cheerio-advanced-selectors'); // adds :last, :eq(index), :first
 const cheerio = cheerioAdv.wrap(require('cheerio'));
@@ -7,15 +5,14 @@ const readability = require('node-readability-cheerio')
 const htmlToText = require('html-to-text');
 const urlTool = require('url')
 
-const connected = chalk.bold.cyan;
-const error = chalk.bold.yellow;
-const disconnected = chalk.bold.red;
-const termination = chalk.bold.magenta;
+const cyan = chalk.bold.cyan;
+const yellow = chalk.bold.yellow;
+const red = chalk.bold.red;
+const magenta = chalk.bold.magenta;
 
-const Raw = require("../models/raw.model")
-const Novel = require("../models/novel.model")
-const Chapter = require("../models/chapter.model")
+const { Novel, Chapter, Raw } = require("../models")
 
+console.log("in scraper")
 const raws = [{
     url: "https://www.lewenxiaoshuo.com/books/xinhunwuai_tizuiqianqi/34622958.html",
     next: ".bottem1>a:last",
