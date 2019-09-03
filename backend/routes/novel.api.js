@@ -8,7 +8,7 @@ router.use(require('express').json())
 
 
 const { cyan, yellow, red, blue } = chalk.bold;
-const { Novel, Chapter } = require('../models')
+const { Novel, Chapter, Sequelize } = require('../models')
 
 
 router.get("/", (req, res) => {
@@ -83,13 +83,38 @@ router.route("/:id/chapter")
 
     Chapter.findAll({
       where: { novel_id: req.params.id },
-      attributes: ["id", "novel_id", "url", "title", "updatedAt", "createdAt"]
+      attributes: ["id", "novel_id", "order", "url", "title", "updatedAt", "createdAt"],
+      order: [["order"], ['id']]
     }).then((chapters) => {
       return res.json(chapters)
     })
       .catch((err) => {
         return res.json({ error: err.message })
       })
+  }).post(function (req, res, next) {
+    console.log("/chapter post/", req.body, req.params)
+
+    let query = {
+      where: {
+        novel_id: req.params.id
+      },
+      attributes: ["id", "novel_id", "order", "url", "title", "updatedAt", "createdAt"],
+      order: [["order"], ['id']]
+    }
+    if (req.body.translator){
+      if(!req.body.force) query.where[req.body.translator] = null
+      query.where.raw = { [Sequelize.Op.ne]: null }
+    }
+    if (req.body.chapter_id > 0) query.where.id = req.body.chapter_id
+    else if (req.body.limit) query.limit = req.body.limit
+    console.log(query)
+    Chapter.findAll(query).then((chapters) => {
+      return res.json(chapters)
+    })
+      .catch((err) => {
+        return res.json({ error: err.message })
+      })
+
   });
 
 
@@ -107,18 +132,22 @@ router.route(["/:novel_id/chapter/:chapter_id"])
       return res.json({ error: err.message })
     })
 
-  }).post(function (req, res, next){
-    console.log("post req", req.body)
+  }).post(function (req, res, next) {
+    //console.log("post req", req.body)
     Chapter.findOne({
       where: { id: parseInt(req.params.chapter_id) },
     }).then((chapter) => {
-      
+      if (req.body.translator) {
+        chapter[req.body.translator] = req.body.content
+        chapter.save().then((chap) => res.json({
+          msg: `Saved ${chapter.id} at ${chapter.url}`, chapter_id: chapter.id
+        }))
+      }
+      else throw { message: "Did nothing" }
     }).catch((err) => {
       console.log(red(err))
       return res.json({ error: err.message })
     })
-
-    return res.send("hei")
   });
 
 

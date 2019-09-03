@@ -31,7 +31,7 @@ module.exports = function (seq, type) {
 			trim: true
 		}, // URL to the book
 		description: {
-			type: type.STRING,
+			type: type.TEXT,
 			validate: {
 				len: [0,500]
 			},

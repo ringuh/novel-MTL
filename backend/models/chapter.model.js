@@ -15,18 +15,10 @@ module.exports = (sequelize, type) => {
         },
         order: { type: type.INTEGER },
         raw: { type: type.JSON },
-        title: {
-            type: type.STRING,
-        },
-        sogou: {
-            type: type.STRING,
-        },
-        baidu: {
-            type: type.STRING,
-        },
-        proofread: {
-            type: type.STRING,
-        }
+        title: { type: type.STRING },
+        sogou: { type: type.JSON },
+        baidu: { type: type.JSON },
+        proofread: { type: type.JSON },
     }, {
             timestamps: true,
         });

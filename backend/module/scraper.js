@@ -114,7 +114,6 @@ const Scraper = async (data, connection) => {
                 novel.image_url = image
                 novel.description = novel.description || desc
                 novel.save()
-
                 sendJson({ command: "reload_chapters", msg: "Novel initialized. Reloading chapters" })
             }).catch((err) => sendJson(err))
     }
@@ -132,14 +131,14 @@ const Scraper = async (data, connection) => {
         let content = htmlToText.fromString($(raw.content).html())
         let next = urlTool.resolve(chapter.url, $(raw.next).attr("href"))
         let pattern = new RegExp(raw.regex, "i")
-
+        
         chapter.raw = {
             title: title,
             content: content,
             next: next
         }
-        chapter.save()
-
+        await chapter.save()
+        
         // check if the next chapter matches the regex
         if (!next.match(pattern)) return sendJson(`Regex for next chapter doesn't match ${next}`)
 
@@ -147,7 +146,7 @@ const Scraper = async (data, connection) => {
             where: { novel_id: chapter.novel_id, url: next }
         }).then(([chapter, created]) => {
             if(created) sendJson({ command: "reload_chapters", msg: `Added new chapter ${next} (+${limit})` })
-            if(limit > 0) // delay the parsing speed to avoid issues with being detected
+            if(limit > 1) // delay the parsing speed to avoid issues with being detected
                 setTimeout(()=> ScrapeChapter(chapter, --limit), 1000)
         }).catch((err) => sendJson(err))
 
