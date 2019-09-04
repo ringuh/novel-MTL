@@ -11,7 +11,7 @@
 
 (function() {
     'use strict';
-    
+
     const target = document.querySelector('textarea')
     const transBtn = document.getElementById("translate-button");
     var tbc = true;
@@ -62,6 +62,7 @@
         if(chapters.length === index || !tbc)
             return PrintConsole(`Finished translating`)
         //console.log("handle chapters", index, chapters[index])
+        target.value = null
         var chap = chapters[index]
 
 
@@ -74,22 +75,16 @@
             //console.log("handling", j, "of", parts.length)
             if (j == parts.length){
 
-                var title = translatedText[0]
-
+                var title = translatedText[0].trim()
                 translatedText.shift()
                 var textContent = translatedText.join("\n")
 
-                //var pattern = /(?<=\+\-\+\-)(.*)(?=\-\+\-\+)/i
-                //title = textContent.match(pattern)
-                //title = title ? title[0] : null
-                //if(title) textContent = textContent.slice(textContent.indexOf("-+-+\n")+4)
-
-                var d = JSON.stringify({ translator: translator, content: { title: title.trim(), content: textContent.trim() } })
-
-                var xhttp = new XMLHttpRequest();
+                var d = JSON.stringify({ translator: translator, content: { title: title, content: textContent.trim() } })
+                console.log(textContent)
+                const xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function() {
                     if (this.readyState == 4 && this.status == 200) {
-                        console.log("xhttp response", this.responseText)
+                        //console.log("xhttp response", this.responseText)
                         PrintConsole(`Translated chapter ${chap.id} @ ${chap.url}`)
                         HandleChapter(chapters, ++index)
                     }
@@ -104,15 +99,19 @@
             }
 
             const callback = function (mutationsList, observer) {
-                //console.log("joku mutaatio", mutationsList)
+                
                 let cont = []
                 $(".target-output").each(function(){ cont.push($(this).text())})
-                cont = cont.join("\n")
-
+                // removing that random chinese
+                cont.shift()
+                cont = cont.join("\n").trim()
+                console.log("Käännös:", cont)
                 // there wait for the observer to really update
-                if(translatedText.includes(cont)) return true
+                if(cont.length == 0 || translatedText.includes(cont)) return true
+
                 translatedText.push(cont)
 
+                $(".target-output").html("")
                 observer.disconnect();
                 HandleParts(parts, ++j)
             };
@@ -120,9 +119,10 @@
 
             const observer = new MutationObserver(callback);
             observer.observe(targetNode, config);
-
-            target.value = parts[j]
             
+            // adding some random chinese to force translation on baidu
+            target.value = `放心\n${parts[j]}`
+
             setTimeout(() => transBtn.click(), 500);
             //target.dispatchEvent(new Event('keyup'));
 
@@ -153,9 +153,9 @@
 
     var SplitTxt = (raw) => {
 
-        var limit = 1500
+        var limit = 1600
         var arr = raw.content.split("\n")
-        //arr.unshift(`+-+- ${raw.title} -+-+`)
+        //arr.unshift(raw.title ? raw.title: "缺少标题")
 
         var retArr = [raw.title ? raw.title : "缺少标题"]
         var partArr = []

@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Switch, Route } from 'react-router-dom';
-
+import CssBaseline from '@material-ui/core/CssBaseline';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import MainPage from './components/main_page'
@@ -16,6 +16,7 @@ import Container from '@material-ui/core/Container'
 function App() {
   return (
     <Container className="App" maxWidth="lg">
+      <CssBaseline/>
       <Header/>
       
       <h3>Tervetuloa</h3>

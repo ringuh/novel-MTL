@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
-import { BrowserRouter, Switch, Route, Link, Redirect } from 'react-router-dom';
-import axios from 'axios';
+import { Redirect } from 'react-router-dom';
+//import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import {
-    Box, Container, Grid, Button,
-    Paper, Typography, TextField, ButtonGroup,
+    Box, Container,  Button,
+    Typography, TextField, 
     List, ListItem, Divider, ListItemText
 } from '@material-ui/core'
 import LinearProgress from '@material-ui/core/LinearProgress';
-import CircularProgress from '@material-ui/core/CircularProgress';
+//import CircularProgress from '@material-ui/core/CircularProgress';
 import CloudDownloadIcon from '@material-ui/icons/CloudDownloadOutlined';
 
 
@@ -98,7 +98,7 @@ class ChapterList extends Component {
                 
                 this.writeConsole(json.msg)
 
-                if(json.command == "reload_chapters")
+                if(json.command === "reload_chapters")
                     this.fetchChapters()
 
             } catch (e) {
@@ -133,8 +133,6 @@ class ChapterList extends Component {
 
 
     render() {
-        const { classes } = this.props;
-
         if (!this.state.chapters)
             return (
                 <LinearProgress color="secondary" />
@@ -185,10 +183,10 @@ class ChapterList extends Component {
                 <Box>
                     <List className="">
                         {this.state.chapters.map((chapter) => (
-                            <a href={`${this.props.match.path}/${chapter.id}`} key={chapter.id}>
+                            <a href={`${this.props.match.url}/chapter/${chapter.id}`} key={chapter.id}>
                                 <ListItem alignItems="flex-start" >
                                     <ListItemText
-                                        primary={chapter.url}
+                                        primary={`${chapter.order}. ${chapter.title}`}
                                         secondary={
                                             <React.Fragment>
                                                 <Typography
@@ -199,10 +197,19 @@ class ChapterList extends Component {
                                                 >
                                                     {chapter.content}
                                                 </Typography>
-                                                {" — I'll be in your neighborhood doing errands this…"}
+                                                {chapter.url}
                                             </React.Fragment>
                                         }
                                     />
+                                    <ListItemText
+                                        secondary={chapter.sogou ? chapter.sogou.content.length: 'sogou'}>
+                                    </ListItemText>
+                                    <ListItemText
+                                        secondary={chapter.baidu ? chapter.baidu.content.length: 'baidu'}>
+                                    </ListItemText>
+                                    <ListItemText
+                                        secondary={chapter.content ? chapter.baidu.content.length: 'baidu'}>
+                                    </ListItemText>
 
                                 </ListItem>
                                 <Divider variant="inset" component="li" />

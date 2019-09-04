@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import { BrowserRouter, Switch, Route, Link, Redirect } from 'react-router-dom';
+import { Route, Redirect } from 'react-router-dom';
 import axios from 'axios';
 import ChapterList from './chapter_list'
 import Button from '@material-ui/core/Button';
-import ReactCrop from 'react-image-crop';
+//import ReactCrop from 'react-image-crop';
 import { withStyles } from '@material-ui/core/styles';
 import 'react-image-crop/dist/ReactCrop.css';
 import TextField from '@material-ui/core/TextField';
@@ -11,8 +11,8 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import SaveIcon from '@material-ui/icons/Save';
 import EditIcon from '@material-ui/icons/Edit';
-import GetAppIcon from '@material-ui/icons/GetAppOutlined'
-import { Grid, Paper, Avatar, Box, Container } from '@material-ui/core';
+//import GetAppIcon from '@material-ui/icons/GetAppOutlined'
+import { Grid, Paper, Box, Container } from '@material-ui/core';
 
 
 

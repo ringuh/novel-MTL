@@ -74,7 +74,6 @@ const Scraper = async (data, connection) => {
         if (!novel) return sendJson("Novel not found")
 
         const chapter = await GetChapter(novel, data.chapter_id)
-        console.log(chapter ? chapter.id: "chapter not found")
         if (!chapter && data.chapter_id === -1) return ScrapeRoot(novel)
         else if (chapter) return ScrapeChapter(chapter, data.limit)
     }
@@ -118,7 +117,7 @@ const Scraper = async (data, connection) => {
             }).catch((err) => sendJson(err))
     }
 
-    const ScrapeChapter = async (chapter, limit = 5) => {
+    const ScrapeChapter = async (chapter, limit = 10) => {
         console.log(limit, "scrape chapter", chapter.url)
          // get the parser template for this website
         const raw = await GetRaw(chapter.url)
@@ -143,7 +142,8 @@ const Scraper = async (data, connection) => {
         if (!next.match(pattern)) return sendJson(`Regex for next chapter doesn't match ${next}`)
 
         Chapter.findOrCreate({
-            where: { novel_id: chapter.novel_id, url: next }
+            where: { novel_id: chapter.novel_id, url: next },
+            defaults: { order: chapter.order + 1 }
         }).then(([chapter, created]) => {
             if(created) sendJson({ command: "reload_chapters", msg: `Added new chapter ${next} (+${limit})` })
             if(limit > 1) // delay the parsing speed to avoid issues with being detected

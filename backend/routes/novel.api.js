@@ -36,18 +36,8 @@ router.route(["/create", "/:id"])
 
     if (req.body.id !== req.params.id)
       return res.json({ error: "/:id the path doesn't match '_id' of post" })
-    console.log("create now")
-    console.log(req.params, req.body)
+    console.log("create POST", req.params, req.body)
 
-    let where = {
-      where: {},
-      defaults: {
-        name: req.body.name,
-        decription: req.body.decription,
-        raw_directory: req.body.raw_directory,
-        raw_url: req.body.raw_url,
-      }
-    }
     if (req.params.id)
       Novel.findByPk(req.params.id).then((novel) => {
         if (!novel)
@@ -101,13 +91,13 @@ router.route("/:id/chapter")
       attributes: ["id", "novel_id", "order", "url", "title", "updatedAt", "createdAt"],
       order: [["order"], ['id']]
     }
-    if (req.body.translator){
-      if(!req.body.force) query.where[req.body.translator] = null
+    if (req.body.translator) {
+      //if (!req.body.force) query.where[req.body.translator] = null
       query.where.raw = { [Sequelize.Op.ne]: null }
     }
     if (req.body.chapter_id > 0) query.where.id = req.body.chapter_id
     else if (req.body.limit) query.limit = req.body.limit
-    console.log(query)
+    
     Chapter.findAll(query).then((chapters) => {
       return res.json(chapters)
     })
@@ -120,12 +110,14 @@ router.route("/:id/chapter")
 
 router.route(["/:novel_id/chapter/:chapter_id"])
   .get(function (req, res, next) {
-
-    console.log("get", req.body, req.params)
-    Chapter.findOne({
+    console.log("chapter get", req.body, req.params)
+    let queryStr = {
       where: { id: parseInt(req.params.chapter_id) },
-      attributes: ['id', 'url', 'raw']
-    }).then((chapter) => {
+    }
+    if (req.body.attributes)
+      queryStr.attributes = req.body.attributes
+    
+    Chapter.findOne(queryStr).then((chapter) => {
       return res.json(chapter)
     }).catch((err) => {
       console.log(red(err))
@@ -133,7 +125,7 @@ router.route(["/:novel_id/chapter/:chapter_id"])
     })
 
   }).post(function (req, res, next) {
-    //console.log("post req", req.body)
+    console.log("post req", req.body, req.params)
     Chapter.findOne({
       where: { id: parseInt(req.params.chapter_id) },
     }).then((chapter) => {

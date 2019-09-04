@@ -149,7 +149,7 @@
 
     var SplitTxt = (raw) => {
 
-        var limit = 1500
+        var limit = 3200
         var arr = raw.content.split("\n")
         //arr.unshift(`+-+- ${raw.title} -+-+`)
 

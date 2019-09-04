@@ -13,12 +13,13 @@ module.exports = (sequelize, type) => {
                 isUrl: true
             }
         },
-        order: { type: type.INTEGER },
+        order: { type: type.INTEGER, defaultValue: 1 },
         raw: { type: type.JSON },
-        title: { type: type.STRING },
         sogou: { type: type.JSON },
         baidu: { type: type.JSON },
-        proofread: { type: type.JSON },
+
+        title: { type: type.STRING },
+        content: { type: type.TEXT },
     }, {
             timestamps: true,
         });
