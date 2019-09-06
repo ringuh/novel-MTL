@@ -2,12 +2,18 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import LinearProgress from '@material-ui/core/LinearProgress';
-import { Grid, GridList, GridListTile, Paper, Avatar, Link, Box, Container } from '@material-ui/core';
-import Grow from '@material-ui/core/Grow';
+import { Grid, GridList, GridListTile, Button, Avatar, Link, Box, Container } from '@material-ui/core';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import TextField from '@material-ui/core/TextField';
 import { BottomNavigation, BottomNavigationAction } from '@material-ui/core';
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import ListIcon from '@material-ui/icons/ListOutlined';
 import SettingsIcon from '@material-ui/icons/SettingsOutlined';
+import TranslateIcon from '@material-ui/icons/Translate';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
@@ -21,7 +27,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import Switch from '@material-ui/core/Switch';
 import ListSubheader from '@material-ui/core/ListSubheader';
-import ChapterDrawer from './chapter_drawer'
+import ChapterDrawer from './drawer'
 
 const styles = {
     link: {
@@ -91,7 +97,11 @@ class ChapterBottomNav extends Component {
                         icon={<ListIcon />}
                         onClick={this.toggleState('chapterDrawer', true)} />
                     <BottomNavigationAction label="Favorites" value="favorites" icon={<FavoriteIcon />} />
-                    <BottomNavigationAction label="Nearby" value="nearby" icon={<FavoriteIcon />} />
+                    <BottomNavigationAction icon={<TranslateIcon />}
+                        label="Nearby"
+                        value="nearby"
+                        onClick={this.toggleState('term', !this.state.smth)}
+                    />
                     <BottomNavigationAction icon={<SettingsIcon />}
                         label="Folder"
                         value="folder"
@@ -101,46 +111,50 @@ class ChapterBottomNav extends Component {
                 </BottomNavigation>
 
 
-                
 
-                <ExpansionPanel expanded={this.state.smth} onChange={true}>
-                    <ExpansionPanelSummary
-                        expandIcon={<ExpandMoreIcon />}
-                        aria-controls="panel1bh-content"
-                        id="panel1bh-header"
-                    >
-                        <Typography >General settings</Typography>
-                        <Typography >I am an expansion panel</Typography>
-                    </ExpansionPanelSummary>
-                    <ExpansionPanelDetails>
-                        <Typography>
-                            Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat. Aliquam eget
-                            maximus est, id dignissim quam.
-          </Typography>
-                    </ExpansionPanelDetails>
-                </ExpansionPanel>
-
-                <Grow className={this.state.smth ? '' : classes.hide} in={this.state.smth}>
-                    <List elevation={4}>
-                        <ListSubheader>Settings</ListSubheader>
-                        <ListItem>
-                            <ListItemText id="switch-list-label-wifi" primary="Wi-Fi" />
-                            <ListItemSecondaryAction>
-                                <Switch
-                                    edge="end"
-                                    //onChange={handleToggle('wifi')}
-                                    checked={true}
-                                    inputProps={{ 'aria-labelledby': 'switch-list-label-wifi' }}
-                                />
-                            </ListItemSecondaryAction>
-                        </ListItem>
-                    </List>
-                </Grow>
+                <Dialog open={this.state.term} onClose={this.toggleState} aria-labelledby="form-dialog-title">
+                    <DialogTitle id="form-dialog-title">Add a new term</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            You can add a new <strong>english</strong> term to 
+                            replace some of the words used in machine translation.
+                            Terms do not effect saved <strong>raw</strong> or <strong>proofread</strong> text
+                        </DialogContentText>
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            id="name"
+                            label="Term to translate"
+                            placeholder="eg. tribulation"
+                            type="text"
+                            fullWidth
+                        />
+                        <Divider/>
+                        <TextField
+                            margin="dense"
+                            id="name"
+                            label="Translation"
+                            placeholder="eg. kill | dont kill"
+                            type="text"
+                            fullWidth
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={this.toggleState} color="primary">
+                            Cancel
+          </Button>
+                        <Button onClick={this.toggleState} color="primary">
+                            Add
+          </Button>
+                    </DialogActions>
+                </Dialog>
 
                 <ChapterDrawer chapter_id={this.state.id}
                     novel_id={this.state.novel_id}
                     open={this.state.chapterDrawer}
                     toggle={this.toggleState} />
+
+
             </Box>
         );
     }

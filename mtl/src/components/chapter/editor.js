@@ -19,33 +19,22 @@ import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
-import ChapterBottomNav from './chapter/chapter_bottom_nav'
+import ChapterBottomNav from './bottom_nav'
+import Paragraph from './paragraph'
 
 
-const styles = {    
-    col0: {
-        backgroundColor: 'red',
-        padding: '1em',
-    },
-    col1: {
-        backgroundColor: 'blue',
-        padding: '1em',
-    },
-    col2: {
-        backgroundColor: 'green',
-        padding: '1em',
-    },
-
+const styles = {
+    
     para: {
         marginBottom: '1em'
     },
-    
+
     bottom: {
         position: "sticky",
         bottom: "0px"
 
     }
-    
+
 };
 
 
@@ -88,7 +77,7 @@ class ChapterEditor extends Component {
         if (!this.state.id) return false
         fetch(`${this.props.match.url}`)
             .then(response => response.json())
-            .then(data => this.handlePara(data))
+            .then(data => this.editParagraphs(data))
             //.then(data => this.setState(data))
             .then(st => console.log(this.state))
 
@@ -100,22 +89,47 @@ class ChapterEditor extends Component {
         document.title = `set title fucksake`
     }
 
-    handlePara(json) {
+    editParagraphs(json) {
+        let max_paragraphs = 0
 
-        json.paragraphs = ['raw', 'baidu', 'sogou'].map(key => {
-            if (!json[key]) return ""
-            console.log(json[key])
+        const paragraphs = ['raw', 'proofread', 'baidu', 'sogou',].map(key => {
+            if (!json[key])
+                return { type: key, paragraphs: [] }
+            //do smth 
+
+            // get the content
             let ps = json[key].content.replace(/\n{2,}/g, '\n');
             ps = ps.split('\n')
             ps = ps.filter(el => el.trim() !== '')
-            return ps
+            // split content into paragraphs and remove double-spaces and empty parts
 
+            // record the max number of paragraphs
+            max_paragraphs = ps.length > max_paragraphs ? ps.length : max_paragraphs;
+
+            return { type: key, paragraphs: ps }
         })
+        json.paragraphs = []
+        for (var i = 0; i < max_paragraphs; ++i)
+            paragraphs.forEach((translation, index) => {
+                let p = {
+                    type: translation.type,
+                    content: translation.paragraphs[i] || null,
+                    row: i
+                }
+
+
+
+                json.paragraphs.push(p)
+               
+            })
+
+        console.log(json)
 
         this.setState(json)
+
     }
 
-    
+
 
 
     render() {
@@ -129,9 +143,7 @@ class ChapterEditor extends Component {
                 <LinearProgress color="secondary" />
             )
 
-
-        // the edit view
-        let gridColumns = 12 / this.state.paragraphs.length;
+        const gridSize = 12 / 4;
 
         return (
             <Container>
@@ -139,9 +151,20 @@ class ChapterEditor extends Component {
                 <a href={`${this.state.id - 1}`}>prev</a> -- <a href={`${this.state.id + 1}`}>next</a>
 
                 <Grid container spacing="{3}">
+                    {this.state.paragraphs.map((p, index) => {
+                        return <Paragraph key={index}
+                        md={gridSize}
+                        paragraph={p}
+                    ></Paragraph>
+                    })}
+                </Grid> */}
+
+
+
+                {/* <Grid container spacing="{3}">
                     {this.state.paragraphs[0].map((value, index) => {
                         return this.state.paragraphs.map((val, i) => {
-                            return <Grid className={classes[`col${i}`]}
+                            return <Grid className={classes[`col${i}`]+` warning`}
                                 item xs={12} md={gridColumns}
                             >
                                 {val[index]}
@@ -150,14 +173,14 @@ class ChapterEditor extends Component {
                         for (var i = 0; ++i; i < this.state.paragraphs.length)
                             return
                     })}
-                </Grid>
-                <ChapterBottomNav 
-                    novel_id={this.state.novel_id} 
+                </Grid> */}
+                <ChapterBottomNav
+                    novel_id={this.state.novel_id}
                     chapter_id={this.state.id} />
             </Container>
 
 
-                
+
         );
     }
 }

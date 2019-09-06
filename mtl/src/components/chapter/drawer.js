@@ -52,7 +52,8 @@ class ChapterDrawer extends Component {
     render() {
         const { classes } = this.props;
 
-
+        if(this.props.open == null)
+            return null
 
         return (
             <SwipeableDrawer

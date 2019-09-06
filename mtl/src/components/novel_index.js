@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Switch, Route } from 'react-router-dom';
 import NovelEditor from './novel_editor'
-import ChapterEditor from './chapter_editor'
+import ChapterEditor from './chapter/editor'
 import NovelList from './novel_list';
 
 class NovelIndex extends Component {

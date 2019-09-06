@@ -63,7 +63,13 @@ var createDB = async () => {
 		name: "农女要翻天：夫君，求压倒",
 		raw_url: "https://www.kenshu.cc/xiaoshuo/37805/",
 		description: null,
-	}]
+
+	},{
+	name: "妃要上天",
+	raw_url: "https://www.kenshu.cc/xiaoshuo/43495/",
+	description: null,
+	}
+]
 
 	const termList = [{
 		string: "robbed",
