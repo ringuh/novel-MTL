@@ -12,9 +12,13 @@ const sequelize = new Sequelize(
     global.config.db.pass,
     global.config.db.options)
 sequelizeTransforms(sequelize, {
-    slugify: (val, def) => slugify(val),
+    slugify: (val, def) => def.slugify ? slugify(val): val,
     cut: (val, def) => {
         return val ? val.toString().slice(0, def.cut): val
+    },
+    singlespace: (val, def) => {
+        if(!def.singlespace) return val
+        return val ? val.replace(/\n{2,}/g, '\n').replace(/ {2,}/g, ' '): val
     }
 });
 
@@ -53,8 +57,9 @@ const initDB = require('../createDatabase')
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
-const force = false
+const force = true
 db.sequelize.sync({ force: force, logging: false }).then(() => force ? initDB(): '')
+
 
 
 

@@ -7,14 +7,14 @@ const ServerConf = require('lodash').merge(config.development, environmentConfig
 //require database URL from properties file
 //var dbURL = require('./property').db;
 
-var { cyan, yellow, red, blue } = chalk.bold; 
+var { cyan, yellow, red, blue } = chalk.bold;
 
 
 var createDB = async () => {
-	
-	const { Raw, User, Novel } = require('./models')
 
-	
+	const { Raw, User, Novel, Term, Chapter, Content } = require('./models')
+
+
 
 	const raws = [{
 		url: "https://www.lewenxiaoshuo.com/books/xinhunwuai_tizuiqianqi/34622958.html",
@@ -28,7 +28,7 @@ var createDB = async () => {
 			catalog: null,
 			chapters: "#list > dl > dd > a"
 		}
-	},{
+	}, {
 		url: "https://www.kenshu.cc/xiaoshuo/30192/75481194/",
 		next: ".articlebtn>a:eq(3)",
 		title: ".article-title",
@@ -64,40 +64,67 @@ var createDB = async () => {
 		raw_url: "https://www.kenshu.cc/xiaoshuo/37805/",
 		description: null,
 
-	},{
-	name: "妃要上天",
-	raw_url: "https://www.kenshu.cc/xiaoshuo/43495/",
-	description: null,
+	}, {
+		name: "妃要上天",
+		raw_url: "https://www.kenshu.cc/xiaoshuo/43495/",
+		description: null,
 	}
-]
+	]
 
 	const termList = [{
-		string: "robbed",
-		prompt: true,
-		terms: [{ value: "killed" }, { value: "attacked" }]
+		from: "robbed",
+		to: "killed | attacked"
 	}]
 
 	raws.forEach((i) => {
 		Raw.create((i))
 	});
-	
+
 	userList.forEach((i) => {
 		User.create(i)
 	});
-	
+
 	novelList.forEach((i) => {
 		var n = Novel.create((i)).then((nov) => {
-			//console.log(nov.name)
+			Chapter.create(
+				{
+					novel_id: nov.id,
+					url: "https://google.com",
+				}
+			).then(chap => {
+				//return true
+				Content.create({
+					type: "RAW",
+					title: "titteli",
+					chapter_id: chap.id,
+					content: "lorem                ipsum \n\n\n kolme väliä \n\n\n\n neljä väliä"
+				}).then()
+			})
 		})
 
 	});
 
-	return true
 	termList.forEach((i) => {
-		Term.create((i)).then((term) => console.log("term created"))
+		Term.create((i)).then((term) => {
+			//console.log("term created")
+		})
 	});
 
-
+	setTimeout(() => {
+		
+		Chapter.findByPk(1, { include: ['contents', 'novel']}).then(chap => {
+			//console.log("chapter:", chap.id)
+			console.log(chap.contents[0].id)
+			console.log(chap.novel.id)
+			
+		}).then(()=>{
+			Content.findByPk(1, { include: ['chapter']}).then(chap => {
+				//console.log("chapter:", chap.id)
+				console.log(chap.chapter.id)
+			})
+		})
+	}, 2000)
+	
 };
 
 module.exports = createDB

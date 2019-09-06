@@ -47,7 +47,13 @@ module.exports = function (seq, type) {
 		Novel.belongsTo(models.User, {
 			//onDelete: "CASCADE",
 			foreignKey: 'user_id',
-		})
+		}),
+		
+		Novel.hasMany(models.Chapter, {
+			as: 'chapters',
+            foreignKey: 'novel_id',
+            allowNull: false
+        })
 	};
 	
 	return Novel

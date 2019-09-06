@@ -23,7 +23,15 @@ module.exports = function (seq, type) {
   }, { timestamps: true });
 
   User.associate = function (models) {
-    //User.hasMany(models.Novel, { as: 'Novels' });
+    User.hasMany(models.Novel, {
+      as: 'novels',
+      foreignKey: 'user_id',
+    })
+
+    User.hasMany(models.Term, {
+      as: 'terms',
+      foreignKey: 'user_id',
+    })
   };
 
   return User
