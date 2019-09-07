@@ -17,8 +17,8 @@ sequelizeTransforms(sequelize, {
         return val ? val.toString().slice(0, def.cut): val
     },
     singlespace: (val, def) => {
-        if(!def.singlespace) return val
-        return val ? val.replace(/\n{2,}/g, '\n').replace(/ {2,}/g, ' '): val
+        if(!def.singlespace || !val) return val
+        return val.replace(/\n{2,}/g, '\n').replace(/ {2,}/g, ' ')
     }
 });
 
@@ -57,7 +57,7 @@ const initDB = require('../createDatabase')
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
-const force = true
+const force = false
 db.sequelize.sync({ force: force, logging: false }).then(() => force ? initDB(): '')
 
 

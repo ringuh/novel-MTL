@@ -9,7 +9,7 @@
 // @require http://code.jquery.com/jquery-3.4.1.min.js
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
     const target = document.querySelector('textarea')
     var tbc = true;
@@ -27,7 +27,7 @@
     $("#box-logo").append(UI);
     $("#mtl_command").val('{"url":"http://localhost:3001/novel/1/chapter","chapter_id":-1,"limit":100}')
 
-    const PrintConsole = (str) => $("#mtl_console").val(str + "\n"+ $("#mtl_console").val())
+    const PrintConsole = (str) => $("#mtl_console").val(str + "\n" + $("#mtl_console").val())
     $("#mtl_stop").click(() => {
         PrintConsole("Stop activated")
         tbc = false
@@ -38,19 +38,25 @@
 
         var json = JSON.parse($("#mtl_command").val())
         server = json.url
+        delete json.url
         json.translator = translator
-        
+        json.includes = "raw"
+
+
+        var url = new URL(server)
+        url.search = new URLSearchParams(json).toString();
+
 
         var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
+        xhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                console.log("xhttp response", this.responseText)
                 chapters = JSON.parse(this.responseText)
+                console.log("chapterlist", chapters)
                 PrintConsole(`Found ${chapters.length} chapters to translate`)
                 HandleChapter(chapters, 0)
             }
         };
-        xhttp.open("POST", server, true);
+        xhttp.open("GET", url, true);
         xhttp.setRequestHeader("Content-type", "application/json");
         xhttp.send(JSON.stringify(json));
 
@@ -59,7 +65,7 @@
     });
 
     var HandleChapter = (chapters, index = 0) => {
-        if(chapters.length === index || !tbc)
+        if (chapters.length === index || !tbc)
             return PrintConsole(`Finished translating`)
         //console.log("handle chapters", index, chapters[index])
         var chap = chapters[index]
@@ -72,25 +78,19 @@
 
         var HandleParts = (parts, j = 0) => {
             //console.log("handling", j, "of", parts.length)
-            if (j == parts.length){
-               
-                var title = translatedText[0]
+            if (j == parts.length) {
 
+                var title = translatedText[0]
                 translatedText.shift()
                 var textContent = translatedText.join("\n")
 
-                //var pattern = /(?<=\+\-\+\-)(.*)(?=\-\+\-\+)/i
-                //title = textContent.match(pattern)
-                //title = title ? title[0] : null
-                //if(title) textContent = textContent.slice(textContent.indexOf("-+-+\n")+4)
-
                 var d = JSON.stringify({ translator: translator, content: { title: title.trim(), content: textContent.trim() } })
-                
+
 
                 var xhttp = new XMLHttpRequest();
-                xhttp.onreadystatechange = function() {
+                xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
-                        console.log("xhttp response", this.responseText)
+                        console.log("translation response", JSON.parse(this.responseText))
                         PrintConsole(`Translated chapter ${chap.id} @ ${chap.url}`)
                         HandleChapter(chapters, ++index)
                     }
@@ -108,7 +108,7 @@
                 //console.log("joku mutaatio", mutationsList)
                 const cont = $("#translation-to").text()
                 // there wait for the observer to really update
-                if(translatedText.includes(cont)) return true
+                if (translatedText.includes(cont)) return true
                 translatedText.push(cont)
 
                 observer.disconnect();
@@ -125,31 +125,29 @@
 
             //
         }
-
-
-        $.ajax({
-                url: server + "/" + chap.id,
-                success: function (result) {
-                    console.log("ajax", result)
-
-                    if (result.raw && result.raw.content.length > 0) {
-                        var parts = SplitTxt(result.raw);
-                        HandleParts(parts)
-                    }
-
-                },
-                type: 'get',
-                async: false
-            });
-
-
-
-
+        console.log(chap.id)
+        //var d = JSON.stringify({  })
+        var url = new URL(`${server}/${chap.id}`)
+        //url.search = new URLSearchParams(json).toString();
+        var xhttp2 = new XMLHttpRequest();
+        xhttp2.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let result = JSON.parse(this.responseText)
+                console.log("chapter data", result)
+                if (result.raw && result.raw.content.length > 0) {
+                    var parts = SplitTxt(result.raw);
+                    HandleParts(parts)
+                }
+            };
+        }
+        xhttp2.open("GET", url, true);
+        xhttp2.setRequestHeader("Content-type", "application/json");
+        xhttp2.send("");
     };
 
     var SplitTxt = (raw) => {
 
-        var limit = 3200
+        var limit = 1500
         var arr = raw.content.split("\n")
         //arr.unshift(`+-+- ${raw.title} -+-+`)
 

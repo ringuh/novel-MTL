@@ -6,6 +6,14 @@ module.exports = (sequelize, type) => {
             autoIncrement: true,
             primaryKey: true,
         },
+       chapter_id: {
+            type: type.INTEGER,
+            references: {
+              model: 'Chapters',
+              key: 'id'
+            },
+            allowNull: false
+        },
         type: { 
             type: type.STRING, 
             allowNull: false,
@@ -27,7 +35,15 @@ module.exports = (sequelize, type) => {
             timestamps: true,
         });
 
+    Content.prototype.toJson = function() {
+        let ret = this.dataValues
+            
+           
+        return ret
+    }
+
     Content.associate = models => {
+        
         Content.belongsTo(models.Chapter, {
             onDelete: "CASCADE",
             foreignKey: 'chapter_id',

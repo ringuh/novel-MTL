@@ -51,7 +51,7 @@ class ChapterList extends Component {
     }
 
     handleChange(e) {
-        //this.setState({ chapterId: e.target.value })
+        //this.setState({ chapter_id: e.target.value })
 
 
     }
@@ -109,12 +109,13 @@ class ChapterList extends Component {
         };
     }
 
-    fetchChapters() {
-        fetch(`/novel/${this.state.id}/chapter`, { chapter: this.state.chapterId })
+    fetchChapters() {        
+        fetch(`/novel/${this.state.id}/chapter?content_length=paragraphs`)
             .then(response => response.json())
+            .then(data => { console.log(data); return data })
             .then(data => this.setState({
                 chapters: data,
-                chapterId: data.length > 0 ? data[data.length - 1].id : this.state.chapterId
+                chapter_id: data.length > 0 ? data[data.length - 1].id : this.state.chapter_id
             }))//.then(()=> console.log(this.state.chapters))
     }
 
@@ -181,7 +182,7 @@ class ChapterList extends Component {
 
 
                 <Box>
-                    <List className="">
+                    <List>
                         {this.state.chapters.map((chapter) => (
                             <a href={`${this.props.match.url}/chapter/${chapter.id}`} key={chapter.id}>
                                 <ListItem alignItems="flex-start" >
@@ -202,13 +203,16 @@ class ChapterList extends Component {
                                         }
                                     />
                                     <ListItemText
-                                        secondary={chapter.sogou ? chapter.sogou.content.length: 'sogou'}>
+                                        secondary={chapter.raw ? chapter.raw: 'raw'}>
                                     </ListItemText>
                                     <ListItemText
-                                        secondary={chapter.baidu ? chapter.baidu.content.length: 'baidu'}>
+                                        secondary={chapter.proofread ? chapter.proofread: 'proofread'}>
                                     </ListItemText>
                                     <ListItemText
-                                        secondary={chapter.content ? chapter.baidu.content.length: 'baidu'}>
+                                        secondary={chapter.baidu ? chapter.baidu: 'baidu'}>
+                                    </ListItemText>
+                                    <ListItemText
+                                        secondary={chapter.content ? chapter.sogou: 'sogou'}>
                                     </ListItemText>
 
                                 </ListItem>

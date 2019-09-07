@@ -8,11 +8,15 @@ router.use(require('express').json())
 
 
 const { cyan, yellow, red, blue } = chalk.bold;
-const { Novel, Chapter, Sequelize } = require('../models')
+const { Novel, Chapter, Content, Sequelize } = require('../models')
 
+const capitalize = (s) => {
+  if (typeof s !== 'string') return ''
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
 
 router.get("/", (req, res) => {
-
+  console.log(req.method, req.url, req.body, req.params, req.query)
   Novel.findAll({
     attributes: ["id", "name", "image_url", "description"],
     order: ['name']
@@ -26,6 +30,7 @@ router.get("/", (req, res) => {
 
 router.route(["/create", "/:id"])
   .get(function (req, res, next) {
+    console.log(req.method, req.url, req.body, req.params, req.query)
     Novel.findOne({ where: { id: req.params.id } })
       .then(novel => res.json(novel))
       .catch(err => {
@@ -36,7 +41,7 @@ router.route(["/create", "/:id"])
 
     if (req.body.id !== req.params.id)
       return res.json({ error: "/:id the path doesn't match '_id' of post" })
-    console.log("create POST", req.params, req.body)
+    console.log(req.method, req.url, req.body, req.params, req.query)
 
     if (req.params.id)
       Novel.findByPk(req.params.id).then((novel) => {
@@ -69,73 +74,87 @@ router.route(["/create", "/:id"])
 
 router.route("/:id/chapter")
   .get(function (req, res, next) {
-    console.log("/chapter/", req.body, req.params)
-
-    Chapter.findAll({
-      where: { novel_id: req.params.id },
-      attributes: ["id", "novel_id", "order", "url", "title", "updatedAt", "createdAt"],
-      order: [["order"], ['id']]
-    }).then((chapters) => {
-      return res.json(chapters)
-    })
-      .catch((err) => {
-        return res.json({ error: err.message })
-      })
-  }).post(function (req, res, next) {
-    console.log("/chapter post/", req.body, req.params)
+    console.log(req.method, req.url, req.body, req.params, req.query)
 
     let query = {
-      where: {
-        novel_id: req.params.id
-      },
-      attributes: ["id", "novel_id", "order", "url", "title", "updatedAt", "createdAt"],
-      order: [["order"], ['id']]
+      where: { novel_id: req.params.id },
+      attributes: ["id", "novel_id", "order", "url", "updatedAt", "createdAt"],
+      order: [["order"], ['id']],
+      include: [ // dont offer RAWless chapters for translators
+        { model: Content, as: 'raw', required: req.query.translator ? true : false },
+        { model: Content, as: 'baidu', required: false },
+        { model: Content, as: 'sogou', required: false },
+        { model: Content, as: 'proofread', required: false },
+      ]
     }
-    if (req.body.translator) {
-      //if (!req.body.force) query.where[req.body.translator] = null
-      query.where.raw = { [Sequelize.Op.ne]: null }
+
+    // if no chapter_id query next bunch of chapters from start
+    if (req.query.chapter_id && req.query.chapter_id != -1) {
+      query.where.id = req.query.chapter_id
     }
-    if (req.body.chapter_id > 0) query.where.id = req.body.chapter_id
-    else if (req.body.limit) query.limit = req.body.limit
-    
+
+    // which children to include in JSON
+    if (req.query.includes)
+      query.include = query.include.filter(inc => req.query.includes.split(",").includes(inc.as))
+
+    // if there is translator and not FORCE only pick the chapters missing translation
+    if (req.query.translator && !req.query.force) {
+      query.where[`${req.query.translator}_id`] = { [Sequelize.Op.is]: null }
+    }
+
     Chapter.findAll(query).then((chapters) => {
-      return res.json(chapters)
+      return res.json(chapters.map(chapter => chapter.toJson(req.query.content_length)))
     })
       .catch((err) => {
         return res.json({ error: err.message })
       })
-
   });
 
 
 router.route(["/:novel_id/chapter/:chapter_id"])
   .get(function (req, res, next) {
-    console.log("chapter get", req.body, req.params)
-    let queryStr = {
+    console.log(req.method, req.url, req.body, req.params, req.query)
+    let query = {
       where: { id: parseInt(req.params.chapter_id) },
+      include: ['raw', 'baidu', 'proofread', 'sogou']
     }
     if (req.body.attributes)
-      queryStr.attributes = req.body.attributes
-    
-    Chapter.findOne(queryStr).then((chapter) => {
-      return res.json(chapter)
+      query.attributes = req.body.attributes.split(",")
+    if (req.body.includes)
+      query.includes = req.body.includes.split(",")
+
+    Chapter.findOne(query).then((chapter) => {
+      return res.json(chapter.toJson())
     }).catch((err) => {
       console.log(red(err))
       return res.json({ error: err.message })
     })
 
   }).post(function (req, res, next) {
-    console.log("post req", req.body, req.params)
+    
+    console.log(req.method, req.url, req.body, req.params, req.query)
+
     Chapter.findOne({
       where: { id: parseInt(req.params.chapter_id) },
     }).then((chapter) => {
-      if (req.body.translator) {
-        chapter[req.body.translator] = req.body.content
-        chapter.save().then((chap) => res.json({
-          msg: `Saved ${chapter.id} at ${chapter.url}`, chapter_id: chapter.id
-        }))
-      }
-      else throw { message: "Did nothing" }
+
+      chapter.contentSave({
+        where: {
+          chapter_id: chapter.id,
+          type: req.body.translator
+        },
+        defaults: {
+          content: req.body.content.content,
+          title: req.body.content.title
+        }
+      }).then(([content, created]) => {
+        chapter[`set${capitalize(req.body.translator)}`](content).then(done =>
+          res.json({
+            msg: `Saved ${chapter.id} at ${chapter.url}`, chapter_id: chapter.id
+          })
+        )
+
+      })
     }).catch((err) => {
       console.log(red(err))
       return res.json({ error: err.message })

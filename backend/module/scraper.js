@@ -7,7 +7,7 @@ const urlTool = require('url')
 
 const { cyan, yellow, red, blue } = chalk.bold;
 
-const { Novel, Chapter, Raw } = require("../models")
+const { Novel, Chapter, Raw, Content } = require("../models")
 
 
 const GetRaw = async (url) => {
@@ -26,7 +26,7 @@ const GetRaw = async (url) => {
 
 const GetChapter = async (novel, chapter_id) => {
     let whereStr = chapter_id === -1 ?
-    { novel_id: novel.id }: { id: chapter_id, novel_id: novel.id }
+        { novel_id: novel.id } : { id: chapter_id, novel_id: novel.id }
     let orderArr = [
         ["order", "desc"],
         ["id", "desc"]
@@ -117,9 +117,9 @@ const Scraper = async (data, connection) => {
             }).catch((err) => sendJson(err))
     }
 
-    const ScrapeChapter = async (chapter, limit = 10) => {
+    const ScrapeChapter = async (chapter, limit = 3) => {
         console.log(limit, "scrape chapter", chapter.url)
-         // get the parser template for this website
+        // get the parser template for this website
         const raw = await GetRaw(chapter.url)
         if (!raw) return sendJson(`Parser template not found for ${chapter.url}`)
 
@@ -131,12 +131,11 @@ const Scraper = async (data, connection) => {
         let next = urlTool.resolve(chapter.url, $(raw.next).attr("href"))
         let pattern = new RegExp(raw.regex, "i")
         
-        chapter.raw = {
-            title: title,
-            content: content,
-            next: next
-        }
-        await chapter.save()
+
+        await chapter.contentSave({
+            where: { type: "raw" },
+            defaults: { title: title, content: content }
+        }).then(([content, created]) => chapter.setRaw(content))
         
         // check if the next chapter matches the regex
         if (!next.match(pattern)) return sendJson(`Regex for next chapter doesn't match ${next}`)
@@ -145,13 +144,13 @@ const Scraper = async (data, connection) => {
             where: { novel_id: chapter.novel_id, url: next },
             defaults: { order: chapter.order + 1 }
         }).then(([chapter, created]) => {
-            if(created) sendJson({ command: "reload_chapters", msg: `Added new chapter ${next} (+${limit})` })
-            if(limit > 1) // delay the parsing speed to avoid issues with being detected
-                setTimeout(()=> ScrapeChapter(chapter, --limit), 1000)
+            if (created) sendJson({ command: "reload_chapters", msg: `Added new chapter ${next} (+${limit})` })
+            if (limit > 1) // delay the parsing speed to avoid issues with being detected
+                setTimeout(() => ScrapeChapter(chapter, --limit), 1000)
         }).catch((err) => sendJson(err))
 
 
-            
+
 
 
     };

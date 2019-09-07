@@ -39,7 +39,7 @@ var createDB = async () => {
 			description: ".book-intro > div:eq(0)",
 			catalog: "a.catalogbtn",
 			chapters: "ul.chapter-list > li > span > a"
-		}
+		}, //https://www.zhaishuyuan.com/book/20452/
 	}]
 
 
@@ -84,21 +84,36 @@ var createDB = async () => {
 		User.create(i)
 	});
 
-	novelList.forEach((i) => {
+	novelList.forEach((i, index) => {
 		var n = Novel.create((i)).then((nov) => {
+			return true
 			Chapter.create(
 				{
 					novel_id: nov.id,
-					url: "https://google.com",
+					url: i.raw_url,
 				}
 			).then(chap => {
-				//return true
+				
 				Content.create({
 					type: "RAW",
-					title: "titteli",
+					title: `${i.name}`,
 					chapter_id: chap.id,
 					content: "lorem                ipsum \n\n\n kolme väliä \n\n\n\n neljä väliä"
-				}).then()
+				}).then(content => chap.setRaw(content));
+
+				Content.create({
+					type: "proofread",
+					title: `${i.name}`,
+					chapter_id: chap.id,
+					content: "proof  kolme väliä \n\n\n\n neljä väliä"
+				}).then(content => chap.setProofread(content));
+				
+				/* chap.setProofread({
+					type: "proofread",
+					title: "prof title",
+					chapter_id: chap.id,
+					content: "proofread content väliä"
+				}) */
 			})
 		})
 
@@ -111,17 +126,33 @@ var createDB = async () => {
 	});
 
 	setTimeout(() => {
-		
-		Chapter.findByPk(1, { include: ['contents', 'novel']}).then(chap => {
-			//console.log("chapter:", chap.id)
-			console.log(chap.contents[0].id)
+		return true
+		Chapter.findByPk(1, { include: ['proofread', 'novel']}).then(chap => {
+			
+			//chap.getRaw().then(proof => console.log(proof.id))
+			
+
+			return true
+			console.log("chapter:", chap.id)
+			//console.log(chap.contents[0].id)
+			console.log(chap.raw.id)
+			console.log(chap.proofread.id)
 			console.log(chap.novel.id)
+			return true
+			chap.contentSave({
+				where: { type: "proofread" },
+				defaults: { title: "Mummon päiväkirja", 
+				content: "mummon sisältö" }})
+
+			console.log(chap.getContent('raw').content)
 			
 		}).then(()=>{
 			Content.findByPk(1, { include: ['chapter']}).then(chap => {
-				//console.log("chapter:", chap.id)
+				console.log("contents chapter:")
 				console.log(chap.chapter.id)
 			})
+
+
 		})
 	}, 2000)
 	

@@ -39,29 +39,33 @@
 
         var json = JSON.parse($("#mtl_command").val())
         server = json.url
+        delete json.url
         json.translator = translator
+        json.includes = "raw"
+
+        var url = new URL(server)
+        url.search = new URLSearchParams(json).toString();
+
 
         var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
+        xhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                console.log("xhttp response", this.responseText)
                 chapters = JSON.parse(this.responseText)
+                console.log("chapterlist", chapters)
                 PrintConsole(`Found ${chapters.length} chapters to translate`)
                 HandleChapter(chapters, 0)
             }
         };
-        xhttp.open("POST", server, true);
+        xhttp.open("GET", url, true);
         xhttp.setRequestHeader("Content-type", "application/json");
         xhttp.send(JSON.stringify(json));
-
-
 
     });
 
     var HandleChapter = (chapters, index = 0) => {
         if(chapters.length === index || !tbc)
             return PrintConsole(`Finished translating`)
-        //console.log("handle chapters", index, chapters[index])
+        console.log("handle chapters", index, chapters[index])
         target.value = null
         var chap = chapters[index]
 
@@ -79,12 +83,12 @@
                 translatedText.shift()
                 var textContent = translatedText.join("\n")
 
-                var d = JSON.stringify({ translator: translator, content: { title: title, content: textContent.trim() } })
-                console.log(textContent)
+                var d = JSON.stringify({ translator: translator, content: { title: title.trim(), content: textContent.trim() } })
+                
                 const xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function() {
                     if (this.readyState == 4 && this.status == 200) {
-                        //console.log("xhttp response", this.responseText)
+                        console.log("translation response", JSON.parse(this.responseText))
                         PrintConsole(`Translated chapter ${chap.id} @ ${chap.url}`)
                         HandleChapter(chapters, ++index)
                     }
@@ -105,7 +109,7 @@
                 // removing that random chinese
                 cont.shift()
                 cont = cont.join("\n").trim()
-                console.log("Käännös:", cont)
+                
                 // there wait for the observer to really update
                 if(cont.length == 0 || translatedText.includes(cont)) return true
 
@@ -120,31 +124,30 @@
             const observer = new MutationObserver(callback);
             observer.observe(targetNode, config);
             
-            // adding some random chinese to force translation on baidu
+            // adding some random chinese to force ZH translation on baidu
             target.value = `放心\n${parts[j]}`
 
             setTimeout(() => transBtn.click(), 500);
             //target.dispatchEvent(new Event('keyup'));
-
-
-            //
         }
 
 
-        $.ajax({
-                url: server + "/" + chap.id,
-                success: function (result) {
-                    console.log("ajax", result)
-
-                    if (result.raw && result.raw.content.length > 0) {
-                        var parts = SplitTxt(result.raw);
-                        HandleParts(parts)
-                    }
-
-                },
-                type: 'get',
-                async: false
-            });
+        var url = new URL(`${server}/${chap.id}`)
+        
+        var xhttp2 = new XMLHttpRequest();
+        xhttp2.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let result = JSON.parse(this.responseText)
+                console.log("chapter data", result)
+                if (result.raw && result.raw.content.length > 0) {
+                    var parts = SplitTxt(result.raw);
+                    HandleParts(parts)
+                }
+            };
+        }
+        xhttp2.open("GET", url, true);
+        xhttp2.setRequestHeader("Content-type", "application/json");
+        xhttp2.send("");
 
 
 
