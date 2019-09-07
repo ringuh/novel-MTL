@@ -122,8 +122,6 @@
             target.value = parts[j]
             target.dispatchEvent(new Event('keyup'));
 
-
-            //
         }
         console.log(chap.id)
         //var d = JSON.stringify({  })

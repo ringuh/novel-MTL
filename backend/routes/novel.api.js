@@ -101,7 +101,7 @@ router.route("/:id/chapter")
     if (req.query.translator && !req.query.force) {
       query.where[`${req.query.translator}_id`] = { [Sequelize.Op.is]: null }
     }
-
+    console.log(query)
     Chapter.findAll(query).then((chapters) => {
       return res.json(chapters.map(chapter => chapter.toJson(req.query.content_length)))
     })

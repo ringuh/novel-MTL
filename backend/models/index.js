@@ -18,7 +18,13 @@ sequelizeTransforms(sequelize, {
     },
     singlespace: (val, def) => {
         if(!def.singlespace || !val) return val
-        return val.replace(/\n{2,}/g, '\n').replace(/ {2,}/g, ' ')
+        
+        val = val.replace(/ {2,}/g, ' ')
+                .replace(/\n{2,}/g, '\n')
+        val = val.split("\n").filter(p => p.trim().length > 0)
+        val = val.map(p => p.trim().replace(/\s+/g, ' ')).join("\n")
+        return val
+            
     }
 });
 

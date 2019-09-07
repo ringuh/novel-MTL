@@ -203,17 +203,16 @@ class ChapterList extends Component {
                                         }
                                     />
                                     <ListItemText
-                                        secondary={chapter.raw ? chapter.raw: 'raw'}>
+                                        secondary={
+                                            [chapter.raw || 'missing',
+                                            chapter.sogou || 'sogou',
+                                            chapter.baidu || 'baidu',
+                                            chapter.proofread || 'tbd',
+                                            ].join(" / ")
+
+                                        }>
                                     </ListItemText>
-                                    <ListItemText
-                                        secondary={chapter.proofread ? chapter.proofread: 'proofread'}>
-                                    </ListItemText>
-                                    <ListItemText
-                                        secondary={chapter.baidu ? chapter.baidu: 'baidu'}>
-                                    </ListItemText>
-                                    <ListItemText
-                                        secondary={chapter.content ? chapter.sogou: 'sogou'}>
-                                    </ListItemText>
+                                    
 
                                 </ListItem>
                                 <Divider variant="inset" component="li" />
