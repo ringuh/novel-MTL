@@ -40,7 +40,7 @@ module.exports = (sequelize, type) => {
         }),
         Term.belongsTo(models.User, {
             onDelete: "CASCADE",
-            foreignKey: 'novel_id',
+            foreignKey: 'user_id',
         })
     };
     return Term

@@ -33,7 +33,7 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import Switch from '@material-ui/core/Switch';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import ChapterDrawer from './drawer'
-import TermDrawer from './terms'
+
 
 const styles = {
     link: {
@@ -41,27 +41,16 @@ const styles = {
             textDecoration: 'none',
         },
     },
-    bottom: {
-        position: "sticky",
-        bottom: "0px"
-    },
-    hide: {
-        display: "none"
-    },
-    background: {
-        backgroundColor: "red",
-    }
+
 };
 
 
-class ChapterBottomNav extends Component {
+class TermDrawer extends Component {
     constructor(props) {
         super(props);
-        console.log("chapter bottom nav", props)
+
         this.state = {
-            chapter_id: props.chapter_id,
-            novel_id: props.novel_id,
-            chapters: []
+
         };
 
     }
@@ -71,15 +60,12 @@ class ChapterBottomNav extends Component {
 
     toggleState = (attr, value) => {
         console.log(attr, value)
-        return event => {
-            this.setState({ ...this.state, [attr]: value });
-        };
+        this.setState({ [attr]: value });
     }
 
 
     componentDidMount() {
-        return true
-        fetch(`/novel/${this.state.novel_id}/chapter`)
+        fetch(`/novel/${this.state.novel_id}/terms`)
             .then(response => response.json())
             .then(data => this.setState({ ...this.state, chapters: data }))
             .then(st => console.log(this.state))
@@ -91,40 +77,12 @@ class ChapterBottomNav extends Component {
     componentDidUpdate() {
 
     }
-   
 
     render() {
         const { classes } = this.props;
 
         return (
             <Box className={classes.bottom}>
-                <BottomNavigation value={this.state.value} onChange={this.handleChange}>
-                    <BottomNavigationAction
-                        label="Recents"
-                        value="recents"
-                        icon={<ListIcon />}
-                        onClick={this.toggleState('chapterDrawer', true)} />
-                    <BottomNavigationAction icon={<FavoriteIcon />}
-                        label="Favorites"
-                        value="favorites" />
-                    <BottomNavigationAction icon={<TranslateIcon />}
-                        label="Nearby"
-                        value="nearby"
-                        onClick={this.toggleState('term', !this.state.smth)}
-                    />
-                    <BottomNavigationAction icon={<SettingsIcon />}
-                        label="Folder"
-                        value="folder"
-                        onClick={this.toggleState('smth', !this.state.smth)}
-                    />
-                </BottomNavigation>
-
-                
-
-                <ChapterDrawer chapter_id={this.state.id}
-                    novel_id={this.state.novel_id}
-                    open={this.state.chapterDrawer}
-                    toggle={this.toggleState} />
 
 
             </Box>
@@ -132,4 +90,43 @@ class ChapterBottomNav extends Component {
     }
 }
 
-export default withStyles(styles)(ChapterBottomNav);
+export default withStyles(styles)(TermDrawer);
+/*
+
+<Dialog open={this.state.term} onClose={this.toggleState} aria-labelledby="form-dialog-title">
+                    <DialogTitle id="form-dialog-title">Add a new term</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            You can add a new <strong>english</strong> term to
+                            replace some of the words used in machine translation.
+                            Terms do not effect saved <strong>raw</strong> or <strong>proofread</strong> text
+                        </DialogContentText>
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            id="name"
+                            label="Term to translate"
+                            placeholder="eg. tribulation"
+                            type="text"
+                            fullWidth
+                        />
+                        <Divider />
+                        <TextField
+                            margin="dense"
+                            id="name"
+                            label="Translation"
+                            placeholder="eg. kill | dont kill"
+                            type="text"
+                            fullWidth
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={this.toggleState} color="primary">
+                            Cancel
+          </Button>
+                        <Button onClick={this.toggleState} color="primary">
+                            Add
+          </Button>
+                    </DialogActions>
+                </Dialog>
+                */

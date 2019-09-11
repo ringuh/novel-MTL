@@ -1,9 +1,6 @@
 import React, { Component } from 'react';
 //import { BrowserRouter, Switch, Route, Link, Redirect } from 'react-router-dom';
 import axios from 'axios';
-/* import ChapterList from './chapter_list'
-import Button from '@material-ui/core/Button';
-import ReactCrop from 'react-image-crop'; */
 import { withStyles } from '@material-ui/core/styles';
 import 'react-image-crop/dist/ReactCrop.css';
 import LinearProgress from '@material-ui/core/LinearProgress';
@@ -20,11 +17,15 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import ChapterBottomNav from './bottom_nav'
+import Button from '@material-ui/core/Button'
+import ButtonGroup from '@material-ui/core/ButtonGroup'
 import Paragraph from './paragraph'
 
 
+
+
 const styles = {
-    
+
     para: {
         marginBottom: '1em'
     },
@@ -54,7 +55,7 @@ class ChapterEditor extends Component {
 
 
 
-
+    matches = "matches"
 
     formChange(e) {
         this.setState({
@@ -63,6 +64,10 @@ class ChapterEditor extends Component {
             //error: false 
         })
 
+
+    }
+
+    stateThis(attr, value) {
 
     }
 
@@ -85,16 +90,25 @@ class ChapterEditor extends Component {
 
     }
 
+
     componentDidUpdate() {
         document.title = `set title fucksake`
+
     }
 
     editParagraphs(json) {
         let max_paragraphs = 0
 
-        const paragraphs = ['raw', 'proofread', 'baidu', 'sogou',].map(key => {
-            if (!json[key])
+
+        /*  check the content of all 4 possible translations and split them by paragraph 
+            calculate the maximum number of paragraphs as we wanna show all nth-paragraphs at same place 
+        */
+        const paragraphs = ['raw', 'baidu', 'sogou', 'proofread'].map(key => {
+            if (!json[key]){
+                json[key] = { show: false, content: [], title: ''}
                 return { type: key, paragraphs: [] }
+            }
+                
             //do smth 
 
             // get the content
@@ -113,20 +127,35 @@ class ChapterEditor extends Component {
             paragraphs.forEach((translation, index) => {
                 let p = {
                     type: translation.type,
-                    content: translation.paragraphs[i] || null,
+                    content: translation.paragraphs[i] || '',
                     row: i
                 }
 
 
 
                 json.paragraphs.push(p)
-               
-            })
 
-        console.log(json)
+            })
+        
+        json.baidu.show = !json.proofread_id
+        json.sogou.show = !json.proofread_id
+        json.proofread.show = true
+
+        console.log("chapters state", json)
 
         this.setState(json)
 
+    }
+
+    selectParagraph = (paragraph, option) => {
+        console.log(paragraph, option, this.state.paragraphs)
+
+        let proof = this.state.paragraphs.find(p => p.type === 'proofread' && p.row === paragraph.row)
+        proof.content = paragraph.content
+        
+        
+        this.setState({...this.state, paragraphs: this.state.paragraphs})
+        console.log(this.state.paragraphs)
     }
 
 
@@ -134,49 +163,53 @@ class ChapterEditor extends Component {
 
     render() {
         const { classes } = this.props;
+        const { state } = this;
+
+
         /* if (this.state.redirect) {
             return <Redirect to={`./${this.state.redirect}`} />
         } */
 
-        if (!this.state.createdAt)
+        if (!this.state.paragraphs)
             return (
                 <LinearProgress color="secondary" />
             )
-
-        const gridSize = 12 / 4;
-
+        const views = ['raw', 'proofread', 'sogou', 'baidu'].filter(key => this.state[key].show)
+        
+        console.log("display", views)
         return (
-            <Container>
+            <Container type="div">
                 <h1>THIS IS CHAPTER EDITOR</h1>
                 <a href={`${this.state.id - 1}`}>prev</a> -- <a href={`${this.state.id + 1}`}>next</a>
 
-                <Grid container spacing="{3}">
+                <Grid container spacing={3}>
                     {this.state.paragraphs.map((p, index) => {
+                        if(index > 17) return ""
                         return <Paragraph key={index}
-                        md={gridSize}
-                        paragraph={p}
-                    ></Paragraph>
+                                selectParagraph={this.selectParagraph}
+                                views={views}
+                                paragraph={p}
+                        />
                     })}
-                </Grid> */}
+                </Grid>
 
 
+                <Box>
+                    {['raw', 'baidu', 'sogou', 'proofread'].map(key => 
+                        <Button fullWidth key={key}
+                        onClick={() => this.setState({ [key]: { show: !this.state[key].show }})}
+                        variant={state[key].show ? 'contained' : 'outlined'}
+                        >
+                        {key}
+                    </Button>
+                    )}
+                </Box>
+                
 
-                {/* <Grid container spacing="{3}">
-                    {this.state.paragraphs[0].map((value, index) => {
-                        return this.state.paragraphs.map((val, i) => {
-                            return <Grid className={classes[`col${i}`]+` warning`}
-                                item xs={12} md={gridColumns}
-                            >
-                                {val[index]}
-                            </Grid>
-                        })
-                        for (var i = 0; ++i; i < this.state.paragraphs.length)
-                            return
-                    })}
-                </Grid> */}
                 <ChapterBottomNav
                     novel_id={this.state.novel_id}
                     chapter_id={this.state.id} />
+                <textarea onChange={() => console.log("textarea value changed")} value={JSON.stringify(this.state.paragraphs[3])}></textarea>
             </Container>
 
 
