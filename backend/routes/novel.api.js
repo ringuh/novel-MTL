@@ -167,15 +167,52 @@ router.route(["/:novel_id/terms"])
 		let query = {
 			where: { novel_id: parseInt(req.params.novel_id) },
 		}
-		
 
-		Term.findAll(query).then((chapter) => {
-			return res.json(chapter.toJson())
+
+		Term.findAll(query).then((term) => {
+			return res.json(term)
 		}).catch((err) => {
 			console.log(red(err))
 			return res.json({ error: err.message })
 		})
-	})
+	}).post(function (req, res, next) {
+		console.log(req.method, req.url, req.body, req.params, req.query)
+
+		if (req.body.prompt === 'delete')
+			Term.destroy({
+				where: {
+					id: req.body.id
+				}
+			}).then(t => res.json({ id: -1 }))
+				.catch((err) => {
+					console.log(red(err))
+					return res.json({ error: err.message })
+				})
+
+		else
+			Term.findOrCreate({
+				where: {
+					id: req.body.id || 0
+				}, defaults: {
+					from: req.body.from,
+					to: req.body.to,
+					prompt: req.body.prompt,
+					novel_id: req.params.novel_id
+				}
+			})
+				.then(([term, created]) => {
+					if (created) return term
+
+					term.from = req.body.from
+					term.to = req.body.to
+					term.prompt = req.body.prompt
+					return term.save()
+				}).then(r => res.json(r))
+				.catch((err) => {
+					console.log(red(err))
+					return res.json({ error: err.message })
+				})
+	});
 
 
 

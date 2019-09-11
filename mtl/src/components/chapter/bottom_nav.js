@@ -61,6 +61,7 @@ class ChapterBottomNav extends Component {
         this.state = {
             chapter_id: props.chapter_id,
             novel_id: props.novel_id,
+            term: false,
             chapters: []
         };
 
@@ -71,9 +72,9 @@ class ChapterBottomNav extends Component {
 
     toggleState = (attr, value) => {
         console.log(attr, value)
-        return event => {
-            this.setState({ ...this.state, [attr]: value });
-        };
+        this.state[attr] = value
+        this.setState(this.state);
+        
     }
 
 
@@ -103,29 +104,33 @@ class ChapterBottomNav extends Component {
                         label="Recents"
                         value="recents"
                         icon={<ListIcon />}
-                        onClick={this.toggleState('chapterDrawer', true)} />
+                        onClick={() => this.toggleState('chapterDrawer', true)} />
                     <BottomNavigationAction icon={<FavoriteIcon />}
                         label="Favorites"
                         value="favorites" />
                     <BottomNavigationAction icon={<TranslateIcon />}
                         label="Nearby"
                         value="nearby"
-                        onClick={this.toggleState('term', !this.state.smth)}
+                        onClick={() => this.toggleState('term', !this.state.smth)}
                     />
                     <BottomNavigationAction icon={<SettingsIcon />}
                         label="Folder"
                         value="folder"
-                        onClick={this.toggleState('smth', !this.state.smth)}
+                        onClick={() => this.toggleState('smth', !this.state.smth)}
                     />
                 </BottomNavigation>
 
                 
-
+                
                 <ChapterDrawer chapter_id={this.state.id}
                     novel_id={this.state.novel_id}
                     open={this.state.chapterDrawer}
                     toggle={this.toggleState} />
 
+                <TermDrawer novel_id={this.state.novel_id}
+                    paragraphs={this.props.paragraphs}
+                    toggle={this.toggleState}
+                    open={this.state.term} />
 
             </Box>
         );

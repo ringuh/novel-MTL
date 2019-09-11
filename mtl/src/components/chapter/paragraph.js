@@ -62,7 +62,7 @@ class ChapterDrawer extends Component {
     }
 
 
-    editParagraph = (event, value) => {
+    editParagraph = (event) => {
         event.preventDefault()
         //console.log(event.target.value, value)
 
