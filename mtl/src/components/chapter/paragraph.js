@@ -152,7 +152,8 @@ class ChapterDrawer extends Component {
                 
                 <ArrowBackIcon onClick={() => selectParagraph(paragraph)} />
                 {paragraph.row}.
-                    {paragraph.content}
+                    <span dangerouslySetInnerHTML={{__html: paragraph.content}} />
+                    
             </Grid>
         );
     }

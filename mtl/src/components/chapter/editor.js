@@ -19,6 +19,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ChapterBottomNav from './bottom_nav'
 import Button from '@material-ui/core/Button'
 import ButtonGroup from '@material-ui/core/ButtonGroup'
+import Popper from '@material-ui/core/Popper'
 import Paragraph from './paragraph'
 
 
@@ -98,14 +99,14 @@ class ChapterEditor extends Component {
 
     editParagraphs(json) {
         let max_paragraphs = 0
-
+        console.log(json)
 
         /*  check the content of all 4 possible translations and split them by paragraph 
             calculate the maximum number of paragraphs as we wanna show all nth-paragraphs at same place 
         */
         const paragraphs = ['raw', 'baidu', 'sogou', 'proofread'].map(key => {
             if (!json[key]){
-                json[key] = { show: false, content: [], title: ''}
+                json[key] = { show: false, content: '', title: ''}
                 return { type: key, paragraphs: [] }
             }
                 
@@ -158,7 +159,27 @@ class ChapterEditor extends Component {
         console.log(this.state.paragraphs)
     }
 
+    translate = (terms) => {
+        console.log("translate", this.state.paragraphs)
+        if(!this.state.paragraphs) return false
+        console.log("this far");
 
+        ["baidu", "sogou", "proofread"].forEach(t => {
+            console.log(t)
+            terms.filter(t => !t.prompt).forEach(term => this.state[t].content = this.state[t].content
+                .replace(new RegExp(term.from, "gi"), `<strong>${term.to}</strong>`))
+            
+        })
+        this.editParagraphs(this.state)
+        
+        //this.state.paragraphs[1].content = terms
+        //this.forceUpdate()
+    }
+
+    promptTranslate = event => {
+        console.log(event.currentTarget)
+        this.state.anchorEl = event.currentTarget
+    }
 
 
     render() {
@@ -205,9 +226,14 @@ class ChapterEditor extends Component {
                     )}
                 </Box>
                 
+                <Popper id="popper" open={this.state.anchorEl ? true: false} anchorEl={this.state.anchorEl}>
+                    <div>The content of the Popper.</div>
+                </Popper>
 
                 <ChapterBottomNav
                     novel_id={this.state.novel_id}
+                    translate={this.translate}
+                    paragraphs={this.state.paragraphs}
                     chapter_id={this.state.id} />
                 <textarea onChange={() => console.log("textarea value changed")} value={JSON.stringify(this.state.paragraphs[3])}></textarea>
             </Container>

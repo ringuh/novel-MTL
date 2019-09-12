@@ -1,3 +1,5 @@
+
+
 module.exports = (sequelize, type) => {
     const Term = sequelize.define('Term', {
         id: {
@@ -27,6 +29,12 @@ module.exports = (sequelize, type) => {
             },
             allowNull: false,
             trim: true,
+            singlespace: true,
+
+            /* set(value){
+                const sanitizeHtml = require('sanitize-html')
+                this.setDataValue('to', sanitizeHtml(value, { allowedTags: []}))
+            } */
         }
 
     }, {

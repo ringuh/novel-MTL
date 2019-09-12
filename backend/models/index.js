@@ -2,7 +2,8 @@
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
-const slugify = require('slugify')
+const sanitizeHtml = require('sanitize-html')
+const slugify = require('slugify') 
 const sequelizeTransforms = require('sequelize-transforms');
 let db = {};
 
@@ -19,6 +20,7 @@ sequelizeTransforms(sequelize, {
     singlespace: (val, def) => {
         if(!def.singlespace || !val) return val
         
+        val = sanitizeHtml(val, { allowedTags: []})
         val = val.replace(/ {2,}/g, ' ')
                 .replace(/\n{2,}/g, '\n')
         val = val.split("\n").filter(p => p.trim().length > 0)

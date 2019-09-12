@@ -70,14 +70,6 @@ class TermDrawer extends Component {
 
     }
 
-    editTerm(event) {
-        console.log(event)
-        console.log(event.target)
-        console.log(event.target.value)
-
-        //this.setState(this.state)
-    }
-
     selectTerm = (term) => {
         if (term)
             return this.setState({ ...this.state, term: { ...term, string: JSON.stringify(term) } })
@@ -109,12 +101,13 @@ class TermDrawer extends Component {
             })
     }
 
-
+    
     componentDidMount() {
         fetch(`/novel/${this.state.novel_id}/terms`)
             .then(response => response.json())
             .then(data => this.setState({ ...this.state, terms: data }))
             .then(st => console.log(this.state))
+            .then(st => this.props.translate(this.state.terms))
 
 
 
@@ -237,7 +230,7 @@ class TermDrawer extends Component {
 
                             <Switch
                                 checked={state.term.prompt}
-                                onChange={(e) => this.setState({ ...this.state, term: { ...this.state.term, prompt: !state.term.prompt } })}
+                                //onChange={(e) => this.setState({ ...this.state, term: { ...this.state.term, prompt: !state.term.prompt } })}
                                 value={state.term.prompt} /> Prompt
                         </DialogContent>
                         <DialogActions>

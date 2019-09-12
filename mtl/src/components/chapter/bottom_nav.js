@@ -128,7 +128,8 @@ class ChapterBottomNav extends Component {
                     toggle={this.toggleState} />
 
                 <TermDrawer novel_id={this.state.novel_id}
-                    paragraphs={this.props.paragraphs}
+                    translate={this.props.translate}
+                    paragraphs={this.state.paragraphs}
                     toggle={this.toggleState}
                     open={this.state.term} />
 

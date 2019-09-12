@@ -44,7 +44,7 @@ router.route(["/create", "/:id"])
 		console.log(req.method, req.url, req.body, req.params, req.query)
 
 		if (req.params.id)
-			Novel.findByPk(req.params.id).then((novel) => {
+			Novel.findByPk(req.params.id, { raw: false }).then((novel) => {
 				if (!novel)
 					return res.json({ error: `Novel by ID ${req.params.id} not found` })
 				novel.name = req.body.name
@@ -146,7 +146,7 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 				defaults: {
 					content: req.body.content.content,
 					title: req.body.content.title
-				}
+				}, raw: false
 			}).then(([content, created]) => {
 				chapter[`set${capitalize(req.body.translator)}`](content).then(done =>
 					res.json({
@@ -198,7 +198,7 @@ router.route(["/:novel_id/terms"])
 					to: req.body.to,
 					prompt: req.body.prompt,
 					novel_id: req.params.novel_id
-				}
+				}, raw: false
 			})
 				.then(([term, created]) => {
 					if (created) return term
