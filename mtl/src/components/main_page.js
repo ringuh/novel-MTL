@@ -1,6 +1,7 @@
 import React from 'react';
 import { Redirect, Link } from 'react-router-dom';
 import NovelCreate from './novel_create';
+import Snacky from './chapter/chapter_snackbar'
 
 
 class MainPage extends React.Component {
@@ -26,7 +27,7 @@ class MainPage extends React.Component {
                 
                 <hr />this is frontpage 
                 <Link to="/novel" >Novels</Link>
-
+                <Snacky />
             </div>
         )
     }

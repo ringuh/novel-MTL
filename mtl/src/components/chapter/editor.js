@@ -16,27 +16,39 @@ import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
+import Switch from '@material-ui/core/Switch';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
 import ChapterBottomNav from './bottom_nav'
 import Button from '@material-ui/core/Button'
 import ButtonGroup from '@material-ui/core/ButtonGroup'
 import Popper from '@material-ui/core/Popper'
 import Paragraph from './paragraph'
+import ChapterSnackbar from './chapter_snackbar'
+import ChapterSettings from './chapter_settings'
+import ForwardIcon from '@material-ui/icons/ArrowForwardIos'
+import BackIcon from '@material-ui/icons/ArrowBackIos'
+import Snackbar from '@material-ui/core/Snackbar';
+import SnackbarContent from '@material-ui/core/SnackbarContent';
 
 
 
 
 const styles = {
 
-    para: {
-        marginBottom: '1em'
+    paragraphs: {
+        textAlign: 'left'
     },
 
     bottom: {
         position: "sticky",
         bottom: "0px"
 
-    }
+    },
 
+    chapterNav: {
+        margin: "2em auto"
+    }
 };
 
 
@@ -105,11 +117,11 @@ class ChapterEditor extends Component {
             calculate the maximum number of paragraphs as we wanna show all nth-paragraphs at same place 
         */
         const paragraphs = ['raw', 'baidu', 'sogou', 'proofread'].map(key => {
-            if (!json[key]){
-                json[key] = { show: false, content: '', title: ''}
+            if (!json[key]) {
+                json[key] = { show: false, content: '', title: '' }
                 return { type: key, paragraphs: [] }
             }
-                
+
             //do smth 
 
             // get the content
@@ -123,6 +135,7 @@ class ChapterEditor extends Component {
 
             return { type: key, paragraphs: ps }
         })
+        json.max_paragraphs = max_paragraphs
         json.paragraphs = []
         for (var i = 0; i < max_paragraphs; ++i)
             paragraphs.forEach((translation, index) => {
@@ -137,7 +150,7 @@ class ChapterEditor extends Component {
                 json.paragraphs.push(p)
 
             })
-        
+
         json.baidu.show = !json.proofread_id
         json.sogou.show = !json.proofread_id
         json.proofread.show = true
@@ -148,30 +161,60 @@ class ChapterEditor extends Component {
 
     }
 
-    selectParagraph = (paragraph, option) => {
-        console.log(paragraph, option, this.state.paragraphs)
+    selectParagraph = (paragraph, option = 0) => {
+        console.log(paragraph, option)
 
-        let proof = this.state.paragraphs.find(p => p.type === 'proofread' && p.row === paragraph.row)
-        proof.content = paragraph.content
-        
-        
-        this.setState({...this.state, paragraphs: this.state.paragraphs})
-        console.log(this.state.paragraphs)
+        let alternatives = this.state.paragraphs.filter(p =>
+            p.row === paragraph.row && p.type !== 'raw')
+        const proofread = alternatives.find(p => p.type === "proofread")
+        alternatives = alternatives.filter(p => p.content.length > 0)
+
+        if (option === 0) { // pre-selecting proofread content
+            // allow long press on translation to replace proofread if empty or exactly same as a translation
+            if (proofread.content.length === 0 || alternatives.find(p => p.content === proofread.content))
+                proofread.content = paragraph.content
+            console.log(proofread.content)
+            paragraph.hide = true
+            proofread.hide = false
+
+            this.state.proofread.count = this.state.paragraphs.filter(p => p.type === 'proofread' && p.content.length > 0).length
+
+            return this.setState({ ...this.state, paragraphs: this.state.paragraphs })
+        }
+
+        const index = alternatives.indexOf(paragraph)
+        let targetIndex = index + option
+        if (targetIndex >= alternatives.length) targetIndex = 0
+        else if (targetIndex < 0) targetIndex = alternatives.length - 1
+        console.log(index, targetIndex)
+
+
+        paragraph.hide = true
+        alternatives[targetIndex].hide = false
+
+
+
+        console.log(alternatives)
+
+
+
+        this.setState({ ...this.state, paragraphs: this.state.paragraphs })
+
     }
 
     translate = (terms) => {
         console.log("translate", this.state.paragraphs)
-        if(!this.state.paragraphs) return false
+        if (!this.state.paragraphs) return false
         console.log("this far");
 
         ["baidu", "sogou", "proofread"].forEach(t => {
             console.log(t)
             terms.filter(t => !t.prompt).forEach(term => this.state[t].content = this.state[t].content
                 .replace(new RegExp(term.from, "gi"), `<strong>${term.to}</strong>`))
-            
+
         })
         this.editParagraphs(this.state)
-        
+
         //this.state.paragraphs[1].content = terms
         //this.forceUpdate()
     }
@@ -180,6 +223,38 @@ class ChapterEditor extends Component {
         console.log(event.currentTarget)
         this.state.anchorEl = event.currentTarget
     }
+
+    ChapterNav = () => {
+        if (!this.state.id) return true
+        return <Box component="div" style={{ margin: "2em auto" }}>
+            <Button component="a" fullWidth
+                variant="outlined"
+                color="secondary"
+                href={this.state.id - 1}>
+                <BackIcon /> Previous
+            </Button>
+
+            <Select fullWidth
+                value={this.state.id}
+                onChange={() => console.log("hei")}
+            >
+
+                <MenuItem value="">Chapterlist at some point</MenuItem>
+
+            </Select>
+
+
+            <Button component="a" fullWidth
+                variant="outlined"
+                color="secondary"
+                href={this.state.id + 1}>
+                Next
+                <ForwardIcon />
+            </Button>
+        </Box>
+
+    }
+
 
 
     render() {
@@ -195,38 +270,32 @@ class ChapterEditor extends Component {
             return (
                 <LinearProgress color="secondary" />
             )
-        const views = ['raw', 'proofread', 'sogou', 'baidu'].filter(key => this.state[key].show)
-        
-        console.log("display", views)
+        const views = ['raw', /* 'proofread', */ 'sogou', 'baidu'].filter(key => this.state[key].show)
+
+
         return (
             <Container type="div">
-                <h1>THIS IS CHAPTER EDITOR</h1>
-                <a href={`${this.state.id - 1}`}>prev</a> -- <a href={`${this.state.id + 1}`}>next</a>
+                <this.ChapterNav />
 
-                <Grid container spacing={3}>
+
+
+                <Grid container spacing={3} className={classes.paragraphs}>
                     {this.state.paragraphs.map((p, index) => {
-                        if(index > 17) return ""
+                        if (index > 17 || p.hide) return ""
                         return <Paragraph key={index}
-                                selectParagraph={this.selectParagraph}
-                                views={views}
-                                paragraph={p}
+                            selectParagraph={this.selectParagraph}
+                            views={views}
+                            paragraph={p}
                         />
                     })}
                 </Grid>
 
+                <this.ChapterNav />
+                <ChapterSnackbar count={this.state.proofread.count} max={this.state.max_paragraphs} />
 
-                <Box>
-                    {['raw', 'baidu', 'sogou', 'proofread'].map(key => 
-                        <Button fullWidth key={key}
-                        onClick={() => this.setState({ [key]: { show: !this.state[key].show }})}
-                        variant={state[key].show ? 'contained' : 'outlined'}
-                        >
-                        {key}
-                    </Button>
-                    )}
-                </Box>
-                
-                <Popper id="popper" open={this.state.anchorEl ? true: false} anchorEl={this.state.anchorEl}>
+                <ChapterSettings />
+
+                <Popper id="popper" open={this.state.anchorEl ? true : false} anchorEl={this.state.anchorEl}>
                     <div>The content of the Popper.</div>
                 </Popper>
 

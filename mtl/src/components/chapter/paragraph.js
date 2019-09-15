@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useState } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField'
 import Link from '@material-ui/core/Link';
@@ -13,10 +13,14 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
 import { borderTop } from '@material-ui/system';
 import ArrowBackIcon from '@material-ui/icons/ArrowBackSharp';
-
+import Hammer from 'react-hammerjs'
+import { useSpring, animated } from 'react-spring'
 
 
 const styles = {
+    paragraph: {
+        backgroundColor: 'red'
+    },
     raw: {
         padding: '1em',
         color: "var(--red)",
@@ -28,6 +32,7 @@ const styles = {
     },
     proofread: {
         padding: '1em',
+        //color: "#4caf50"
         color: "var(--secondary)"
     },
     baidu: {
@@ -36,12 +41,24 @@ const styles = {
     },
     sogou: {
         padding: '1em',
-        color: "var(--gray)"
+        color: "var(--green)"
     },
     border: {
         border: "1px solid black"
-    }
+    },
 };
+
+
+const SmallTitle = ({ type, duration = 4000 }) => {
+    const props = useSpring({
+        config: { duration: duration },
+        opacity: 0.0, from: { opacity: 1 },
+        color: "var(--danger)",
+        textAlign: 'left',
+        marginLeft: '1em'
+    })
+    return (<animated.span style={props}>{type}</animated.span>)
+}
 
 
 class ChapterDrawer extends Component {
@@ -53,7 +70,7 @@ class ChapterDrawer extends Component {
             ...props.paragraph
         };
 
-        
+
 
     }
 
@@ -67,7 +84,7 @@ class ChapterDrawer extends Component {
         //console.log(event.target.value, value)
 
         let val = event.target.value
-        if(!this.state.newLine)
+        if (!this.state.newLine)
             val = val.replace(/\n/g, ' ')
         val = val.replace(/\n{2,}/g, '\n');
         val = val.replace(/ {2,}/g, ' ');
@@ -75,28 +92,37 @@ class ChapterDrawer extends Component {
 
     }
 
-    componentDidUpdate(n, o) {        
-        if(this.state.content !== this.props.paragraph.content)
-            this.setState({content: this.props.paragraph.content})
+    toggleParagraph = paragraph => {
+
+        this.forceUpdate()
+    }
+
+    componentDidUpdate(n, o) {
+        if (this.state.content !== this.props.paragraph.content)
+            this.setState({ content: this.props.paragraph.content })
     }
 
     componentDidMount() {
 
     }
 
+
     render() {
         const { paragraph, selectParagraph, views, key, classes } = this.props;
-        const md = 12 / views.length || 12
+        const md = 12 /// views.length || 12
 
-        if(!views.includes(paragraph.type)) return null
+
+
+        //if (!views.includes(paragraph.type) || paragraph.hide) return null
 
         // raw content
         if (paragraph.type === 'raw')
             return (
                 <Grid item xs={12} md={md} key={key}
-                    className={[classes[paragraph.type]]}
+                    className={classes[paragraph.type]}
                 >
                     {paragraph.content}
+                    <SmallTitle type={paragraph.type} />
                 </Grid>
             )
         // somewhat proofread content
@@ -105,10 +131,22 @@ class ChapterDrawer extends Component {
                 <Grid item xs={12} md={md} key={key}
                     className={classes[paragraph.type]}
                 >{!this.state.edit &&
-                    <div>
-                        <button onClick={() => this.toggleState('edit', true)}>Edit</button>
-                        {this.state.content}
-                    </div>
+                    <Hammer onPress={() => this.toggleState('edit', true)}
+                        onSwipeLeft={(e) => this.props.selectParagraph(paragraph, -1)}
+                        onSwipeRight={(e) => this.props.selectParagraph(paragraph, 1)}
+                        onDoubleTap={e => console.log(e.type)}
+                        options={{
+                            recognizers: {
+                                press: { time: 1500 },
+                                swipe: { threshold: 200 }
+                            }
+                        }}
+                    >
+                        <div>
+                            {this.state.content}
+                            <SmallTitle type={paragraph.type} />
+                        </div>
+                    </Hammer>
                     }
                     {this.state.edit &&
                         <Box>
@@ -133,7 +171,7 @@ class ChapterDrawer extends Component {
                                         inputProps={{
                                             'aria-label': 'primary checkbox',
                                         }}
-                                /> }
+                                    />}
                                 label="Allow New Lines" />
                             <Button type="submit">Submit</Button>
                             <Button onClick={() => this.toggleState('edit', false)} type="submit">Cancel</Button>
@@ -148,12 +186,24 @@ class ChapterDrawer extends Component {
             <Grid item xs={12} md={md} key={key}
                 className={classes[paragraph.type]}
             >
-                <button onClick={() => selectParagraph(paragraph, 'select')}>Select</button>
-                
-                <ArrowBackIcon onClick={() => selectParagraph(paragraph)} />
-                {paragraph.row}.
-                    <span dangerouslySetInnerHTML={{__html: paragraph.content}} />
-                    
+                <Hammer onPress={() => this.props.selectParagraph(paragraph)}
+                    onSwipeLeft={(e) => this.props.selectParagraph(paragraph, -1)}
+                    onSwipeRight={(e) => this.props.selectParagraph(paragraph, 1)}
+                    onDoubleTap={e => console.log(e.type)}
+                    options={{
+                        recognizers: {
+                            press: { time: 1500 },
+                            swipe: { threshold: 200 }
+                        }
+                    }}
+                >
+                    <div>
+                        
+                        {paragraph.row}
+                        {paragraph.content}
+                        <SmallTitle type={paragraph.type} />
+                    </div>
+                </Hammer>
             </Grid>
         );
     }

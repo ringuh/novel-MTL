@@ -58,8 +58,8 @@ class ChapterDrawer extends Component {
         return (
             <SwipeableDrawer
                 open={this.props.open}
-                onClose={this.props.toggle('chapterDrawer', false)}
-                onOpen={this.props.toggle('chapterDrawer', true)}
+                onClose={() => this.props.toggle('chapterDrawer', false)}
+                onOpen={() => this.props.toggle('chapterDrawer', true)}
             >
                 <div
                     className={classes.list}

@@ -40,6 +40,7 @@ var createDB = async () => {
 			catalog: "a.catalogbtn",
 			chapters: "ul.chapter-list > li > span > a"
 		}, //https://www.zhaishuyuan.com/book/20452/
+		// https://www.xbiqugexsw.com/book/245723/ "presidents ex wife"
 	}]
 
 
