@@ -78,7 +78,7 @@ class TermDrawer extends Component {
             .then(res => {
                 console.log("term save", res.data)
                 if (res.data.id) {
-                    this.state.term = null
+                    this.setState({...this.state, term: null })
                     this.componentDidMount()
                 }
 
@@ -97,9 +97,7 @@ class TermDrawer extends Component {
 
     }
 
-    componentDidUpdate() {
-        console.log("hei vittu")
-    }
+   
 
     render() {
         const { classes } = this.props;

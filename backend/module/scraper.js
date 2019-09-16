@@ -27,11 +27,19 @@ const GetRaw = async (url) => {
 const GetChapter = async (novel, chapter_id) => {
     let whereStr = chapter_id === -1 ?
         { novel_id: novel.id } : { id: chapter_id, novel_id: novel.id }
-    let orderArr = [
-        ["order", "desc"],
-        ["id", "desc"]
+    let orderArr = [ 
+        ["order", "DESC"],
+        ["id", "ASC"]
     ]
-    console.log(whereStr)
+
+    Chapter.findAll({
+        where: whereStr,
+        order: orderArr
+    }).then(chapters => chapters.map(c => {
+        console.log("order", c.order, "=> id", c.id)
+    }))
+
+    console.log("find chapter with", whereStr)
     return Chapter.findOne({
         where: whereStr,
         order: orderArr
@@ -117,8 +125,8 @@ const Scraper = async (data, connection) => {
             }).catch((err) => sendJson(err))
     }
 
-    const ScrapeChapter = async (chapter, limit = 50) => {
-        console.log(limit, "scrape chapter", chapter.url)
+    const ScrapeChapter = async (chapter, limit = 3) => {
+        console.log(limit, "scrape chapter", chapter.url, "id", chapter.id, "order", chapter.order)
         // get the parser template for this website
         const raw = await GetRaw(chapter.url)
         if (!raw) return sendJson(`Parser template not found for ${chapter.url}`)
@@ -131,7 +139,7 @@ const Scraper = async (data, connection) => {
         let next = urlTool.resolve(chapter.url, $(raw.next).attr("href"))
         let pattern = new RegExp(raw.regex, "i")
         
-
+        
         await chapter.contentSave({
             where: { type: "raw" },
             defaults: { title: title, content: content }

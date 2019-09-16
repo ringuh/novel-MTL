@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react';
+import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField'
 
@@ -74,18 +74,7 @@ class ChapterDrawer extends Component {
     }
 
 
-    editParagraph = (event) => {
-        event.preventDefault()
-        //console.log(event.target.value, value)
-
-        let val = event.target.value
-        if (!this.state.newLine)
-            val = val.replace(/\n/g, ' ')
-        val = val.replace(/\n{2,}/g, '\n');
-        val = val.replace(/ {2,}/g, ' ');
-        this.setState({ ...this.state, content: val })
-
-    }
+    
 
     toggleParagraph = paragraph => {
 
@@ -103,12 +92,8 @@ class ChapterDrawer extends Component {
 
 
     render() {
-        const { paragraph, selectParagraph, views, key, classes } = this.props;
+        const { paragraph, proofreadParagraph, selectParagraph, key, classes } = this.props;
         const md = 12 /// views.length || 12
-
-
-
-        //if (!views.includes(paragraph.type) || paragraph.hide) return null
 
         // raw content
         if (paragraph.type === 'raw')
@@ -125,10 +110,10 @@ class ChapterDrawer extends Component {
             return (
                 <Grid item xs={12} md={md} key={key}
                     className={classes[paragraph.type]}
-                >{!this.state.edit &&
+                >{!this.state.edit && this.state.content.length > 0 &&
                     <Hammer onPress={() => this.toggleState('edit', true)}
-                        onSwipeLeft={(e) => this.props.selectParagraph(paragraph, -1)}
-                        onSwipeRight={(e) => this.props.selectParagraph(paragraph, 1)}
+                        onSwipeLeft={() => selectParagraph(paragraph, -1)}
+                        onSwipeRight={() => selectParagraph(paragraph, 1)}
                         onDoubleTap={e => console.log(e.type)}
                         options={{
                             recognizers: {
@@ -138,7 +123,7 @@ class ChapterDrawer extends Component {
                         }}
                     >
                         <div>
-                            {this.state.content}
+                            <span dangerouslySetInnerHTML={{ __html: this.state.tmp_content || this.state.content }} />
                             <SmallTitle type={paragraph.type} />
                         </div>
                     </Hammer>
@@ -151,7 +136,7 @@ class ChapterDrawer extends Component {
                                 placeholder="Avoid new lines as they will be considered new chapters on next load"
                                 //className={clsx(classes.textField, classes.dense)}
                                 value={this.state.content}
-                                onChange={this.editParagraph}
+                                onChange={(e) => proofreadParagraph(e, paragraph)}
                                 margin="dense"
                                 variant="outlined"
                                 multiline
@@ -168,8 +153,8 @@ class ChapterDrawer extends Component {
                                         }}
                                     />}
                                 label="Allow New Lines" />
-                            <Button type="submit">Submit</Button>
-                            <Button onClick={() => this.toggleState('edit', false)} type="submit">Cancel</Button>
+                            {/* <Button onClick={() => this.setSt} type="submit">Submit</Button> */}
+                            <Button onClick={() => this.toggleState('edit', false)} type="submit">Hide</Button>
                         </Box>
                     }
                 </Grid>
@@ -181,9 +166,9 @@ class ChapterDrawer extends Component {
             <Grid item xs={12} md={md} key={key}
                 className={classes[paragraph.type]}
             >
-                <Hammer onPress={() => this.props.selectParagraph(paragraph)}
-                    onSwipeLeft={(e) => this.props.selectParagraph(paragraph, -1)}
-                    onSwipeRight={(e) => this.props.selectParagraph(paragraph, 1)}
+                <Hammer onPress={() => selectParagraph(paragraph)}
+                    onSwipeLeft={(e) => selectParagraph(paragraph, -1)}
+                    onSwipeRight={(e) => selectParagraph(paragraph, 1)}
                     onDoubleTap={e => console.log(e.type)}
                     options={{
                         recognizers: {
@@ -193,9 +178,7 @@ class ChapterDrawer extends Component {
                     }}
                 >
                     <div>
-                        
-                        {paragraph.row}
-                        {paragraph.content}
+                        <span dangerouslySetInnerHTML={{ __html: this.state.content }} />
                         <SmallTitle type={paragraph.type} />
                     </div>
                 </Hammer>

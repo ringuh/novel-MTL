@@ -45,8 +45,7 @@ class ChapterBottomNav extends Component {
 
     toggleState = (attr, value) => {
         console.log(attr, value)
-        this.state[attr] = value
-        this.setState(this.state);
+        this.setState({...this.state, [attr]: value});
         
     }
 

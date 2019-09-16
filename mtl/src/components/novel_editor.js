@@ -95,7 +95,7 @@ class NovelEditor extends Component {
             console.log(res.data)
             console.log(res.data.error || res.data.message)
 
-            if (res.data._id) {
+            if (res.data.id) {
                 setTimeout(() => this.setState({
                     novel: res.data,
                     progress: false,

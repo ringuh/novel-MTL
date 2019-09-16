@@ -42,10 +42,8 @@ class ChapterEditor extends Component {
         this.state = {
             id: props.match.params.chapter_id,
             novel_id: props.match.params.novel_id,
+            swipeMode: true
         };
-
-        this.formChange = this.formChange.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
 
     }
 
@@ -63,27 +61,14 @@ class ChapterEditor extends Component {
 
     }
 
-    stateThis(attr, value) {
-
-    }
-
-    handleSubmit(event) {
-
-
-
-        event.preventDefault();
-    }
-
     componentDidMount() {
         if (!this.state.id) return false
         fetch(`/api/${this.props.match.url}`)
             .then(response => response.json())
+            .then(data => this.priority(data))
             .then(data => this.editParagraphs(data))
             //.then(data => this.setState(data))
             .then(st => console.log(this.state))
-
-
-
     }
 
 
@@ -91,6 +76,23 @@ class ChapterEditor extends Component {
         document.title = `set title fucksake`
 
     }
+
+    // check which paragraph to prioritize based on existence
+    // proofread > baidu > sogou
+    priority(data) {
+        const arr = ["proofread", 'baidu', 'sogou', 'raw']
+        for (var i in arr) {
+            const trans = arr[i]
+            if (data[trans] && data[trans].content.length > 0) {
+                data[trans].priority = true
+
+                break
+            }
+        }
+
+        return data
+    }
+
 
     editParagraphs(json) {
         let max_paragraphs = 0
@@ -101,8 +103,8 @@ class ChapterEditor extends Component {
         */
         const paragraphs = ['raw', 'baidu', 'sogou', 'proofread'].map(key => {
             if (!json[key]) {
-                json[key] = { show: false, content: '', title: '' }
-                return { type: key, paragraphs: [] }
+                json[key] = { hide: false, content: '', title: '' }
+                return { type: key, paragraphs: [], priority: false }
             }
 
             //do smth 
@@ -116,31 +118,49 @@ class ChapterEditor extends Component {
             // record the max number of paragraphs
             max_paragraphs = ps.length > max_paragraphs ? ps.length : max_paragraphs;
 
-            return { type: key, paragraphs: ps }
+            return { type: key, paragraphs: ps, priority: json[key].priority }
         })
         json.max_paragraphs = max_paragraphs
         json.paragraphs = []
-        for (var i = 0; i < max_paragraphs; ++i)
-            paragraphs.forEach((translation, index) => {
+        for (var i = 0; i < max_paragraphs; ++i) {
+            for (var j in paragraphs) {
+                const translation = paragraphs[j]
+                //paragraphs.forEach((translation, index) => {
                 let p = {
                     type: translation.type,
                     content: translation.paragraphs[i] || '',
-                    row: i
+                    row: i,
+                    hide: translation.priority || translation.type === 'raw' ? false : true
                 }
 
 
 
                 json.paragraphs.push(p)
 
-            })
+            }
+            //)
+        }
 
-        json.baidu.show = !json.proofread_id
-        json.sogou.show = !json.proofread_id
-        json.proofread.show = true
+        json.raw.hide = true
 
         console.log("chapters state", json)
 
         this.setState(json)
+
+    }
+
+    proofreadParagraph = (event, paragraph) => {
+        //event.preventDefault()
+        console.log(paragraph)
+        console.log(event.target.value)
+
+        let val = event.target.value
+        if (!this.state.newLine)
+            val = val.replace(/\n/g, ' ')
+        val = val.replace(/\n{2,}/g, '\n');
+        val = val.replace(/ {2,}/g, ' ');
+        paragraph.content = val
+        this.setState({ ...this.state })
 
     }
 
@@ -160,51 +180,45 @@ class ChapterEditor extends Component {
             paragraph.hide = true
             proofread.hide = false
 
-            this.state.proofread.count = this.state.paragraphs.filter(p => p.type === 'proofread' && p.content.length > 0).length
 
-            return this.setState({ ...this.state, paragraphs: this.state.paragraphs })
+
+            return this.setState({
+                ...this.state,
+                proofread: {
+                    ...this.state.proofread,
+                    count: this.state.paragraphs.filter(p => p.type === 'proofread' && p.content.length > 0).length
+                },
+                paragraphs: this.state.paragraphs
+            })
         }
 
         const index = alternatives.indexOf(paragraph)
         let targetIndex = index + option
         if (targetIndex >= alternatives.length) targetIndex = 0
         else if (targetIndex < 0) targetIndex = alternatives.length - 1
-        console.log(index, targetIndex)
-
 
         paragraph.hide = true
         alternatives[targetIndex].hide = false
-
-
-
-        console.log(alternatives)
-
-
 
         this.setState({ ...this.state, paragraphs: this.state.paragraphs })
 
     }
 
     translate = (terms) => {
-        console.log("translate", this.state.paragraphs)
-        if (!this.state.paragraphs) return false
-        console.log("this far");
-
+        if (!this.state.paragraphs) return false;
         ["baidu", "sogou", "proofread"].forEach(t => {
-            console.log(t)
-            terms.filter(t => !t.prompt).forEach(term => this.state[t].content = this.state[t].content
-                .replace(new RegExp(term.from, "gi"), `<strong>${term.to}</strong>`))
+            terms.forEach(term => {
+                this.setState({
+                    ...this.state, [t]: {
+                        ...this.state[t],
+                        content: this.state[t].content.replace(
+                            new RegExp(term.from, "gi"), `<strong>${term.to}</strong>`)
+                    }
+                })
+            })
 
         })
         this.editParagraphs(this.state)
-
-        //this.state.paragraphs[1].content = terms
-        //this.forceUpdate()
-    }
-
-    promptTranslate = event => {
-        console.log(event.currentTarget)
-        this.state.anchorEl = event.currentTarget
     }
 
     ChapterNav = () => {
@@ -238,6 +252,14 @@ class ChapterEditor extends Component {
 
     }
 
+    toggleSettings = (attr, val) => {
+        console.log("toggle settings", attr, val)
+        if (attr === 'hideRaw')
+            return this.setState({ ...this.state, raw: { ...this.state.raw, hide: val } })
+        if (attr === 'swipeMode')
+            return this.setState({ ...this.state, swipeMode: val })
+    }
+
 
 
     render() {
@@ -253,8 +275,8 @@ class ChapterEditor extends Component {
             return (
                 <LinearProgress color="secondary" />
             )
-        const views = ['raw', /* 'proofread', */ 'sogou', 'baidu'].filter(key => state[key].show)
-
+        const views = ['raw', 'proofread', 'sogou', 'baidu'].filter(key => !state[key].hide)
+        console.log(views)
 
         return (
             <Container type="div">
@@ -264,9 +286,10 @@ class ChapterEditor extends Component {
 
                 <Grid container spacing={3} className={classes.paragraphs}>
                     {this.state.paragraphs.map((p, index) => {
-                        if (index > 17 || p.hide) return ""
+                        if (!views.includes(p.type) || index > 17 || (state.swipeMode && p.hide)) return null
                         return <Paragraph key={index}
                             selectParagraph={this.selectParagraph}
+                            proofreadParagraph={this.proofreadParagraph}
                             views={views}
                             paragraph={p}
                         />
@@ -274,16 +297,17 @@ class ChapterEditor extends Component {
                 </Grid>
 
                 <this.ChapterNav />
+                <div>{state.swipeMode ? 'swipe' : 'noswipe'}</div>
                 <ChapterSnackbar count={state.proofread.count} max={state.max_paragraphs} />
 
-                <ChapterSettings />
+                <ChapterSettings settings={this.toggleSettings} chapter={this.state} />
 
                 <ChapterBottomNav
                     novel_id={state.novel_id}
                     translate={this.translate}
                     paragraphs={state.paragraphs}
                     chapter_id={state.id} />
-               
+
             </Container>
 
 

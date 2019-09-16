@@ -69,6 +69,11 @@ var createDB = async () => {
 		name: "妃要上天",
 		raw_url: "https://www.kenshu.cc/xiaoshuo/43495/",
 		description: null,
+	},
+	{
+		name: "The Devious First-Daughter",
+		raw_url: "https://www.kenshu.cc/xiaoshuo/51204/",
+		description: "Transmigrated to 14 year old from same family. Shitty family",
 	}
 	]
 

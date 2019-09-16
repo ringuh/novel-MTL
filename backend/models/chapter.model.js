@@ -1,3 +1,5 @@
+
+const { Op } = require('sequelize');
 module.exports = (sequelize, type) => {
 
     const Chapter = sequelize.define('Chapter', {
@@ -22,22 +24,67 @@ module.exports = (sequelize, type) => {
         },
         order: { type: type.INTEGER, defaultValue: 1 },
 
+        title: {
+            type: type.VIRTUAL,
+            get () {
+                return `Chapter ${this.getDataValue('order')}`
+            }
+          }
+
+
     }, {
-            timestamps: true,
-        });
-    
+        timestamps: true,
+    });
+
 
     Chapter.prototype.contentSave = function (obj) {
         obj.where.chapter_id = this.id
         return sequelize.models.Content.findOrCreate(obj)
     }
 
+    Chapter.prototype.reOrder = function () {
+        console.log("not ordering", this.id, this.order)
+        return sequelize.models.Chapter.findAll({
+            where: {
+                novel_id: this.novel_id,
+                id: { [Op.not]: this.id },
+                order: { [Op.gte]: this.order }
+            },
+            order: [["order", "ASC"],
+                    ["id", "ASC"]]
+        }).then(chapters => {
+            let runningNr = this.order
+            chapters.forEach(c => {
+                ++runningNr
+                if(c.order === runningNr)
+                    c.update({order: runningNr}).then(c => c.save())
+            })
+            
+            return runningNr
+        })
+
+
+    }
+
     Chapter.prototype.toJson = function (length_only) {
         let ret = this.dataValues
-
+        ret.title = this.title
+        
         // LENGTH_ONLY drops the replaces content data with string length / paragraph count
         const conts = ['raw', 'baidu', 'sogou', 'proofread'].filter(c => ret[c])
-        if (length_only) {
+        for (var i in conts) {
+            ret.title = ret[conts[i]].title || ret.title
+            
+            if (length_only === "paragraphs")
+                ret[conts[i]] = ret[conts[i]].content ? ret[conts[i]].content.split("\n").length : null
+            else if(length_only)
+                ret[conts[i]] = ret[conts[i]].content ? ret[conts[i]].content.length : null
+            
+            
+        }
+        
+        
+      /*   if (length_only) {
             for (var i in conts) {
                 if (length_only == "paragraphs")
                     ret[conts[i]] = ret[conts[i]].content ? ret[conts[i]].content.split("\n").length : null
@@ -45,8 +92,8 @@ module.exports = (sequelize, type) => {
                     ret[conts[i]] = ret[conts[i]].content ? ret[conts[i]].content.length : null
             }
 
-        }
-       
+        } */
+
         return ret
     }
 

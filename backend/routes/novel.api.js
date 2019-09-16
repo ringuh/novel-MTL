@@ -16,7 +16,7 @@ const capitalize = (s) => {
 }
 
 router.get("/", (req, res) => {
-	console.log(req.method, req.url, req.body, req.params, req.query)
+	//console.log(req.method, req.url, req.body, req.params, req.query)
 	Novel.findAll({
 		attributes: ["id", "name", "image_url", "description"],
 		order: ['name']
@@ -30,7 +30,7 @@ router.get("/", (req, res) => {
 
 router.route(["/create", "/:id"])
 	.get(function (req, res, next) {
-		console.log(req.method, req.url, req.body, req.params, req.query)
+		//console.log(req.method, req.url, req.body, req.params, req.query)
 		Novel.findOne({ where: { id: req.params.id } })
 			.then(novel => res.json(novel))
 			.catch(err => {
@@ -38,11 +38,10 @@ router.route(["/create", "/:id"])
 				res.json({ error: err.message })
 			})
 	}).post(function (req, res, next) {
-
-		if (req.body.id !== req.params.id)
-			return res.json({ error: "/:id the path doesn't match '_id' of post" })
 		console.log(req.method, req.url, req.body, req.params, req.query)
-
+		if (req.params.id && req.body.id !== parseInt(req.params.id))
+			return res.json({ error: "/:id the path doesn't match '_id' of post" })
+		
 		if (req.params.id)
 			Novel.findByPk(req.params.id, { raw: false }).then((novel) => {
 				if (!novel)
@@ -74,11 +73,11 @@ router.route(["/create", "/:id"])
 
 router.route("/:id/chapter")
 	.get(function (req, res, next) {
-		console.log(req.method, req.url, req.body, req.params, req.query)
+		//console.log(req.method, req.url, req.body, req.params, req.query)
 
 		let query = {
 			where: { novel_id: req.params.id },
-			attributes: ["id", "novel_id", "order", "url", "updatedAt", "createdAt"],
+			//attributes: ["id", "novel_id", "order", "title", "url", "updatedAt", "createdAt"],
 			order: [["order"], ['id']],
 			include: [ // dont offer RAWless chapters for translators
 				{ model: Content, as: 'raw', required: req.query.translator ? true : false },
@@ -101,7 +100,7 @@ router.route("/:id/chapter")
 		if (req.query.translator && !req.query.force) {
 			query.where[`${req.query.translator}_id`] = { [Sequelize.Op.is]: null }
 		}
-		console.log(query)
+		
 		Chapter.findAll(query).then((chapters) => {
 			return res.json(chapters.map(chapter => chapter.toJson(req.query.content_length)))
 		})
@@ -113,7 +112,7 @@ router.route("/:id/chapter")
 
 router.route(["/:novel_id/chapter/:chapter_id"])
 	.get(function (req, res, next) {
-		console.log(req.method, req.url, req.body, req.params, req.query)
+		//console.log(req.method, req.url, req.body, req.params, req.query)
 		let query = {
 			where: { id: parseInt(req.params.chapter_id) },
 			include: ['raw', 'baidu', 'proofread', 'sogou']
@@ -163,7 +162,7 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 
 router.route(["/:novel_id/terms"])
 	.get(function (req, res, next) {
-		console.log(req.method, req.url, req.body, req.params, req.query)
+		//console.log(req.method, req.url, req.body, req.params, req.query)
 		let query = {
 			where: { novel_id: parseInt(req.params.novel_id) },
 		}

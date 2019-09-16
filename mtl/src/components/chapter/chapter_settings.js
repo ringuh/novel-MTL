@@ -53,7 +53,7 @@ class ChapterSettings extends Component {
 
 
     render() {
-        const { classes } = this.props;
+        const { classes, settings, chapter } = this.props;
         const state = this.state
 
 
@@ -66,9 +66,9 @@ class ChapterSettings extends Component {
                         <Grid item xs={5}>Show all</Grid>
                         <Grid item xs={2}>
                             <Switch
-                                checked={state.checkedC}
-                                onChange={() => 'checkedC'}
-                                value="checkedC"
+                                checked={chapter.swipeMode ? true: false}
+                                onChange={() => settings('swipeMode', !chapter.swipeMode)}
+                                value={chapter.swipeMode}
                             />
                         </Grid>
                         <Grid item xs={5}>Swipe between</Grid>
@@ -78,9 +78,9 @@ class ChapterSettings extends Component {
                         <Grid item xs={5}></Grid>
                         <Grid item xs={2}>
                             <Switch
-                                checked={state.checkedD}
-                                onChange={() => 'checkedD'}
-                                value="checkedD"
+                                checked={chapter.raw.hide ? false: true}
+                                onChange={() => settings('hideRaw', !chapter.raw.hide)}
+                                value={!chapter.raw.hide}
                             />
                         </Grid>
                         <Grid item xs={5}>Show RAW</Grid>
