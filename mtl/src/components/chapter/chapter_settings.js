@@ -1,15 +1,10 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
-import { amber, green } from '@material-ui/core/colors';
+import { green } from '@material-ui/core/colors';
 import Box from '@material-ui/core/Box';
 import Grid from '@material-ui/core/Grid';
 import Switch from '@material-ui/core/Switch';
-import Button from '@material-ui/core/Button';
-import Snackbar from '@material-ui/core/Snackbar';
-import SnackbarContent from '@material-ui/core/SnackbarContent';
-import CloseIcon from '@material-ui/icons/Close';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import InfoIcon from '@material-ui/icons/Info';
+
 
 const styles = theme => ({
     grid: {

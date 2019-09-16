@@ -1,18 +1,13 @@
 import React, { Component, useState } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField'
-import Link from '@material-ui/core/Link';
-import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
-import Divider from '@material-ui/core/Divider';
+
 import Grid from '@material-ui/core/Grid';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import ListItemText from '@material-ui/core/ListItemText';
-import ListSubheader from '@material-ui/core/ListSubheader';
-import { borderTop } from '@material-ui/system';
-import ArrowBackIcon from '@material-ui/icons/ArrowBackSharp';
+
 import Hammer from 'react-hammerjs'
 import { useSpring, animated } from 'react-spring'
 

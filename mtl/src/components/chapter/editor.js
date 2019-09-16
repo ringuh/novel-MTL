@@ -1,35 +1,18 @@
 import React, { Component } from 'react';
-//import { BrowserRouter, Switch, Route, Link, Redirect } from 'react-router-dom';
-import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import 'react-image-crop/dist/ReactCrop.css';
 import LinearProgress from '@material-ui/core/LinearProgress';
-import { Grid, GridList, GridListTile, Paper, Avatar, Link, Box, Container } from '@material-ui/core';
-import { BottomNavigation, BottomNavigationAction } from '@material-ui/core';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
-import Typography from '@material-ui/core/Typography';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
-import Divider from '@material-ui/core/Divider';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import Switch from '@material-ui/core/Switch';
+import { Grid, Box, Container } from '@material-ui/core';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import ChapterBottomNav from './bottom_nav'
 import Button from '@material-ui/core/Button'
-import ButtonGroup from '@material-ui/core/ButtonGroup'
-import Popper from '@material-ui/core/Popper'
+
 import Paragraph from './paragraph'
 import ChapterSnackbar from './chapter_snackbar'
 import ChapterSettings from './chapter_settings'
 import ForwardIcon from '@material-ui/icons/ArrowForwardIos'
 import BackIcon from '@material-ui/icons/ArrowBackIos'
-import Snackbar from '@material-ui/core/Snackbar';
-import SnackbarContent from '@material-ui/core/SnackbarContent';
 
 
 
@@ -266,11 +249,11 @@ class ChapterEditor extends Component {
             return <Redirect to={`./${this.state.redirect}`} />
         } */
 
-        if (!this.state.paragraphs)
+        if (!state.paragraphs)
             return (
                 <LinearProgress color="secondary" />
             )
-        const views = ['raw', /* 'proofread', */ 'sogou', 'baidu'].filter(key => this.state[key].show)
+        const views = ['raw', /* 'proofread', */ 'sogou', 'baidu'].filter(key => state[key].show)
 
 
         return (
@@ -291,15 +274,15 @@ class ChapterEditor extends Component {
                 </Grid>
 
                 <this.ChapterNav />
-                <ChapterSnackbar count={this.state.proofread.count} max={this.state.max_paragraphs} />
+                <ChapterSnackbar count={state.proofread.count} max={state.max_paragraphs} />
 
                 <ChapterSettings />
 
                 <ChapterBottomNav
-                    novel_id={this.state.novel_id}
+                    novel_id={state.novel_id}
                     translate={this.translate}
-                    paragraphs={this.state.paragraphs}
-                    chapter_id={this.state.id} />
+                    paragraphs={state.paragraphs}
+                    chapter_id={state.id} />
                
             </Container>
 

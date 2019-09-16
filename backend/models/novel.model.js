@@ -21,7 +21,7 @@ module.exports = function (seq, type) {
 		},
 		image_url: {
 			type: type.STRING,
-			defaultValue: "/static/dist/default.jpg"
+			defaultValue: "/files/dist/default.jpg"
 		}, // image of the book
 		raw_url: {
 			type: type.STRING,
