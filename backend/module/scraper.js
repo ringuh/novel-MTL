@@ -117,7 +117,7 @@ const Scraper = async (data, connection) => {
             }).catch((err) => sendJson(err))
     }
 
-    const ScrapeChapter = async (chapter, limit = 3) => {
+    const ScrapeChapter = async (chapter, limit = 50) => {
         console.log(limit, "scrape chapter", chapter.url)
         // get the parser template for this website
         const raw = await GetRaw(chapter.url)

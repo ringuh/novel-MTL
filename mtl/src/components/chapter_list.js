@@ -43,7 +43,7 @@ class ChapterList extends Component {
 
     generateTranslateString(){
         let str = {
-            url: `${global.config.server.url}:${global.config.server.port}/api/novel/${this.state.id}/chapter`,
+            url: `${global.config.server.api}/novel/${this.state.id}/chapter`,
             chapter_id: -1,
             limit: 100
         }
