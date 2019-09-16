@@ -15,9 +15,8 @@ app.listen(global.config.server.port, () => {
     console.log(`Server is running on port: ${global.config.server.port}`);
     ws.init()
 });
-app.use('/static', express.static(path.join(__dirname, 'static')))
+app.use('/api/static', express.static(path.join(__dirname, 'static')))
 //app.use("/auth", require("./routes/login.api"))
-app.use("/novel", require("./routes/novel.api"))
-//app.use("/chapter", require("./routes/chapter.api"))
+app.use("/api/novel", require("./routes/novel.api"))
 
 module.exports = app;

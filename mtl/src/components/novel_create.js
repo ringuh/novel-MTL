@@ -37,7 +37,7 @@ export default class NovelCreate extends React.Component {
     handleSubmit() {
         var subm = async () => {
             this.setState({progress: true})
-            let res = await axios.post('/novel/create', this.state);
+            let res = await axios.post('/api/novel/create', this.state);
             
             
             console.log(res.data.error || res.data.message)

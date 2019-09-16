@@ -67,32 +67,12 @@ class ChapterBottomNav extends Component {
 
     }
 
-
-
-
     toggleState = (attr, value) => {
         console.log(attr, value)
         this.state[attr] = value
         this.setState(this.state);
         
     }
-
-
-    componentDidMount() {
-        return true
-        fetch(`/novel/${this.state.novel_id}/chapter`)
-            .then(response => response.json())
-            .then(data => this.setState({ ...this.state, chapters: data }))
-            .then(st => console.log(this.state))
-
-
-
-    }
-
-    componentDidUpdate() {
-
-    }
-   
 
     render() {
         const { classes } = this.props;

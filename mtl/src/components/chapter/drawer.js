@@ -40,7 +40,7 @@ class ChapterDrawer extends Component {
 
 
     componentDidMount() {
-        fetch(`/novel/${this.state.novel_id}/chapter`)
+        fetch(`/api/novel/${this.state.novel_id}/chapter`)
             .then(response => response.json())
             .then(data => this.setState({ ...this.state, chapters: data }))
             .then(st => console.log(this.state))

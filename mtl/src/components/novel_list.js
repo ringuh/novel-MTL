@@ -29,7 +29,7 @@ class NovelList extends Component {
 
         /* if (this.props.match.url != this.props.location.pathname)
             return true */
-        fetch('/novel')
+        fetch('/api/novel')
             .then(response => response.json())
             .then(data => this.setState({ novels: data }));
 

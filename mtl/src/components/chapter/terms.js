@@ -90,7 +90,7 @@ class TermDrawer extends Component {
         if (del) json.prompt = del
 
         term.post = true
-        axios.post(`/novel/${this.state.novel_id}/terms`, json)
+        axios.post(`/api/novel/${this.state.novel_id}/terms`, json)
             .then(res => {
                 console.log("term save", res.data)
                 if (res.data.id) {
@@ -103,7 +103,7 @@ class TermDrawer extends Component {
 
     
     componentDidMount() {
-        fetch(`/novel/${this.state.novel_id}/terms`)
+        fetch(`/api/novel/${this.state.novel_id}/terms`)
             .then(response => response.json())
             .then(data => this.setState({ ...this.state, terms: data }))
             .then(st => console.log(this.state))

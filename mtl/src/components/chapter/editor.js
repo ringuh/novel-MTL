@@ -93,7 +93,7 @@ class ChapterEditor extends Component {
 
     componentDidMount() {
         if (!this.state.id) return false
-        fetch(`${this.props.match.url}`)
+        fetch(`/api/${this.props.match.url}`)
             .then(response => response.json())
             .then(data => this.editParagraphs(data))
             //.then(data => this.setState(data))
@@ -295,16 +295,12 @@ class ChapterEditor extends Component {
 
                 <ChapterSettings />
 
-                <Popper id="popper" open={this.state.anchorEl ? true : false} anchorEl={this.state.anchorEl}>
-                    <div>The content of the Popper.</div>
-                </Popper>
-
                 <ChapterBottomNav
                     novel_id={this.state.novel_id}
                     translate={this.translate}
                     paragraphs={this.state.paragraphs}
                     chapter_id={this.state.id} />
-                <textarea onChange={() => console.log("textarea value changed")} value={JSON.stringify(this.state.paragraphs[3])}></textarea>
+               
             </Container>
 
 

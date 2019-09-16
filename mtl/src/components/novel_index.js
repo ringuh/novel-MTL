@@ -18,13 +18,6 @@ class NovelIndex extends Component {
 
     }
 
-    componentDidMount() {
-        //console.log(this.props.match.url, this.props.location.pathname)
-        // dont fetch if not on main page
-
-    }
-
-
     render() {
 
         return (

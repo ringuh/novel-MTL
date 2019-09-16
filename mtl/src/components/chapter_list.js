@@ -43,7 +43,7 @@ class ChapterList extends Component {
 
     generateTranslateString(){
         let str = {
-            url: `${global.config.server.url}:${global.config.server.port}/novel/${this.state.id}/chapter`,
+            url: `${global.config.server.url}:${global.config.server.port}/api/novel/${this.state.id}/chapter`,
             chapter_id: -1,
             limit: 100
         }
@@ -84,7 +84,7 @@ class ChapterList extends Component {
     initWS() {
         window.WebSocket = window.WebSocket || window.MozWebSocket;
 
-        this.connection = new WebSocket('ws://127.0.0.1:1337');
+        this.connection = new WebSocket(global.config.server.websocket);
         this.connection.onopen = () => {
             // connection is opened and ready to use
             this.writeConsole("Websocket ready")
@@ -110,7 +110,7 @@ class ChapterList extends Component {
     }
 
     fetchChapters() {        
-        fetch(`/novel/${this.state.id}/chapter?content_length=paragraphs`)
+        fetch(`/api/novel/${this.state.id}/chapter?content_length=paragraphs`)
             .then(response => response.json())
             .then(data => { console.log(data); return data })
             .then(data => this.setState({

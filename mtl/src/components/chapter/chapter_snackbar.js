@@ -34,9 +34,6 @@ class ChapterSnackbar extends Component {
         this.state = {
 
         };
-
-
-
     }
 
     Show = bool => {

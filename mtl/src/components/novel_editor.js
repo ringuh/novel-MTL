@@ -90,7 +90,7 @@ class NovelEditor extends Component {
 
         var subm = async () => {
             this.setState({ progress: true })
-            let res = await axios.post(`/novel/${this.state.id}`, this.state.novel);
+            let res = await axios.post(`/api/novel/${this.state.id}`, this.state.novel);
 
             console.log(res.data)
             console.log(res.data.error || res.data.message)
@@ -114,7 +114,7 @@ class NovelEditor extends Component {
         if (!this.state.id) return false
         document.title = "Fetching novel"
 
-        fetch(`/novel/${this.state.id}`)
+        fetch(`/api/novel/${this.state.id}`)
             .then(response => response.json())
             .then(data => this.setState({
                 novel: data,
@@ -170,8 +170,6 @@ class NovelEditor extends Component {
                                             label={field.label}
                                             value={this.state.novel[field.name] || ""}
                                             onChange={this.formChange}
-                                            //helperText={this.state.novel[field.name].message || ""}
-                                            //error={this.state.}
                                             margin="normal"
                                             disabled={this.state.progress || !this.state.edit}
                                             fullWidth
