@@ -12,7 +12,7 @@ import Hammer from 'react-hammerjs'
 import { useSpring, animated } from 'react-spring'
 
 
-const styles = {
+const styles = theme => ({
     paragraph: {
         backgroundColor: 'red'
     },
@@ -41,7 +41,10 @@ const styles = {
     border: {
         border: "1px solid black"
     },
-};
+    button: {
+        float: "right"
+    },
+});
 
 
 const SmallTitle = ({ type, duration = 4000 }) => {
@@ -153,8 +156,11 @@ class ChapterDrawer extends Component {
                                         }}
                                     />}
                                 label="Allow New Lines" />
-                            {/* <Button onClick={() => this.setSt} type="submit">Submit</Button> */}
-                            <Button onClick={() => this.toggleState('edit', false)} type="submit">Hide</Button>
+                            
+                            <Button className={classes.button} 
+                                variant="outlined"
+                                color="secondary"
+                                onClick={() => this.toggleState('edit', false)} type="submit">Hide</Button>
                         </Box>
                     }
                 </Grid>

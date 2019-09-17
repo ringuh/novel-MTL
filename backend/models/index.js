@@ -13,7 +13,10 @@ const sequelize = new Sequelize(
     global.config.db.pass,
     global.config.db.options)
 sequelizeTransforms(sequelize, {
-    slugify: (val, def) => def.slugify ? slugify(val): val,
+    slugify: (val, def) => {
+        console.log("slugifying")
+        return def.slugify ? slugify(val, { lower: true }): val
+    },
     cut: (val, def) => {
         return val ? val.toString().slice(0, def.cut): val
     },

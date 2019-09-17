@@ -8,6 +8,27 @@ import ListItemText from '@material-ui/core/ListItemText';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import Avatar from '@material-ui/core/Avatar';
 import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
+
+
+const styles = theme => ({
+
+    paragraphs: {
+        textAlign: 'left'
+    },
+
+    bottom: {
+        position: "sticky",
+        bottom: "0px"
+
+    },
+
+    chapterNav: {
+        margin: "2em auto"
+    }
+});
+
+
 
 class NovelList extends Component {
     constructor(props) {
@@ -17,44 +38,32 @@ class NovelList extends Component {
             novels: null,
         };
 
-        //this.handleChange = this.handleChange.bind(this);
-        //this.handleSubmit = this.handleSubmit.bind(this);
-
 
     }
 
     componentDidMount() {
-        //console.log(this.props.match.url, this.props.location.pathname)
-        // dont fetch if not on main page
-
-        /* if (this.props.match.url != this.props.location.pathname)
-            return true */
         fetch('/api/novel')
             .then(response => response.json())
+            .then(data => { console.log("novels", data); return data})
             .then(data => this.setState({ novels: data }));
-
     }
 
 
     render() {
-        if (!this.state.novels)
+        const { classes } = this.props
+        const state = this.state
+
+        if (!state.novels)
             return (<LinearProgress color="secondary" />)
 
         return (
             <div>
                 <h2>Novel listing</h2>
-                <ul>
-                    {this.state.novels.map(({ name, id }) => (
-                        <li key={id}>
-                            <Link to={`${this.props.match.path}/${id}`}>{name}</Link>
-                        </li>
-                    ))}
-                </ul>
-                <div>{JSON.stringify(this.state.novels)}</div>
 
-                <List className="">
-                {this.state.novels.map((novel) => (
-                    <a href={`${this.props.match.path}/${novel.id}`} key={novel.id}>
+                <List className={classes.root}>
+                {state.novels.map((novel) => (
+                    <Link to={`/novel/${novel.alias}`} key={novel.id}>
+                    
                     <ListItem alignItems="flex-start" >
                         <ListItemAvatar>
                             <Avatar alt={novel.name} src={novel.image_url} />
@@ -78,7 +87,7 @@ class NovelList extends Component {
                         
                     </ListItem>
                     <Divider variant="inset" component="li" />
-                    </a>
+                    </Link>
                  ))}
                     
                
@@ -89,4 +98,4 @@ class NovelList extends Component {
     }
 }
 
-export default NovelList;
+export default withStyles(styles)(NovelList);

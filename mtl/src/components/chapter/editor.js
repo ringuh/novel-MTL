@@ -17,7 +17,7 @@ import BackIcon from '@material-ui/icons/ArrowBackIos'
 
 
 
-const styles = {
+const styles = theme => ({
 
     paragraphs: {
         textAlign: 'left'
@@ -32,7 +32,7 @@ const styles = {
     chapterNav: {
         margin: "2em auto"
     }
-};
+});
 
 
 class ChapterEditor extends Component {
@@ -40,8 +40,7 @@ class ChapterEditor extends Component {
         super(props);
         console.log("chapter editor", props)
         this.state = {
-            id: props.match.params.chapter_id,
-            novel_id: props.match.params.novel_id,
+            id: props.chapter_id,
             swipeMode: true
         };
 

@@ -1,13 +1,10 @@
 import React, { Component } from 'react';
-import { Route, Redirect } from 'react-router-dom';
 import axios from 'axios';
-import ChapterList from './chapter_list'
 import Button from '@material-ui/core/Button';
 //import ReactCrop from 'react-image-crop';
 import { withStyles } from '@material-ui/core/styles';
 import 'react-image-crop/dist/ReactCrop.css';
 import TextField from '@material-ui/core/TextField';
-import LinearProgress from '@material-ui/core/LinearProgress';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import SaveIcon from '@material-ui/icons/Save';
 import EditIcon from '@material-ui/icons/Edit';
@@ -16,7 +13,7 @@ import { Grid, Paper, Box, Container } from '@material-ui/core';
 
 
 
-const styles = {
+const styles = theme => ({
     transparentBar: {
       backgroundColor: 'transparent !important',
       boxShadow: 'none',
@@ -29,22 +26,16 @@ const styles = {
         maxHeight:"100%",
         width: "auto",
         height: "auto",
+        padding: "1em"
     }
-  };
+  });
 
 
 class NovelEditor extends Component {
     constructor(props) {
         super(props);
         console.log("novel editor", props)
-        this.state = {
-            id: props.match.params.id,
-            novel: {
-                name: "",
-                description: "",
-            },
-
-        };
+        this.state = {...props.novel};
 
         this.formChange = this.formChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -72,88 +63,44 @@ class NovelEditor extends Component {
 
     ]
 
-
-
     formChange(e) {
         this.setState({
-            novel: { ...this.state.novel, ...{ [e.target.name]: e.target.value } },
-            //message: null,
-            //error: false 
+           [e.target.name]: e.target.value,
         })
 
 
     }
 
     handleSubmit(event) {
-
-        console.log(event, this.state)
-
-        var subm = async () => {
-            this.setState({ progress: true })
-            let res = await axios.post(`/api/novel/${this.state.id}`, this.state.novel);
-
-            console.log(res.data)
-            console.log(res.data.error || res.data.message)
-
-            if (res.data.id) {
-                setTimeout(() => this.setState({
-                    novel: res.data,
-                    progress: false,
-                    edit: false
-                }), 1000)
-            }
-
-        };
-
-        subm();
-
         event.preventDefault();
+        console.log(event, this.state)
+        this.setState({ progress: true })
+
+        axios.post(`/api/novel/${this.state.id}`, this.state)
+        .then(res => {
+            if(!res.data.id) throw res.data
+        }).catch(err => console.log(err))
+        .then(()=> this.props.getNovel())
+        .then(() => this.setState({...this.props.novel}))
+        .finally(() => this.setState({ progress: false, edit: false }))
     }
-
-    componentDidMount() {
-        if (!this.state.id) return false
-        document.title = "Fetching novel"
-
-        fetch(`/api/novel/${this.state.id}`)
-            .then(response => response.json())
-            .then(data => this.setState({
-                novel: data,
-                edit: data.raw_url ? false : true
-            }));
-
-    }
-
-    componentDidUpdate() {
-        document.title = this.state.edit ? `Editing ${this.state.novel.name}` : `Novel ${this.state.novel.name}`
-    }
-
-
 
     render() {
         const { classes } = this.props;
-
-        if (this.state.redirect) {
-            return <Redirect to={`./${this.state.redirect}`} />
-        }
-
-        if (!this.state.novel.name)
-            return (
-                <LinearProgress color="secondary" />
-            )
-
+        const state = this.state
 
         // the edit view
         return (
             <Container>
-                <Paper>
+                <Paper><div>{JSON.stringify(this.state)}</div>
                     <Box component="form" p={2}
                         onSubmit={this.handleSubmit}
                         autoComplete="off" >
                         <Grid container>
                             <Grid item xs={2}>
                                 <img className={classes.avatar} 
-                                    alt={this.state.novel.name}
-                                    src={this.state.novel.image_url} />
+                                    alt={state.name}
+                                    src={state.image_url} />
                             </Grid>
                             <Grid container item xs={9}>
                                 {this.fields.map((field) =>
@@ -168,7 +115,7 @@ class NovelEditor extends Component {
                                             type={field.type}
                                             placeholder={field.placeholder}
                                             label={field.label}
-                                            value={this.state.novel[field.name] || ""}
+                                            value={state[field.name] || ""}
                                             onChange={this.formChange}
                                             margin="normal"
                                             disabled={this.state.progress || !this.state.edit}
@@ -206,13 +153,9 @@ class NovelEditor extends Component {
                                     <EditIcon color="primary" fontSize="large" />
                                 </Button>
                             </Grid>
-                           
                         </Grid>
                     </Box>
                 </Paper>
-
-                {/* <ChapterList novel={this.props.match.params.id}/> */}
-                <Route path={this.props.match.path} component={ChapterList}/>
             </Container>
         );
     }

@@ -18,7 +18,7 @@ const capitalize = (s) => {
 router.get("/", (req, res) => {
 	//console.log(req.method, req.url, req.body, req.params, req.query)
 	Novel.findAll({
-		attributes: ["id", "name", "image_url", "description"],
+		attributes: ["id", "name", "image_url", "description", 'alias'],
 		order: ['name']
 	}).then(novels => {
 		res.json(novels)
@@ -31,7 +31,11 @@ router.get("/", (req, res) => {
 router.route(["/create", "/:id"])
 	.get(function (req, res, next) {
 		//console.log(req.method, req.url, req.body, req.params, req.query)
-		Novel.findOne({ where: { id: req.params.id } })
+		let query = { alias: req.params.id }
+		if (parseInt(req.params.id)) query = { id: parseInt(req.params.id) }
+
+
+		Novel.findOne({ where: query })
 			.then(novel => res.json(novel))
 			.catch(err => {
 				console.log(red(err.message))
@@ -41,32 +45,30 @@ router.route(["/create", "/:id"])
 		console.log(req.method, req.url, req.body, req.params, req.query)
 		if (req.params.id && req.body.id !== parseInt(req.params.id))
 			return res.json({ error: "/:id the path doesn't match '_id' of post" })
-		
-		if (req.params.id)
-			Novel.findByPk(req.params.id, { raw: false }).then((novel) => {
-				if (!novel)
-					return res.json({ error: `Novel by ID ${req.params.id} not found` })
-				novel.name = req.body.name
-				novel.decription = req.body.decription
-				novel.raw_directory = req.body.raw_directory
-				novel.raw_url = req.body.raw_url
-				novel.save().then(novel => res.json(novel))
+
+		if (req.params.id) {
+			Novel.findOrCreate({
+				where: { id: req.params.id },
+				defaults: {
+					name: req.body.name,
+					description: req.body.description,
+					raw_url: req.body.raw_url,
+				}
+			}
+			).then(([novel, created]) => {
+				if (created) return res.json({ message: `Novel ${novel.name} created succesfully`, id: novel.id })
+
+				return novel.update({
+					name: req.body.name,
+					raw_url: req.body.raw_url,
+					description: req.body.description,
+				}).then(nov => res.json({ message: `Novel ${nov.name} updated`, id: nov.id }))
 			}).catch(err => {
-				console.log(red(err.message))
+				console.log(cyan(err.message))
 				res.json({ error: err.message })
 			});
-		else
-			Novel.create({
-				name: req.body.name,
-				decription: req.body.decription,
-				raw_directory: req.body.raw_directory,
-				raw_url: req.body.raw_url,
-			}).then(novel =>
-				res.json({ message: `Novel ${novel.name} created succesfully`, id: novel.id })
-			).catch(err => {
-				console.log(red(err.message))
-				res.json({ error: err.message })
-			});
+		}
+
 	});
 
 
@@ -100,7 +102,7 @@ router.route("/:id/chapter")
 		if (req.query.translator && !req.query.force) {
 			query.where[`${req.query.translator}_id`] = { [Sequelize.Op.is]: null }
 		}
-		
+
 		Chapter.findAll(query).then((chapters) => {
 			return res.json(chapters.map(chapter => chapter.toJson(req.query.content_length)))
 		})

@@ -10,6 +10,14 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import axios from 'axios'
+import { withStyles } from '@material-ui/core/styles';
+
+const styles = theme => ({
+    root: {
+        textAlign: 'left'
+    },
+});
+
 
 export default class NovelCreate extends React.Component {
     constructor(props) {

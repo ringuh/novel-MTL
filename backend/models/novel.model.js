@@ -11,13 +11,18 @@ module.exports = function (seq, type) {
 			unique: { args: true, msg: "Novel name already in use" },
 			allowNull: false,
 			trim: true,
+			set(val) {
+				this.alias = val
+				this.setDataValue('name', val)				
+			}
 			//slugify: true
 		},
 		alias: { // slugified version of the name
 			type: type.STRING,
 			unique: { args: true, msg: "Novel alias needs to be unique" },
 			trim: true,
-			slugify: true
+			slugify: true,
+			allowNull: true,
 		},
 		image_url: {
 			type: type.STRING,

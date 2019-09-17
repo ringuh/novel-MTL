@@ -1,8 +1,17 @@
 import React from 'react';
 import { Redirect, Link } from 'react-router-dom';
-import NovelCreate from './novel_create';
+import NovelCreate from './novel/novel_create';
 import Snacky from './chapter/chapter_snackbar'
+import { withStyles } from '@material-ui/core/styles';
 
+
+
+const styles = theme => ({
+
+    paragraphs: {
+        textAlign: 'left'
+    },
+});
 
 class MainPage extends React.Component {
     constructor(props) {

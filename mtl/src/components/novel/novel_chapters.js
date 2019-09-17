@@ -1,20 +1,19 @@
 import React, { Component } from 'react';
-import { Redirect } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 //import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
 import {
-    Box, Container,  Button,
-    Typography, TextField, 
+    Box, Container, Button,
+    Typography, TextField,
     List, ListItem, Divider, ListItemText
 } from '@material-ui/core'
-import LinearProgress from '@material-ui/core/LinearProgress';
-//import CircularProgress from '@material-ui/core/CircularProgress';
 import CloudDownloadIcon from '@material-ui/icons/CloudDownloadOutlined';
+import ProgressBar from '../util/ProgressBar'
+import { green } from '@material-ui/core/colors'
 
 
 
-
-const styles = {
+const styles = theme => ({
     form: {
         width: "100%",
         maxWidth: "600px",
@@ -23,46 +22,38 @@ const styles = {
     textField: {
         width: "100%"
     },
-};
+});
 
 
-class ChapterList extends Component {
+class NovelChapters extends Component {
     constructor(props) {
         super(props);
         console.log("chapter list", props)
         this.state = {
-            id: props.match.params.id,
-            edit: true,
+            id: props.novel.id,
             wsFeed: []
         };
 
-        this.handleChange = this.handleChange.bind(this);
+
         this.handleSubmit = this.handleSubmit.bind(this);
 
     }
 
-    generateTranslateString(){
+    generateTranslateString() {
         let str = {
             url: `${global.config.server.api}/novel/${this.state.id}/chapter`,
             chapter_id: -1,
             limit: 100
         }
-        this.setState({translateString: JSON.stringify(str) })
-    }
-
-    handleChange(e) {
-        //this.setState({ chapter_id: e.target.value })
-
-
+        this.setState({ translateString: JSON.stringify(str) })
     }
 
     handleSubmit(chapter_id, limit, overwrite) {
 
-        if(this.connection.readyState > 1)
-        {
+        if (this.connection.readyState > 1) {
             this.initWS()
 
-            setTimeout(()=> this.handleSubmit(chapter_id, limit, overwrite), 2000);
+            setTimeout(() => this.handleSubmit(chapter_id, limit, overwrite), 2000);
             return true
         }
 
@@ -73,12 +64,12 @@ class ChapterList extends Component {
             limit: limit,
             overwrite: overwrite
         }))
-        
+
     }
 
     writeConsole(line) {
         this.setState({ wsFeed: [line.toString(), ...this.state.wsFeed] })
-        
+
     }
 
     initWS() {
@@ -93,13 +84,13 @@ class ChapterList extends Component {
         this.connection.onerror = (error) => console.log("WS", error)
 
         this.connection.onmessage = (message) => {
-            try {                
+            try {
                 var json = JSON.parse(message.data);
-                
+
                 this.writeConsole(json.msg)
 
-                if(json.command === "reload_chapters")
-                    this.fetchChapters()
+                if (json.command === "reload_chapters")
+                    this.props.fetchChapters()
 
             } catch (e) {
                 console.log(e)
@@ -109,7 +100,8 @@ class ChapterList extends Component {
         };
     }
 
-    fetchChapters() {        
+    fetchChapters() {
+        return true
         fetch(`/api/novel/${this.state.id}/chapter?content_length=paragraphs`)
             .then(response => response.json())
             .then(data => { console.log(data); return data })
@@ -120,7 +112,7 @@ class ChapterList extends Component {
     }
 
     componentDidMount() {
-        this.fetchChapters()
+        this.props.fetchChapters()
         this.generateTranslateString()
 
         this.initWS()
@@ -134,15 +126,11 @@ class ChapterList extends Component {
 
 
     render() {
-        if (!this.state.chapters)
-            return (
-                <LinearProgress color="secondary" />
-            )
 
+        const { classes, novel } = this.props
 
-        if (this.state.redirect) {
-            return <Redirect to={`./${this.state.redirect}`} />
-        }
+        if (!novel.chapters)
+            return (<ProgressBar color={green[600]} margin='1em 0' />)
 
         return (
             <Container>
@@ -150,15 +138,15 @@ class ChapterList extends Component {
                     <Button xs={4}
                         color="primary"
                         size="medium"
-                        onClick={()=> this.handleSubmit(-1)}>
-                        <CloudDownloadIcon color="secondary"/>
+                        onClick={() => this.handleSubmit(-1)}>
+                        <CloudDownloadIcon color="secondary" />
                         <Box ml={1}>
-                        {(this.state.chapters.length === 0) ?
-                                ("Initialize from RAW directory"):
+                            {(novel.chapters.length === 0) ?
+                                ("Initialize from RAW directory") :
                                 ("Scrape from the latest chapter")
 
-                        }</Box>
-                        
+                            }</Box>
+
                     </Button>
                 </Box>
 
@@ -171,7 +159,7 @@ class ChapterList extends Component {
                         rows={4}
                         value={this.state.wsFeed.join('\n')} />
                 </Box>
-                
+
                 <Box m={2}>
                     <TextField multiline fullWidth
                         label="Console"
@@ -180,13 +168,14 @@ class ChapterList extends Component {
                         value={this.state.translateString} />
                 </Box>
 
-
+                {/* <Link to={`/novel/${novel.alias}/chapter/${chapter.order}`} key={chapter.id}> */}
                 <Box>
                     <List>
-                        {this.state.chapters.map((chapter) => (
-                            <a href={`${this.props.match.url}/chapter/${chapter.id}`} key={chapter.id}>
+                        {novel.chapters.map((chapter) => (
+                            <Link to={`/novel/${novel.alias}/chapter/${chapter.order}`} key={chapter.id}>
                                 <ListItem alignItems="flex-start" >
-                                    <ListItemText
+
+                                    <ListItemText component="a" href="/novel"
                                         primary={`${chapter.order}. ${chapter.title}`}
                                         secondary={
                                             <React.Fragment>
@@ -212,18 +201,18 @@ class ChapterList extends Component {
 
                                         }>
                                     </ListItemText>
-                                    
+
 
                                 </ListItem>
                                 <Divider variant="inset" component="li" />
-                            </a>
+                            </Link>
                         ))}
 
 
                     </List>
                 </Box>
                 <Typography variant="h5">
-                    {JSON.stringify(this.state.chapters)}
+                    {JSON.stringify(novel.chapters)}
                 </Typography>
             </Container>
 
@@ -231,4 +220,4 @@ class ChapterList extends Component {
     }
 }
 
-export default withStyles(styles)(ChapterList);
+export default withStyles(styles)(NovelChapters);

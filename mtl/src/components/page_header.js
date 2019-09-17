@@ -3,9 +3,14 @@ import React, { /* Component */ } from 'react';
 import AppBar from '@material-ui/core/AppBar';
 import ToolBar from '@material-ui/core/Toolbar'
 import Typography from '@material-ui/core/Typography'
-/* import Toolbar from '@material-ui/core/Toolbar';
-import Login from './login' */
-//import { Form, Button } from 'react-bootstrap';
+//import { withStyles } from '@material-ui/core/styles';
+
+const styles = theme => ({
+    root: {
+        textAlign: 'left'
+    },
+});
+
 
 const Header = () => {
     return (

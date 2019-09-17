@@ -62,11 +62,13 @@ var createDB = async () => {
 	},
 	{
 		name: "农女要翻天：夫君，求压倒",
+		alias: "china A",
 		raw_url: "https://www.kenshu.cc/xiaoshuo/37805/",
 		description: null,
 
 	}, {
 		name: "妃要上天",
+		alias: "china B",
 		raw_url: "https://www.kenshu.cc/xiaoshuo/43495/",
 		description: null,
 	},
@@ -91,6 +93,7 @@ var createDB = async () => {
 	});
 
 	novelList.forEach((i, index) => {
+		//if(index > 1) return
 		var n = Novel.create((i)).then((nov) => {
 			return true
 			Chapter.create(
@@ -122,7 +125,6 @@ var createDB = async () => {
 				}) */
 			})
 		})
-
 	});
 
 	termList.forEach((i) => {

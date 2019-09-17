@@ -8,7 +8,7 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
 
-const styles = {
+const styles = theme => ({
     list: {
         width: "300px",
         overflowX: "hidden"
@@ -21,7 +21,7 @@ const styles = {
             textDecoration: 'none',
        },    
     }
-};
+});
 
 
 class ChapterDrawer extends Component {

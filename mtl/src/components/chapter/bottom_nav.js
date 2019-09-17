@@ -11,7 +11,7 @@ import TranslateIcon from '@material-ui/icons/Translate';
 import ChapterDrawer from './drawer'
 import TermDrawer from './terms'
 
-const styles = {
+const styles = theme => ({
     link: {
         '&:hover': {
             textDecoration: 'none',
@@ -27,7 +27,7 @@ const styles = {
     background: {
         backgroundColor: "red",
     }
-};
+});
 
 
 class ChapterBottomNav extends Component {

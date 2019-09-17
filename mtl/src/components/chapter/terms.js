@@ -23,7 +23,7 @@ import ListSubheader from '@material-ui/core/ListSubheader';
 
 
 
-const styles = {
+const styles = theme => ({
     bottom: {
         '&:hover': {
             textDecoration: 'none',
@@ -41,7 +41,7 @@ const styles = {
         justifyContent: "start"
     }
 
-};
+});
 
 
 class TermDrawer extends Component {
