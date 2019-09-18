@@ -1,16 +1,15 @@
 import React, { Component } from 'react';
+import { Link } from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles';
 import 'react-image-crop/dist/ReactCrop.css';
-import LinearProgress from '@material-ui/core/LinearProgress';
 import { Grid, Box, Container } from '@material-ui/core';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import ChapterBottomNav from './bottom_nav'
 import Button from '@material-ui/core/Button'
-
+import ProgressBar from '../util/ProgressBar'
 import Paragraph from './paragraph'
 import ChapterSnackbar from './chapter_snackbar'
-import ChapterSettings from './chapter_settings'
 import ForwardIcon from '@material-ui/icons/ArrowForwardIos'
 import BackIcon from '@material-ui/icons/ArrowBackIos'
 
@@ -18,7 +17,10 @@ import BackIcon from '@material-ui/icons/ArrowBackIos'
 
 
 const styles = theme => ({
-
+    root: {
+        paddingLeft: 0,
+        paddingRight: 0,
+    },
     paragraphs: {
         textAlign: 'left'
     },
@@ -30,8 +32,9 @@ const styles = theme => ({
     },
 
     chapterNav: {
-        margin: "2em auto"
-    }
+        margin: "2em auto",
+    },
+    breadcrumbs: {}
 });
 
 
@@ -40,29 +43,24 @@ class ChapterEditor extends Component {
         super(props);
         console.log("chapter editor", props)
         this.state = {
-            id: props.chapter_id,
-            swipeMode: true
+            chapters: props.chapters,
+            swipeMode: true,
         };
 
     }
 
-
-
-    matches = "matches"
-
     formChange(e) {
         this.setState({
             novel: { ...this.state.novel, ...{ [e.target.name]: e.target.value } },
-            //message: null,
-            //error: false 
         })
 
 
     }
 
     componentDidMount() {
-        if (!this.state.id) return false
-        fetch(`/api/${this.props.match.url}`)
+        if (!this.props.chapter.id) return false
+
+        fetch(`/api/novel/${this.props.chapter.novel_id}/chapter/${this.props.chapter.id}`)
             .then(response => response.json())
             .then(data => this.priority(data))
             .then(data => this.editParagraphs(data))
@@ -72,7 +70,10 @@ class ChapterEditor extends Component {
 
 
     componentDidUpdate() {
-        document.title = `set title fucksake`
+        // if chapter has changed reload everything
+        if (this.props.chapter.id !== this.state.id) {
+            this.componentDidMount()
+        }
 
     }
 
@@ -95,7 +96,6 @@ class ChapterEditor extends Component {
 
     editParagraphs(json) {
         let max_paragraphs = 0
-        console.log(json)
 
         /*  check the content of all 4 possible translations and split them by paragraph 
             calculate the maximum number of paragraphs as we wanna show all nth-paragraphs at same place 
@@ -140,7 +140,7 @@ class ChapterEditor extends Component {
             //)
         }
 
-        json.raw.hide = true
+        json.raw.hide = false
 
         console.log("chapters state", json)
 
@@ -221,32 +221,42 @@ class ChapterEditor extends Component {
     }
 
     ChapterNav = () => {
-        if (!this.state.id) return true
+        const chapterIndex = this.state.chapters.findIndex(c => c.id === this.state.id)
+        const prev = chapterIndex > 0 ? this.state.chapters[chapterIndex - 1] : null
+        const next = this.state.chapters.length - 1 > chapterIndex ? this.state.chapters[chapterIndex + 1] : null
+
         return <Box component="div" style={{ margin: "2em auto" }}>
-            <Button component="a" fullWidth
-                variant="outlined"
-                color="secondary"
-                href={this.state.id - 1}>
-                <BackIcon /> Previous
-            </Button>
-
-            <Select fullWidth
+            {prev &&
+                <Button component={Link} fullWidth
+                    variant="outlined"
+                    color="secondary"
+                    onClick={() => this.setState({ paragraphs: null })}
+                    to={`${prev.order}`}>
+                    <BackIcon /> {`Chapter ${prev.order}` || `${prev.order}. ${prev.title}`}
+                </Button>
+            }
+            <Select fullWidth style={{ margin: "1.5em auto", border: "1px solid black", backgroundColor: 'var(--gray)' }}
                 value={this.state.id}
-                onChange={() => console.log("hei")}
+                onChange={() => this.setState({ paragraphs: null })}
             >
+                {this.state.chapters.map(c =>
+                    <MenuItem key={c.id} component={Link} to={`${c.order}`} value={c.id}>{`${c.order} - ${c.title} ${c.id}`}</MenuItem>
+                )}
 
-                <MenuItem value="">Chapterlist at some point</MenuItem>
 
             </Select>
 
 
-            <Button component="a" fullWidth
-                variant="outlined"
-                color="secondary"
-                href={this.state.id + 1}>
-                Next
-                <ForwardIcon />
-            </Button>
+            {next &&
+                <Button component={Link} fullWidth
+                    variant="outlined"
+                    color="primary"
+                    onClick={() => this.setState({ paragraphs: null })}
+                    to={`${next.order}`}>
+                    {`Chapter ${next.order}` || `${next.order}. ${next.title}`}
+                    <ForwardIcon />
+                </Button>
+            }
         </Box>
 
     }
@@ -265,27 +275,26 @@ class ChapterEditor extends Component {
         const { classes } = this.props;
         const { state } = this;
 
+        
 
         /* if (this.state.redirect) {
             return <Redirect to={`./${this.state.redirect}`} />
         } */
 
         if (!state.paragraphs)
-            return (
-                <LinearProgress color="secondary" />
-            )
+            return <ProgressBar />
+            
         const views = ['raw', 'proofread', 'sogou', 'baidu'].filter(key => !state[key].hide)
-        console.log(views)
 
         return (
-            <Container type="div">
+            <Container type="div" className={classes.root}>
                 <this.ChapterNav />
 
 
 
                 <Grid container spacing={3} className={classes.paragraphs}>
                     {this.state.paragraphs.map((p, index) => {
-                        if (!views.includes(p.type) || index > 17 || (state.swipeMode && p.hide)) return null
+                        if (!views.includes(p.type) || (state.swipeMode && p.hide)) return null
                         return <Paragraph key={index}
                             selectParagraph={this.selectParagraph}
                             proofreadParagraph={this.proofreadParagraph}
@@ -299,13 +308,15 @@ class ChapterEditor extends Component {
                 <div>{state.swipeMode ? 'swipe' : 'noswipe'}</div>
                 <ChapterSnackbar count={state.proofread.count} max={state.max_paragraphs} />
 
-                <ChapterSettings settings={this.toggleSettings} chapter={this.state} />
+                
 
                 <ChapterBottomNav
-                    novel_id={state.novel_id}
+                    parent={this}
+                    novel_id={this.props.chapter.novel_id}
                     translate={this.translate}
                     paragraphs={state.paragraphs}
-                    chapter_id={state.id} />
+                    chapters={state.chapters}
+                    chapter_id={this.props.chapter.id} />
 
             </Container>
 

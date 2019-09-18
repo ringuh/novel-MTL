@@ -43,7 +43,7 @@ module.exports = (sequelize, type) => {
     }
 
     Chapter.prototype.reOrder = function () {
-        console.log("not ordering", this.id, this.order)
+        
         return sequelize.models.Chapter.findAll({
             where: {
                 novel_id: this.novel_id,
@@ -82,17 +82,6 @@ module.exports = (sequelize, type) => {
             
             
         }
-        
-        
-      /*   if (length_only) {
-            for (var i in conts) {
-                if (length_only == "paragraphs")
-                    ret[conts[i]] = ret[conts[i]].content ? ret[conts[i]].content.split("\n").length : null
-                else
-                    ret[conts[i]] = ret[conts[i]].content ? ret[conts[i]].content.length : null
-            }
-
-        } */
 
         return ret
     }

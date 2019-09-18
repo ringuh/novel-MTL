@@ -94,6 +94,10 @@ router.route("/:id/chapter")
 			query.where.id = req.query.chapter_id
 		}
 
+		if (req.query.order && req.query.order != -1) {
+			query.where.order = req.query.order
+		}
+
 		// which children to include in JSON
 		if (req.query.includes)
 			query.include = query.include.filter(inc => req.query.includes.split(",").includes(inc.as))
@@ -138,7 +142,7 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 		Chapter.findOne({
 			where: { id: parseInt(req.params.chapter_id) },
 		}).then((chapter) => {
-
+			console.log("saving")
 			chapter.contentSave({
 				where: {
 					chapter_id: chapter.id,
@@ -149,11 +153,19 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 					title: req.body.content.title
 				}, raw: false
 			}).then(([content, created]) => {
-				chapter[`set${capitalize(req.body.translator)}`](content).then(done =>
-					res.json({
+				if (!created) {
+					content.content = req.body.content.content
+					content.title = req.body.content.title
+					content.save().then(() => res.json({
 						msg: `Saved ${chapter.id} at ${chapter.url}`, chapter_id: chapter.id
-					})
-				)
+					}))
+				}
+				else
+					chapter[`set${capitalize(req.body.translator)}`](content).then(done =>
+						res.json({
+							msg: `Saved ${chapter.id} at ${chapter.url}`, chapter_id: chapter.id
+						})
+					)
 
 			})
 		}).catch((err) => {

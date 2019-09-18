@@ -4,36 +4,15 @@ import { green } from '@material-ui/core/colors';
 import Box from '@material-ui/core/Box';
 import Grid from '@material-ui/core/Grid';
 import Switch from '@material-ui/core/Switch';
+import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 
 
 const styles = theme => ({
-    grid: {
-        //margin: '1em auto'
-    },
-    row: {
-       // margin: '1em auto',
-        verticalAlign: 'center',
-        '&:first-child': {
-            paddingTop: "0.75em",
-        },
-        '& grid:last-child': {
-            paddingTop: "0.75em",
-        }
-    },
-    text: {
-        paddingTop: "0.75em !important",
-    },
-    snackbar: {
-        //margin: theme.spacing(1),
-        //color: amber[700],
-
-        //backgroundColor: theme.palette.primary.main,
-    },
-    save: {
-        backgroundColor: green[600],
-    },
-    icon: {
-        marginRight: "0.5em"
+    root: {
+        minHeight: "300px",
+        maxHeight: "80%",
+        margin: "1em auto",
+        width: "90%",
     }
 });
 
@@ -53,20 +32,26 @@ class ChapterSettings extends Component {
 
 
     render() {
-        const { classes, settings, chapter } = this.props;
-        const state = this.state
+        const { classes, settings, chapter, parent } = this.props;
+        const { state, props } = this
 
 
         return (
-            <Box component="div" className={classes.snackbar}>
-                <Grid component="label" container 
-                    alignItems="center" 
-                    className={classes.grid} spacing={1}>
+
+            <SwipeableDrawer
+                anchor="bottom"
+                open={props.open || false}
+                onClose={() => parent.toggleState('settings', false)}
+                onOpen={() => parent.toggleState('settings', true)}
+            >
+                <Grid component="label" container
+                    alignItems="center"
+                    className={classes.root} spacing={1}>
                     <Grid container item spacing={1} xs={12} className={classes.row}>
                         <Grid item xs={5}>Show all</Grid>
                         <Grid item xs={2}>
                             <Switch
-                                checked={chapter.swipeMode ? true: false}
+                                checked={chapter.swipeMode ? true : false}
                                 onChange={() => settings('swipeMode', !chapter.swipeMode)}
                                 value={chapter.swipeMode}
                             />
@@ -78,7 +63,7 @@ class ChapterSettings extends Component {
                         <Grid item xs={5}></Grid>
                         <Grid item xs={2}>
                             <Switch
-                                checked={chapter.raw.hide ? false: true}
+                                checked={chapter.raw.hide ? false : true}
                                 onChange={() => settings('hideRaw', !chapter.raw.hide)}
                                 value={!chapter.raw.hide}
                             />
@@ -97,7 +82,8 @@ class ChapterSettings extends Component {
                         <Grid item xs={5}>Autosave as proofread</Grid>
                     </Grid>
                 </Grid>
-            </Box>
+            </SwipeableDrawer>
+
         );
     }
 }

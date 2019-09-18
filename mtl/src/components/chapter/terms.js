@@ -50,24 +50,32 @@ class TermDrawer extends Component {
 
         this.state = {
             novel_id: props.novel_id,
+            edit: false,
+            term: {
+                edit: true,
+                prompt: false,
+                from: "",
+                to: ""
+            }
         };
 
     }
 
     selectTerm = (term) => {
-        if (term)
-            return this.setState({ ...this.state, term: { ...term, string: JSON.stringify(term) } })
+        if (term) {
+            if (term === 'new')
+                return this.setState({ edit: true, term: { prompt: false, from: "", to: "" } })
 
-        let state = this.state
-        delete state.term
-        this.setState(state)
+            return this.setState({ edit: true, term: { ...term, string: JSON.stringify(term) } })
+
+        }
+
+
+
+        this.setState({ edit: false, term: { prompt: false, from: "", to: "" } })
 
     }
 
-    toggleState = (attr, value) => {
-        console.log(attr, value)
-        this.setState({ [attr]: value });
-    }
 
     saveTerm = (term, del) => {
         let json = { ...term }
@@ -76,16 +84,15 @@ class TermDrawer extends Component {
         term.post = true
         axios.post(`/api/novel/${this.state.novel_id}/terms`, json)
             .then(res => {
-                console.log("term save", res.data)
                 if (res.data.id) {
-                    this.setState({...this.state, term: null })
+                    this.selectTerm()
                     this.componentDidMount()
                 }
 
             })
     }
 
-    
+
     componentDidMount() {
         fetch(`/api/novel/${this.state.novel_id}/terms`)
             .then(response => response.json())
@@ -97,7 +104,7 @@ class TermDrawer extends Component {
 
     }
 
-   
+
 
     render() {
         const { classes } = this.props;
@@ -124,7 +131,7 @@ class TermDrawer extends Component {
 
                             </ListSubheader>
                             <ListItem button
-                                onClick={() => this.selectTerm({})}
+                                onClick={() => this.selectTerm('new')}
                                 dense={true}
                                 divider={true}>
                                 <ListItemIcon>
@@ -155,20 +162,20 @@ class TermDrawer extends Component {
                                     </ListItem>
                                 )
                             })}
-                            { state.terms.length > 5 &&
-                            <ListItem button
-                                onClick={() => this.selectTerm({})}
-                                dense={true}
-                                divider={true}>
-                                <ListItemIcon>
-                                    <AddIcon color={'success'} />
-                                </ListItemIcon>
+                            {state.terms.length > 5 &&
+                                <ListItem button
+                                    onClick={() => this.selectTerm('new')}
+                                    dense={true}
+                                    divider={true}>
+                                    <ListItemIcon>
+                                        <AddIcon color={'success'} />
+                                    </ListItemIcon>
 
-                                <ListItemText
-                                    primary="Add new term" />
-                                <ListItemSecondaryAction>
-                                </ListItemSecondaryAction>
-                            </ListItem>}
+                                    <ListItemText
+                                        primary="Add new term" />
+                                    <ListItemSecondaryAction>
+                                    </ListItemSecondaryAction>
+                                </ListItem>}
 
                         </List>
 
@@ -177,8 +184,8 @@ class TermDrawer extends Component {
                 </SwipeableDrawer>
 
 
-                {state.term &&
-                    <Dialog open={state.term} onClose={() => this.selectTerm(null)} aria-labelledby="form-dialog-title">
+                {state.edit &&
+                    <Dialog open={state.edit} onClose={() => this.selectTerm()} aria-labelledby="form-dialog-title">
                         <DialogTitle id="form-dialog-title">Add a new term</DialogTitle>
                         <DialogContent>
                             <DialogContentText> <span>{JSON.stringify(this.state.term)}</span>
@@ -187,7 +194,7 @@ class TermDrawer extends Component {
                             Terms do not effect saved <strong>raw</strong> or <strong>proofread</strong> text
                         </DialogContentText>
                             <TextField fullWidth
-                                onChange={(e) => this.setState({ ...this.state, term: { ...this.state.term, from: e.target.value } })}
+                                onChange={(e) => this.setState({ term: { ...this.state.term, from: e.target.value } })}
                                 autoFocus
                                 margin="dense"
                                 id="name"
@@ -200,7 +207,7 @@ class TermDrawer extends Component {
 
                             <Divider />
                             <TextField
-                                onChange={(e) => this.setState({ ...this.state, term: { ...this.state.term, to: e.target.value } })}
+                                onChange={(e) => this.setState({ term: { ...this.state.term, to: e.target.value } })}
                                 margin="dense"
                                 id="name"
                                 label="Translation"

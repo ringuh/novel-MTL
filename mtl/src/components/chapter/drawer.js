@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
-import Link from '@material-ui/core/Link';
+import { Link } from 'react-router-dom';
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
@@ -19,7 +19,7 @@ const styles = theme => ({
     link: {
         '&:hover': {
             textDecoration: 'none',
-       },    
+        },
     }
 });
 
@@ -28,31 +28,20 @@ class ChapterDrawer extends Component {
     constructor(props) {
         super(props);
         console.log("chapter drawer", props)
-        this.state = {
-            chapter_id: props.chapter_id,
-            novel_id: props.novel_id,
-            chapters: []
-        };
+        this.state = {};
 
-        
+
 
     }
 
 
     componentDidMount() {
-        fetch(`/api/novel/${this.state.novel_id}/chapter`)
-            .then(response => response.json())
-            .then(data => this.setState({ ...this.state, chapters: data }))
-            .then(st => console.log(this.state))
-
-
-
     }
 
     render() {
         const { classes } = this.props;
 
-        if(this.props.open == null)
+        if (this.props.open == null)
             return null
 
         return (
@@ -67,34 +56,22 @@ class ChapterDrawer extends Component {
                     <List>
                         <ListSubheader
                             className={classes.subheader}>
-                            {`Novel name?`}
+                            {`${this.props.chapters.length} chapters`}
                         </ListSubheader>
-                        <Link component="li"
-                            underline="none"
-                            href={`/novel/${this.props.novel_id}`}>
-                            <ListItem button key={"index"}
-                                dense={true}
-                                divider={true}>
-                                <ListItemText
-                                    primary={"Novel index"}
-                                    secondary={`really`} />
-                            </ListItem>
-                        </Link>
 
-                        {this.state.chapters.map((val, indx) => {
-                            return <Link component="a" 
-                                className={classes.link}
-                                href={val.id}>
-                                <ListItem button key={val.id}
-                                    dense={true}
-                                    divider={true}
-                                    autoFocus={val.id === this.state.chapter_id}
-                                    selected={val.id === this.state.chapter_id}>
-                                    <ListItemText
-                                        primary={val.id === this.state.chapter_id ? "hei" : "ei"}
-                                        secondary={`${val.order} ${val.url}`} />
-                                </ListItem>
-                            </Link>
+                        {this.props.chapters.map((val, indx) => {
+                            return <ListItem button
+                                key={val.id}
+                                component={Link}
+                                to={`${val.order}`}
+                                dense={true}
+                                divider={true}
+                                autoFocus={val.id === this.props.chapter_id}
+                                selected={val.id === this.props.chapter_id}>
+                                <ListItemText
+                                    primary={`Chapter ${val.order}`}
+                                    secondary={val.title} />
+                            </ListItem>
                         })}
 
                     </List>

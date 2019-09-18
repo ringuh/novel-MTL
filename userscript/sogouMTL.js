@@ -16,6 +16,7 @@
     var chapters = [];
     var server = null;
     const translator = "sogou"
+    const delay = 2000
 
 
     var UI = '<div id="rimlu_mtl">' +
@@ -25,7 +26,7 @@
         '<button id="mtl_stop">Stop</button>' +
         '</div>';
     $("#box-logo").append(UI);
-    $("#mtl_command").val('{"url":"http://localhost:3001/novel/1/chapter","chapter_id":-1,"limit":100}')
+    $("#mtl_command").val('{"url":"http://localhost:3001/api/novel/1/chapter","chapter_id":-1,"limit":100}')
 
     const PrintConsole = (str) => $("#mtl_console").val(str + "\n" + $("#mtl_console").val())
     $("#mtl_stop").click(() => {
@@ -53,6 +54,7 @@
                 chapters = JSON.parse(this.responseText)
                 console.log("chapterlist", chapters)
                 PrintConsole(`Found ${chapters.length} chapters to translate`)
+                target.value = ""
                 HandleChapter(chapters, 0)
             }
         };
@@ -65,9 +67,11 @@
     });
 
     var HandleChapter = (chapters, index = 0) => {
+        console.log("handlechapter")
         if (chapters.length === index || !tbc)
             return PrintConsole(`Finished translating`)
         //console.log("handle chapters", index, chapters[index])
+        
         var chap = chapters[index]
 
 
@@ -77,28 +81,35 @@
         var translatedText = []
 
         var HandleParts = (parts, j = 0) => {
-            //console.log("handling", j, "of", parts.length)
+            console.log("handling", j, "of", parts.length)
             if (j == parts.length) {
 
                 var title = translatedText[0]
                 translatedText.shift()
                 var textContent = translatedText.join("\n")
+                // error happened-text replaced
+                textContent = textContent.replace(/呀，出错误了！再试下吧。/g, "")
+                    
 
-                var d = JSON.stringify({ translator: translator, content: { title: title.trim(), content: textContent.trim() } })
-
-
+                
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
                         console.log("translation response", JSON.parse(this.responseText))
-                        PrintConsole(`Translated chapter ${chap.id} @ ${chap.url}`)
+                        PrintConsole(`Translated chapter ${chap.order} (id:${chap.id}) @ ${chap.url}`)
+                        console.log("a")
+                        target.value = "";
+                        console.log("b")
                         HandleChapter(chapters, ++index)
                     }
                 };
                 xhttp.open("POST", server + "/" + chap.id, true);
                 xhttp.setRequestHeader("Content-type", "application/json");
+                
+                var d = JSON.stringify({ translator: translator, 
+                    content: { title: title.trim(), content: textContent.trim() } })
                 xhttp.send(d);
-
+                
 
                 return true
 
@@ -110,6 +121,12 @@
                 // there wait for the observer to really update
                 if (translatedText.includes(cont)) return true
                 translatedText.push(cont)
+
+                /* if(cont.indexOf("呀，出错误了！再试下吧。") ){
+                    alert("ERROR FOUND")
+                    console.log(cont)
+                } */
+                    
 
                 observer.disconnect();
                 HandleParts(parts, ++j)
@@ -123,10 +140,10 @@
             target.dispatchEvent(new Event('keyup'));
 
         }
-        console.log(chap.id)
-        //var d = JSON.stringify({  })
+       
+        
         var url = new URL(`${server}/${chap.id}`)
-        //url.search = new URLSearchParams(json).toString();
+        
         var xhttp2 = new XMLHttpRequest();
         xhttp2.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
@@ -144,7 +161,7 @@
     };
 
     var SplitTxt = (raw) => {
-
+        console.log("splitraw")
         var limit = 1500
         var arr = raw.content.split("\n")
         //arr.unshift(`+-+- ${raw.title} -+-+`)

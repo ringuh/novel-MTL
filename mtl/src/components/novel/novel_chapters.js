@@ -162,55 +162,56 @@ class NovelChapters extends Component {
 
                 <Box m={2}>
                     <TextField multiline fullWidth
+                        onClick={() => { navigator.clipboard.writeText(this.state.translateString); alert("Copied to clipboard") }}
                         label="Console"
                         variant="outlined"
                         rows={2}
                         value={this.state.translateString} />
                 </Box>
 
-                {/* <Link to={`/novel/${novel.alias}/chapter/${chapter.order}`} key={chapter.id}> */}
-                <Box>
-                    <List>
-                        {novel.chapters.map((chapter) => (
-                            <Link to={`/novel/${novel.alias}/chapter/${chapter.order}`} key={chapter.id}>
-                                <ListItem alignItems="flex-start" >
+                {novel.chapters && novel.chapters.length > 0 &&
+                    <Box>
+                        <List>
+                            {novel.chapters.map((chapter) => (
+                                <Link to={`/novel/${novel.alias}/chapter/${chapter.order}`} key={chapter.id}>
+                                    <ListItem alignItems="flex-start" >
 
-                                    <ListItemText component="a" href="/novel"
-                                        primary={`${chapter.order}. ${chapter.title}`}
-                                        secondary={
-                                            <React.Fragment>
-                                                <Typography
-                                                    component="span"
-                                                    variant="body2"
-                                                    className=""
-                                                    color="textPrimary"
-                                                >
-                                                    {chapter.content}
-                                                </Typography>
-                                                {chapter.url}
-                                            </React.Fragment>
-                                        }
-                                    />
-                                    <ListItemText
-                                        secondary={
-                                            [chapter.raw || 'missing',
-                                            chapter.sogou || 'sogou',
-                                            chapter.baidu || 'baidu',
-                                            chapter.proofread || 'tbd',
-                                            ].join(" / ")
+                                        <ListItemText component="a" href="/novel"
+                                            primary={`${chapter.order}. ${chapter.title}`}
+                                            secondary={
+                                                <React.Fragment>
+                                                    <Typography
+                                                        component="span"
+                                                        variant="body2"
+                                                        className=""
+                                                        color="textPrimary"
+                                                    >
+                                                        {chapter.content}
+                                                    </Typography>
+                                                    {chapter.url}
+                                                </React.Fragment>
+                                            }
+                                        />
+                                        <ListItemText
+                                            secondary={
+                                                [chapter.raw || 'missing',
+                                                chapter.sogou || 'sogou',
+                                                chapter.baidu || 'baidu',
+                                                chapter.proofread || 'tbd',
+                                                ].join(" / ")
 
-                                        }>
-                                    </ListItemText>
-
-
-                                </ListItem>
-                                <Divider variant="inset" component="li" />
-                            </Link>
-                        ))}
+                                            }>
+                                        </ListItemText>
 
 
-                    </List>
-                </Box>
+                                    </ListItem>
+                                    <Divider variant="inset" component="li" />
+                                </Link>
+                            ))}
+
+
+                        </List>
+                    </Box>}
                 <Typography variant="h5">
                     {JSON.stringify(novel.chapters)}
                 </Typography>

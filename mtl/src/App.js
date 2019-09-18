@@ -25,7 +25,10 @@ function App() {
           <Route exact path="/" component={MainPage} />
           <Route exact path="/novel" component={NovelList} />
           <Route exact path="/novel/:alias" component={Novel} />
-          <Route path={`/novel/:alias/chapter`} component={Chapter} />
+          <Route exact path={[
+            `/novel/:alias/chapter`,
+            `/novel/:alias/chapter/:order`
+          ]} component={Chapter} />
           <Route component={PageNotFound} />
         </Switch>
       </BrowserRouter>

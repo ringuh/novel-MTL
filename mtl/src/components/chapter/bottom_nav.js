@@ -7,7 +7,7 @@ import FavoriteIcon from '@material-ui/icons/Favorite';
 import ListIcon from '@material-ui/icons/ListOutlined';
 import SettingsIcon from '@material-ui/icons/SettingsOutlined';
 import TranslateIcon from '@material-ui/icons/Translate';
-
+import ChapterSettings from './chapter_settings'
 import ChapterDrawer from './drawer'
 import TermDrawer from './terms'
 
@@ -50,11 +50,12 @@ class ChapterBottomNav extends Component {
     }
 
     render() {
-        const { classes } = this.props;
+        const { classes, parent } = this.props;
+        const { state, props } = this
 
         return (
             <Box className={classes.bottom}>
-                <BottomNavigation value={this.state.value} onChange={this.handleChange}>
+                <BottomNavigation value={state.value} onChange={this.handleChange}>
                     <BottomNavigationAction
                         label="Recents"
                         value="recents"
@@ -71,14 +72,19 @@ class ChapterBottomNav extends Component {
                     <BottomNavigationAction icon={<SettingsIcon />}
                         label="Folder"
                         value="folder"
-                        onClick={() => this.toggleState('smth', !this.state.smth)}
+                        onClick={() => this.toggleState('settings', !this.state.settings)}
                     />
                 </BottomNavigation>
-
                 
+                <ChapterSettings 
+                    open={this.state.settings}
+                    parent={this}
+                    settings={parent.toggleSettings} 
+                    chapter={parent.state} />
                 
-                <ChapterDrawer chapter_id={this.state.id}
-                    novel_id={this.state.novel_id}
+                <ChapterDrawer chapter_id={this.props.chapter_id}
+                    chapters={this.props.chapters}
+                    novel_id={this.props.novel_id}
                     open={this.state.chapterDrawer}
                     toggle={this.toggleState} />
 

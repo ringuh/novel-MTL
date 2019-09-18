@@ -35,11 +35,9 @@ const GetChapter = async (novel, chapter_id) => {
     Chapter.findAll({
         where: whereStr,
         order: orderArr
-    }).then(chapters => chapters.map(c => {
-        console.log("order", c.order, "=> id", c.id)
-    }))
+    })
 
-    console.log("find chapter with", whereStr)
+    
     return Chapter.findOne({
         where: whereStr,
         order: orderArr
@@ -125,7 +123,7 @@ const Scraper = async (data, connection) => {
             }).catch((err) => sendJson(err))
     }
 
-    const ScrapeChapter = async (chapter, limit = 3) => {
+    const ScrapeChapter = async (chapter, limit = 15) => {
         console.log(limit, "scrape chapter", chapter.url, "id", chapter.id, "order", chapter.order)
         // get the parser template for this website
         const raw = await GetRaw(chapter.url)

@@ -51,32 +51,33 @@ var createDB = async () => {
 		role: "admin",
 	}]
 
-	const novelList = [{
-		name: "gandiehenaxieganerzi",
-		raw_url: "https://www.lewenxiaoshuo.com/books/gandiehenaxieganerzi/",
-		description: "Zheng Xian's greatest achievement in his life was to build a castle and keep his dry sons in it properly."
-	}, {
-		name: "weilaizhidangmabuyi",
-		raw_url: "https://www.lewenxiaoshuo.com/books/weilaizhidangmabuyi/",
-		description: null,
-	},
-	{
-		name: "农女要翻天：夫君，求压倒",
-		alias: "china A",
-		raw_url: "https://www.kenshu.cc/xiaoshuo/37805/",
-		description: null,
+	const novelList = [
+		{
+			name: "The Devious First-Daughter",
+			raw_url: "https://www.kenshu.cc/xiaoshuo/51204/",
+			description: "Transmigrated to 14 year old from same family. Shitty family",
+		}, {
+			name: "gandiehenaxieganerzi",
+			raw_url: "https://www.lewenxiaoshuo.com/books/gandiehenaxieganerzi/",
+			description: "Zheng Xian's greatest achievement in his life was to build a castle and keep his dry sons in it properly."
+		}, {
+			name: "weilaizhidangmabuyi",
+			raw_url: "https://www.lewenxiaoshuo.com/books/weilaizhidangmabuyi/",
+			description: null,
+		},
+		{
+			name: "农女要翻天：夫君，求压倒",
+			alias: "china A",
+			raw_url: "https://www.kenshu.cc/xiaoshuo/37805/",
+			description: null,
 
-	}, {
-		name: "妃要上天",
-		alias: "china B",
-		raw_url: "https://www.kenshu.cc/xiaoshuo/43495/",
-		description: null,
-	},
-	{
-		name: "The Devious First-Daughter",
-		raw_url: "https://www.kenshu.cc/xiaoshuo/51204/",
-		description: "Transmigrated to 14 year old from same family. Shitty family",
-	}
+		}, {
+			name: "妃要上天",
+			alias: "china B",
+			raw_url: "https://www.kenshu.cc/xiaoshuo/43495/",
+			description: null,
+		},
+
 	]
 
 	const termList = [{
@@ -102,7 +103,7 @@ var createDB = async () => {
 					url: i.raw_url,
 				}
 			).then(chap => {
-				
+
 				Content.create({
 					type: "RAW",
 					title: `${i.name}`,
@@ -116,7 +117,7 @@ var createDB = async () => {
 					chapter_id: chap.id,
 					content: "proof  kolme väliä \n\n\n\n neljä väliä"
 				}).then(content => chap.setProofread(content));
-				
+
 				/* chap.setProofread({
 					type: "proofread",
 					title: "prof title",
@@ -135,10 +136,10 @@ var createDB = async () => {
 
 	setTimeout(() => {
 		return true
-		Chapter.findByPk(1, { include: ['proofread', 'novel']}).then(chap => {
-			
+		Chapter.findByPk(1, { include: ['proofread', 'novel'] }).then(chap => {
+
 			//chap.getRaw().then(proof => console.log(proof.id))
-			
+
 
 			return true
 			console.log("chapter:", chap.id)
@@ -149,13 +150,16 @@ var createDB = async () => {
 			return true
 			chap.contentSave({
 				where: { type: "proofread" },
-				defaults: { title: "Mummon päiväkirja", 
-				content: "mummon sisältö" }})
+				defaults: {
+					title: "Mummon päiväkirja",
+					content: "mummon sisältö"
+				}
+			})
 
 			console.log(chap.getContent('raw').content)
-			
-		}).then(()=>{
-			Content.findByPk(1, { include: ['chapter']}).then(chap => {
+
+		}).then(() => {
+			Content.findByPk(1, { include: ['chapter'] }).then(chap => {
 				console.log("contents chapter:")
 				console.log(chap.chapter.id)
 			})
@@ -163,7 +167,7 @@ var createDB = async () => {
 
 		})
 	}, 2000)
-	
+
 };
 
 module.exports = createDB
