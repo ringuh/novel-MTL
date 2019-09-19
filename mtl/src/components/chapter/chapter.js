@@ -127,7 +127,7 @@ class Chapter extends Component {
                 <Link to={`${state.redirect}`} >{state.redirect}</Link>
 
                 {this.state.chapter &&
-                    <ChapterEditor {...this.props} chapter={state.chapter} chapters={state.chapters} />
+                    <ChapterEditor {...this.props} parent={this} chapter={state.chapter} chapters={state.chapters} />
                 }
 
 

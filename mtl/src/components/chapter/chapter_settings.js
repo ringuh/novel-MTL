@@ -3,7 +3,12 @@ import { withStyles } from '@material-ui/core/styles';
 import { green } from '@material-ui/core/colors';
 import Box from '@material-ui/core/Box';
 import Grid from '@material-ui/core/Grid';
-import Switch from '@material-ui/core/Switch';
+import SpellcheckIcon from '@material-ui/icons/SpellcheckRounded';
+import EditIcon from '@material-ui/icons/EditOutlined';
+import Button from '@material-ui/core/Button'
+import ButtonGroup from '@material-ui/core/ButtonGroup'
+import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup'
+import ToggleButton from '@material-ui/lab/ToggleButton'
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 
 
@@ -13,6 +18,28 @@ const styles = theme => ({
         maxHeight: "80%",
         margin: "1em auto",
         width: "90%",
+    },
+    row: {
+        // marginBottom: "1em"
+    },
+    right: {
+        float: "right"
+    },
+    toggleButton: {
+        width: "100%",
+        display: "flex",
+        "& button": {
+            /* color: "#f50057",
+            border: "1px solid #f50057", */
+            flex: 1
+        },
+        "& .Mui-selected": {
+            /*  color: "#fff",
+             backgroundColor: "#f50057 !important" */
+            color: "#f50057",
+            border: "1px solid #f50057",
+        }
+
     }
 });
 
@@ -46,41 +73,67 @@ class ChapterSettings extends Component {
             >
                 <Grid component="label" container
                     alignItems="center"
-                    className={classes.root} spacing={1}>
-                    <Grid container item spacing={1} xs={12} className={classes.row}>
-                        <Grid item xs={5}>Show all</Grid>
-                        <Grid item xs={2}>
-                            <Switch
-                                checked={chapter.swipeMode ? true : false}
-                                onChange={() => settings('swipeMode', !chapter.swipeMode)}
-                                value={chapter.swipeMode}
-                            />
+                    className={classes.root}>
+                    <Grid container item xs={12} className={classes.row}>
+                        <Button className={classes.right}>Settings</Button>
+                    </Grid>
+                    <Grid container item xs={12} className={classes.row}>
+                        <ToggleButtonGroup exclusive
+                            className={classes.toggleButton}
+                            value={chapter.swipeMode}
+                            size="small">
+                            <ToggleButton
+                                onClick={() => settings('swipeMode', false)}
+                                value={false}
+                            >Show all</ToggleButton>
+                            <ToggleButton
+                                onClick={() => settings('swipeMode', true)}
+                                value={true}
+                            >Swipe mode</ToggleButton>
+                        </ToggleButtonGroup>
+                    </Grid>
+                    {chapter.swipeMode &&
+                        <Grid container item xs={12} className={classes.row}>
+                            <Button fullWidth
+                                variant="outlined"
+                                onClick={() => { settings('priority', !chapter.priority) }}
+                            >
+                                {chapter.priority ? 'Baidu > Sogou' : 'Sogou > Baidu'} (reload required)
+                        </Button>
                         </Grid>
-                        <Grid item xs={5}>Swipe between</Grid>
+                    }
+
+                    <Grid container item xs={12} className={classes.row}>
+                        <ToggleButtonGroup exclusive
+                            size="small"
+                            className={classes.toggleButton}
+                            value={chapter.raw.hide} >
+                            <ToggleButton
+                                onClick={() => settings('hideRaw', true)}
+                                value={true}
+                            >Hide RAW</ToggleButton>
+                            <ToggleButton
+                                onClick={() => settings('hideRaw', false)}
+                                value={false}
+                            >Show Raw</ToggleButton>
+                        </ToggleButtonGroup>
                     </Grid>
 
-                    <Grid container item spacing={1} xs={12}>
-                        <Grid item xs={5}></Grid>
-                        <Grid item xs={2}>
-                            <Switch
-                                checked={chapter.raw.hide ? false : true}
-                                onChange={() => settings('hideRaw', !chapter.raw.hide)}
-                                value={!chapter.raw.hide}
-                            />
-                        </Grid>
-                        <Grid item xs={5}>Show RAW</Grid>
+                    <Grid container item xs={12} className={classes.row}>
+                        <Button fullWidth
+                            variant="outlined"
+                            onClick={() => parent.props.parent.setState({ edit: 'edit' })}
+                            value={true}
+                        >
+                            <EditIcon fontSize="small" /> 
+                        Edit chapter </Button>
+
                     </Grid>
-                    <Grid container item spacing={1} xs={12}>
-                        <Grid item xs={5}></Grid>
-                        <Grid item xs={2}>
-                            <Switch
-                                checked={state.checkedD}
-                                onChange={() => 'checkedD'}
-                                value="checkedD"
-                            />
-                        </Grid>
-                        <Grid item xs={5}>Autosave as proofread</Grid>
-                    </Grid>
+
+
+
+                    <Grid container item xs={5}>Autosave as proofread</Grid>
+
                 </Grid>
             </SwipeableDrawer>
 

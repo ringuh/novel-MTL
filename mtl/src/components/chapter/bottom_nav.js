@@ -44,8 +44,7 @@ class ChapterBottomNav extends Component {
     }
 
     toggleState = (attr, value) => {
-        console.log(attr, value)
-        this.setState({...this.state, [attr]: value});
+        this.setState({[attr]: value});
         
     }
 
@@ -82,15 +81,15 @@ class ChapterBottomNav extends Component {
                     settings={parent.toggleSettings} 
                     chapter={parent.state} />
                 
-                <ChapterDrawer chapter_id={this.props.chapter_id}
-                    chapters={this.props.chapters}
-                    novel_id={this.props.novel_id}
+                <ChapterDrawer chapter_id={parent.state.chapter_id}
+                    chapters={parent.state.chapters}
+                    novel_id={parent.state.novel_id}
                     open={this.state.chapterDrawer}
                     toggle={this.toggleState} />
 
-                <TermDrawer novel_id={this.state.novel_id}
-                    translate={this.props.translate}
-                    paragraphs={this.state.paragraphs}
+                <TermDrawer 
+                    novel_id={parent.state.novel_id}
+                    translate={parent.translate}
                     toggle={this.toggleState}
                     open={this.state.term} />
 

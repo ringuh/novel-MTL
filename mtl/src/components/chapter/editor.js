@@ -1,8 +1,13 @@
 import React, { Component } from 'react';
+import axios from 'axios'
 import { Link } from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles';
 import 'react-image-crop/dist/ReactCrop.css';
 import { Grid, Box, Container } from '@material-ui/core';
+import Typography from '@material-ui/core/Typography';
+import SaveIcon from '@material-ui/icons/SaveOutlined'
+import KeyboardReturnIcon from '@material-ui/icons/KeyboardReturn'
+import TextField from '@material-ui/core/TextField';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import ChapterBottomNav from './bottom_nav'
@@ -42,18 +47,26 @@ class ChapterEditor extends Component {
     constructor(props) {
         super(props);
         console.log("chapter editor", props)
+        const defaultSettings = { swipeMode: true, hideRaw: true, priority: false }
+        this.storage = JSON.parse(localStorage.getItem("chapterSettings") || JSON.stringify(defaultSettings))
+        console.log(this.storage)
         this.state = {
             chapters: props.chapters,
-            swipeMode: true,
+            swipeMode: this.storage.swipeMode,
+            priority: this.storage.priority,
         };
+
+
 
     }
 
-    formChange(e) {
-        this.setState({
-            novel: { ...this.state.novel, ...{ [e.target.name]: e.target.value } },
-        })
-
+    toggleSettings = (attr, val) => {
+        if (["hideRaw", "swipeMode", "priority"].includes(attr)) {
+            if (attr === 'hideRaw') this.setState({ raw: { ...this.state.raw, hide: val } })
+            else this.setState({ [attr]: val })
+            this.storage[attr] = val
+            localStorage.setItem("chapterSettings", JSON.stringify(this.storage))
+        }
 
     }
 
@@ -80,7 +93,7 @@ class ChapterEditor extends Component {
     // check which paragraph to prioritize based on existence
     // proofread > baidu > sogou
     priority(data) {
-        const arr = ["proofread", 'baidu', 'sogou', 'raw']
+        const arr = this.state.priority ? ["proofread", 'baidu', 'sogou', 'raw'] : ["proofread", 'sogou', 'baidu', 'raw']
         for (var i in arr) {
             const trans = arr[i]
             if (data[trans] && data[trans].content.length > 0) {
@@ -140,7 +153,7 @@ class ChapterEditor extends Component {
             //)
         }
 
-        json.raw.hide = false
+        json.raw.hide = this.storage.hideRaw
 
         console.log("chapters state", json)
 
@@ -148,60 +161,9 @@ class ChapterEditor extends Component {
 
     }
 
-    proofreadParagraph = (event, paragraph) => {
-        //event.preventDefault()
-        console.log(paragraph)
-        console.log(event.target.value)
-
-        let val = event.target.value
-        if (!this.state.newLine)
-            val = val.replace(/\n/g, ' ')
-        val = val.replace(/\n{2,}/g, '\n');
-        val = val.replace(/ {2,}/g, ' ');
-        paragraph.content = val
-        this.setState({ ...this.state })
-
-    }
-
-    selectParagraph = (paragraph, option = 0) => {
-        console.log(paragraph, option)
-
-        let alternatives = this.state.paragraphs.filter(p =>
-            p.row === paragraph.row && p.type !== 'raw')
-        const proofread = alternatives.find(p => p.type === "proofread")
-        alternatives = alternatives.filter(p => p.content.length > 0)
-
-        if (option === 0) { // pre-selecting proofread content
-            // allow long press on translation to replace proofread if empty or exactly same as a translation
-            if (proofread.content.length === 0 || alternatives.find(p => p.content === proofread.content))
-                proofread.content = paragraph.content
-            console.log(proofread.content)
-            paragraph.hide = true
-            proofread.hide = false
 
 
 
-            return this.setState({
-                ...this.state,
-                proofread: {
-                    ...this.state.proofread,
-                    count: this.state.paragraphs.filter(p => p.type === 'proofread' && p.content.length > 0).length
-                },
-                paragraphs: this.state.paragraphs
-            })
-        }
-
-        const index = alternatives.indexOf(paragraph)
-        let targetIndex = index + option
-        if (targetIndex >= alternatives.length) targetIndex = 0
-        else if (targetIndex < 0) targetIndex = alternatives.length - 1
-
-        paragraph.hide = true
-        alternatives[targetIndex].hide = false
-
-        this.setState({ ...this.state, paragraphs: this.state.paragraphs })
-
-    }
 
     translate = (terms) => {
         if (!this.state.paragraphs) return false;
@@ -211,13 +173,25 @@ class ChapterEditor extends Component {
                     ...this.state, [t]: {
                         ...this.state[t],
                         content: this.state[t].content.replace(
-                            new RegExp(term.from, "gi"), `<strong>${term.to}</strong>`)
+                            new RegExp(term.from, "gi"), `<strong title='${term.from}'>${term.to}</strong>`)
                     }
                 })
             })
 
         })
         this.editParagraphs(this.state)
+    }
+
+
+    submit = (attr, val) => {
+        console.log(this.state)
+        console.log("submitting", attr, val, this.props.match.path)
+        let json = { [attr]: val }
+        axios.post(`/api/novel/${this.state.novel_id}/chapter/${this.state.id}`, json)
+            .then(res => {
+                console.log(res)
+
+            })
     }
 
     ChapterNav = () => {
@@ -261,21 +235,17 @@ class ChapterEditor extends Component {
 
     }
 
-    toggleSettings = (attr, val) => {
-        console.log("toggle settings", attr, val)
-        if (attr === 'hideRaw')
-            return this.setState({ ...this.state, raw: { ...this.state.raw, hide: val } })
-        if (attr === 'swipeMode')
-            return this.setState({ ...this.state, swipeMode: val })
-    }
+
+
+
 
 
 
     render() {
         const { classes } = this.props;
-        const { state } = this;
+        const { state, parent } = this;
 
-        
+
 
         /* if (this.state.redirect) {
             return <Redirect to={`./${this.state.redirect}`} />
@@ -283,40 +253,158 @@ class ChapterEditor extends Component {
 
         if (!state.paragraphs)
             return <ProgressBar />
-            
+
         const views = ['raw', 'proofread', 'sogou', 'baidu'].filter(key => !state[key].hide)
 
+        if (state.edit || state.paragraphs.length === 0) {
+            if (["raw", "proofread"].includes(state.edit))
+                return (<Box component="div">
+                    <TextField
+                        autoComplete="off"
+                        variant="outlined"
+                        name="title"
+                        placeholder={state.edit === 'raw' ?
+                            "If possible use the userscript tools to semi-automatically generate this content" :
+                            "Proofread content is shown as priority"
+                        }
+                        label={`${state.edit} title`}
+                        value={state[state.edit].title || ""}
+                        onChange={e => this.setState({ [state.edit]: { ...state[state.edit], title: e.target.value }})}
+                        margin="normal"
+                        fullWidth
+                    />
+
+                    <TextField
+                        autoComplete="off"
+                        variant="outlined"
+                        name="content"
+                        multiline={true}
+                        rows={5}
+                        rowsMax={30}
+                        placeholder={state.edit === 'raw' ?
+                            "If possible use the userscript tools to semi-automatically generate this content" :
+                            "Proofread content is shown as priority"
+                        }
+                        label={`${state.edit} content`}
+                        value={state[state.edit].content || ""}
+                        onChange={e => this.setState({ [state.edit]: { ...state[state.edit], content: e.target.value }})}
+                        margin="normal"
+                        fullWidth
+                    />
+                    <Button variant="outlined" onClick={this.submit('raw', state.raw)}>
+                        <SaveIcon fontSize="small" />
+                        Submit
+                </Button>
+
+                    <Button variant="outlined" onClick={e => this.setState({ edit: false })}>
+                        <SaveIcon fontSize="small" />
+                        Cancel
+                    </Button>
+                </Box>
+                )
+
+            return (
+                <Grid container style={{ marginTop: "3em" }}>
+                    <Grid item md={12} style={{ textAlign: "left" }}>
+                        <TextField
+                            autoComplete="off"
+                            type="number"
+                            min={1}
+                            variant="outlined"
+                            name="Chapter number"
+                            placeholder="Chapter number"
+
+                            label={`Chapter ${state.order}`}
+                            value={state.new ? state.new.order : state.order}
+                            onChange={e => this.setState({ new: { url: this.state.new ? this.state.new.url : this.state.url, order: e.target.value } })}
+                            margin="normal"
+                            fullWidth
+                        />
+                        {state.new && state.new.order > 0 &&
+
+                            <Button style={{ marginBottom: "2em" }} onClick={() => this.submit('order', state.new.order)}>
+                                <SaveIcon fontSize="small" />
+                                Save
+                                    {state.chapters.find(c => c.order === parseInt(state.new.order)) &&
+                                    <Typography component="span" color="secondary">&nbsp; (Already in use)</Typography>
+                                }
+                            </Button>
+                        }
+
+
+                    </Grid>
+                    <Grid item md={12} style={{ marginBottom: "2em", textAlign: "left" }}>
+                        <TextField
+                            autoComplete="off"
+                            type="url"
+                            variant="outlined"
+                            name="url"
+                            placeholder="RAW url (optional)"
+                            label={`RAW URL (optional)`}
+                            value={state.new ? state.new.url : state.url}
+                            onChange={e => this.setState({ new: { order: this.state.new ? this.state.new.order : this.state.order, url: e.target.value } })}
+                            margin="normal"
+                            fullWidth
+                        />
+                        {state.new && state.new.url !== state.url &&
+                            <Button style={{ marginBottom: "2em" }} onClick={() => this.submit('url', state.new.url)}
+                            >
+                                <SaveIcon fontSize="small" />
+                                Save
+                            </Button>
+                        }
+                    </Grid>
+
+                    <Grid style={{ textAlign: "center" }} item md={6} xs={12}>
+                        <Button onClick={() => this.setState({ edit: "raw" })}>
+                            {state.raw_id ? 'Add' : 'Edit'} RAW
+                        </Button>
+                    </Grid>
+                    <Grid style={{ textAlign: "center" }} item md={6} xs={12}>
+                        <Button onClick={() => this.setState({ edit: "proofread" })}>
+                            {state.proofread_id ? 'Add' : 'Edit'} Proofread
+                        </Button>
+                    </Grid>
+                    {state.raw_id &&
+                        < Grid style={{ textAlign: "right", marginTop: "2em" }} item md={6} xs={12}>
+                            <Button color="secondary" onClick={() => this.setState({ edit: false })}>
+                                <KeyboardReturnIcon fontSize="small" />
+                                Return
+                            </Button>
+                        </Grid>
+                    }
+                </Grid>
+            )
+        }
         return (
-            <Container type="div" className={classes.root}>
+            <Container type="div" className={classes.root} >
                 <this.ChapterNav />
 
 
-
                 <Grid container spacing={3} className={classes.paragraphs}>
-                    {this.state.paragraphs.map((p, index) => {
+                    {state.paragraphs.map((p, index) => {
                         if (!views.includes(p.type) || (state.swipeMode && p.hide)) return null
                         return <Paragraph key={index}
-                            selectParagraph={this.selectParagraph}
-                            proofreadParagraph={this.proofreadParagraph}
-                            views={views}
+                            parent={this}
+                            md={state.swipeMode ? 12 : (12 / views.length)}
                             paragraph={p}
+                            words={p.row + 1 === state.max_paragraphs ? state[p.type].content : null}
                         />
                     })}
+
+
+
+
+
                 </Grid>
 
                 <this.ChapterNav />
                 <div>{state.swipeMode ? 'swipe' : 'noswipe'}</div>
                 <ChapterSnackbar count={state.proofread.count} max={state.max_paragraphs} />
 
-                
 
-                <ChapterBottomNav
-                    parent={this}
-                    novel_id={this.props.chapter.novel_id}
-                    translate={this.translate}
-                    paragraphs={state.paragraphs}
-                    chapters={state.chapters}
-                    chapter_id={this.props.chapter.id} />
+
+                <ChapterBottomNav parent={this} />
 
             </Container>
 

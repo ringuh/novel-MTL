@@ -24,7 +24,7 @@ router.get("/", (req, res) => {
 		res.json(novels)
 	}).catch(err => {
 		console.log(red(err.message))
-		res.json({ error: err.message })
+		res.status(500).json({ message: err.message })
 	})
 })
 
@@ -39,12 +39,12 @@ router.route(["/create", "/:id"])
 			.then(novel => res.json(novel))
 			.catch(err => {
 				console.log(red(err.message))
-				res.json({ error: err.message })
+				res.status(500).json({ message: err.message })
 			})
 	}).post(function (req, res, next) {
 		console.log(req.method, req.url, req.body, req.params, req.query)
 		if (req.params.id && req.body.id !== parseInt(req.params.id))
-			return res.json({ error: "/:id the path doesn't match '_id' of post" })
+			return res.status(500).json({ message: "/:id the path doesn't match '_id' of post" })
 
 		if (req.params.id) {
 			Novel.findOrCreate({
@@ -65,7 +65,7 @@ router.route(["/create", "/:id"])
 				}).then(nov => res.json({ message: `Novel ${nov.name} updated`, id: nov.id }))
 			}).catch(err => {
 				console.log(cyan(err.message))
-				res.json({ error: err.message })
+				res.status(500).json({ message: err.message })
 			});
 		}
 
@@ -111,7 +111,7 @@ router.route("/:id/chapter")
 			return res.json(chapters.map(chapter => chapter.toJson(req.query.content_length)))
 		})
 			.catch((err) => {
-				return res.json({ error: err.message })
+				return res.status(500).json({ message: err.message })
 			})
 	});
 
@@ -132,7 +132,7 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 			return res.json(chapter.toJson())
 		}).catch((err) => {
 			console.log(red(err))
-			return res.json({ error: err.message })
+			return res.status(500).json({ message: err.message })
 		})
 
 	}).post(function (req, res, next) {
@@ -170,7 +170,7 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 			})
 		}).catch((err) => {
 			console.log(red(err))
-			return res.json({ error: err.message })
+			return res.status(500).json({ message: err.message })
 		})
 	});
 
@@ -186,7 +186,7 @@ router.route(["/:novel_id/terms"])
 			return res.json(term)
 		}).catch((err) => {
 			console.log(red(err))
-			return res.json({ error: err.message })
+			return res.status(500).json({ message: err.message })
 		})
 	}).post(function (req, res, next) {
 		console.log(req.method, req.url, req.body, req.params, req.query)
@@ -199,7 +199,7 @@ router.route(["/:novel_id/terms"])
 			}).then(t => res.json({ id: -1 }))
 				.catch((err) => {
 					console.log(red(err))
-					return res.json({ error: err.message })
+					return res.status(500).json({ message: err.message })
 				})
 
 		else
@@ -223,7 +223,7 @@ router.route(["/:novel_id/terms"])
 				}).then(r => res.json(r))
 				.catch((err) => {
 					console.log(red(err))
-					return res.json({ error: err.message })
+					return res.status(500).json({ message: err.message })
 				})
 	});
 

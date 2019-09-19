@@ -7,7 +7,7 @@ import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-
+import Typography from '@material-ui/core/Typography';
 import Hammer from 'react-hammerjs'
 import { useSpring, animated } from 'react-spring'
 
@@ -17,13 +17,7 @@ const styles = theme => ({
         backgroundColor: 'red'
     },
     raw: {
-        padding: '1em',
         color: "var(--red)",
-        marginTop: '2em',
-
-        '&:first-child': {
-            marginTop: "none"
-        }
     },
     proofread: {
         padding: '1em',
@@ -44,6 +38,9 @@ const styles = theme => ({
     button: {
         float: "right"
     },
+    words: {
+        marginTop: '2em'
+    }
 });
 
 
@@ -76,13 +73,59 @@ class ChapterDrawer extends Component {
         this.setState({ ...this.state, [attr]: value })
     }
 
+    proofreadParagraph = (event, paragraph) => {
+        let val = event.target.value
+        if (!this.state.newLine)
+            val = val.replace(/\n/g, ' ')
+        val = val.replace(/\n{2,}/g, '\n');
+        val = val.replace(/ {2,}/g, ' ');
+        paragraph.content = val
+        this.setState({ ...this.state })
 
-    
-
-    toggleParagraph = paragraph => {
-
-        this.forceUpdate()
     }
+
+    selectParagraph = (paragraph, option = 0) => {
+        let alternatives = this.props.parent.state.paragraphs.filter(p =>
+            p.row === paragraph.row && p.type !== 'raw')
+        const proofread = alternatives.find(p => p.type === "proofread")
+        alternatives = alternatives.filter(p => p.content.length > 0)
+
+        if (option === 0) { // pre-selecting proofread content
+            // allow long press on translation to replace proofread if empty or exactly same as a translation
+            if (proofread.content.length === 0 || alternatives.find(p => p.content === proofread.content))
+                proofread.content = paragraph.content
+
+            paragraph.hide = true
+            proofread.hide = false
+
+
+
+            return this.props.parent.setState({
+                proofread: {
+                    ...this.props.parent.state.proofread,
+                    count: this.props.parent.state.paragraphs.filter(p => p.type === 'proofread' && p.content.length > 0).length
+                },
+            })
+        }
+
+        const index = alternatives.indexOf(paragraph)
+        let targetIndex = index + option
+        if (targetIndex >= alternatives.length) targetIndex = 0
+        else if (targetIndex < 0) targetIndex = alternatives.length - 1
+
+        paragraph.hide = true
+        alternatives[targetIndex].hide = false
+
+        this.props.parent.setState({ paragraphs: this.props.parent.state.paragraphs })
+
+    }
+
+    Words = props => {
+        return <Typography color="textSecondary" variant="body2" display="block" className={props.className}>
+                words: {props.words.split(/\s+/).length} | characters: {props.words.length}
+            </Typography>
+    }
+
 
     componentDidUpdate(n, o) {
         if (this.state.content !== this.props.paragraph.content)
@@ -95,8 +138,8 @@ class ChapterDrawer extends Component {
 
 
     render() {
-        const { paragraph, proofreadParagraph, selectParagraph, key, classes } = this.props;
-        const md = 12 /// views.length || 12
+        const { paragraph, md, key, classes, words, parent } = this.props;
+        const { proofreadParagraph, selectParagraph } = this
 
         // raw content
         if (paragraph.type === 'raw')
@@ -106,6 +149,7 @@ class ChapterDrawer extends Component {
                 >
                     {paragraph.content}
                     <SmallTitle type={paragraph.type} />
+                    {words && <this.Words className={classes.words} words={words} />}
                 </Grid>
             )
         // somewhat proofread content
@@ -114,20 +158,21 @@ class ChapterDrawer extends Component {
                 <Grid item xs={12} md={md} key={key}
                     className={classes[paragraph.type]}
                 >{!this.state.edit && this.state.content.length > 0 &&
-                    <Hammer onPress={() => this.toggleState('edit', true)}
-                        onSwipeLeft={() => selectParagraph(paragraph, -1)}
-                        onSwipeRight={() => selectParagraph(paragraph, 1)}
-                        onDoubleTap={e => console.log(e.type)}
+                    <Hammer onPress={e => this.toggleState('edit', true)}
+                        onSwipeLeft={e => selectParagraph(paragraph, -1)}
+                        onSwipeRight={e => selectParagraph(paragraph, 1)}
+                        onDoubleTap={e => this.toggleState('edit', true)}
                         options={{
                             recognizers: {
-                                press: { time: 1500 },
+                                press: { time: 1000 },
                                 swipe: { threshold: 200 }
                             }
                         }}
                     >
                         <div>
-                            <span dangerouslySetInnerHTML={{ __html: this.state.tmp_content || this.state.content }} />
+                            <span dangerouslySetInnerHTML={{ __html: this.state.content }} />
                             <SmallTitle type={paragraph.type} />
+                            {words && <this.Words className={classes.words} words={words} />}
                         </div>
                     </Hammer>
                     }
@@ -156,8 +201,8 @@ class ChapterDrawer extends Component {
                                         }}
                                     />}
                                 label="Allow New Lines" />
-                            
-                            <Button className={classes.button} 
+
+                            <Button className={classes.button}
                                 variant="outlined"
                                 color="secondary"
                                 onClick={() => this.toggleState('edit', false)} type="submit">Hide</Button>
@@ -172,13 +217,13 @@ class ChapterDrawer extends Component {
             <Grid item xs={12} md={md} key={key}
                 className={classes[paragraph.type]}
             >
-                <Hammer onPress={() => selectParagraph(paragraph)}
-                    onSwipeLeft={(e) => selectParagraph(paragraph, -1)}
-                    onSwipeRight={(e) => selectParagraph(paragraph, 1)}
-                    onDoubleTap={e => console.log(e.type)}
+                <Hammer onPress={e => selectParagraph(paragraph)}
+                    onSwipeLeft={e => selectParagraph(paragraph, -1)}
+                    onSwipeRight={e => selectParagraph(paragraph, 1)}
+                    onDoubleTap={e => selectParagraph(paragraph)}
                     options={{
                         recognizers: {
-                            press: { time: 1500 },
+                            press: { time: 1000 },
                             swipe: { threshold: 200 }
                         }
                     }}
@@ -186,6 +231,7 @@ class ChapterDrawer extends Component {
                     <div>
                         <span dangerouslySetInnerHTML={{ __html: this.state.content }} />
                         <SmallTitle type={paragraph.type} />
+                        {words && <this.Words className={classes.words} words={words} />}
                     </div>
                 </Hammer>
             </Grid>
