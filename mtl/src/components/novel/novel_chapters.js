@@ -42,8 +42,7 @@ class NovelChapters extends Component {
     generateTranslateString() {
         let str = {
             url: `${global.config.server.api}/novel/${this.state.id}/chapter`,
-            chapter_id: -1,
-            limit: 100
+            limit: 50
         }
         this.setState({ translateString: JSON.stringify(str) })
     }
@@ -162,7 +161,8 @@ class NovelChapters extends Component {
 
                 <Box m={2}>
                     <TextField multiline fullWidth
-                        onClick={() => { navigator.clipboard.writeText(this.state.translateString); alert("Copied to clipboard") }}
+                        onClick={() => { navigator.clipboard.writeText(this.state.translateString); 
+                            alert(`Copied to clipboard: ${this.state.translateString}`)}}
                         label="Console"
                         variant="outlined"
                         rows={2}

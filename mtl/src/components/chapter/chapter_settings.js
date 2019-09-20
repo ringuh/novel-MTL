@@ -122,7 +122,7 @@ class ChapterSettings extends Component {
                     <Grid container item xs={12} className={classes.row}>
                         <Button fullWidth
                             variant="outlined"
-                            onClick={() => parent.props.parent.setState({ edit: 'edit' })}
+                            onClick={() => parent.props.parent.setState({ edit: { translator: 'chapter' } })}
                             value={true}
                         >
                             <EditIcon fontSize="small" /> 

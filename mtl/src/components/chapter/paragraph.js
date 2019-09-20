@@ -70,18 +70,25 @@ class ChapterDrawer extends Component {
     }
 
     toggleState(attr, value) {
-        this.setState({ ...this.state, [attr]: value })
+        this.setState({ [attr]: value })
     }
 
     proofreadParagraph = (event, paragraph) => {
+        console.log(this.state)
         let val = event.target.value
         if (!this.state.newLine)
             val = val.replace(/\n/g, ' ')
         val = val.replace(/\n{2,}/g, '\n');
         val = val.replace(/ {2,}/g, ' ');
         paragraph.content = val
-        this.setState({ ...this.state })
 
+        this.setState({ ...this.state })
+        this.props.parent.setState({
+            proofread: {
+                ...this.props.parent.state.proofread,
+                count: this.props.parent.state.paragraphs.filter(p => p.type === 'proofread' && p.content.length > 0).length
+            },
+        })
     }
 
     selectParagraph = (paragraph, option = 0) => {
@@ -122,8 +129,8 @@ class ChapterDrawer extends Component {
 
     Words = props => {
         return <Typography color="textSecondary" variant="body2" display="block" className={props.className}>
-                words: {props.words.split(/\s+/).length} | characters: {props.words.length}
-            </Typography>
+            words: {props.words.split(/\s+/).length} | characters: {props.words.length}
+        </Typography>
     }
 
 

@@ -7,6 +7,8 @@ import { Grid, Box, Container } from '@material-ui/core';
 import Typography from '@material-ui/core/Typography';
 import SaveIcon from '@material-ui/icons/SaveOutlined'
 import KeyboardReturnIcon from '@material-ui/icons/KeyboardReturn'
+import TranslateIcon from '@material-ui/icons/TranslateRounded'
+import EditIcon from '@material-ui/icons/EditOutlined'
 import TextField from '@material-ui/core/TextField';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -54,9 +56,18 @@ class ChapterEditor extends Component {
             chapters: props.chapters,
             swipeMode: this.storage.swipeMode,
             priority: this.storage.priority,
+            edit: {}
         };
+    }
 
-
+    generateTranslateString() {
+        let r = JSON.stringify({
+            url: `${global.config.server.api}/novel/${this.props.chapter.novel_id}/chapter`,
+            chapter_id: [this.props.chapter.id],
+            force: true
+        })
+        navigator.clipboard.writeText(r);
+        alert(`Copied to clipboard: ${r}`);
 
     }
 
@@ -145,15 +156,16 @@ class ChapterEditor extends Component {
                     hide: translation.priority || translation.type === 'raw' ? false : true
                 }
 
-
-
+                // maybe hide empty translations?
+                //if(["baidu", "sogou"].includes(translation.type) && translation.paragraphs.length === 0)
+                    
                 json.paragraphs.push(p)
 
             }
             //)
         }
-
-        json.raw.hide = this.storage.hideRaw
+        let chap = this.props.chapter
+        json.raw.hide = chap.sogou_id || chap.baidu_id || chap.proofread_id ? this.storage.hideRaw : false
 
         console.log("chapters state", json)
 
@@ -183,15 +195,22 @@ class ChapterEditor extends Component {
     }
 
 
-    submit = (attr, val) => {
-        console.log(this.state)
-        console.log("submitting", attr, val, this.props.match.path)
+    SubmitChapter = (attr, val) => {
+        console.log(this.state.edit)
         let json = { [attr]: val }
+        if (['raw', 'proofread'].includes(attr))
+            json = { translator: attr, content: val }
+        console.log(json)
         axios.post(`/api/novel/${this.state.novel_id}/chapter/${this.state.id}`, json)
             .then(res => {
-                console.log(res)
+                if (!res.data.chapter_id) return false
+                if (attr === 'order')
+                    return this.props.parent.setState({ redirect: val })
+                if (attr === 'url') return this.props.parent.fetchNovel()
+                this.setState({ edit: {} })
+                this.componentDidMount()
 
-            })
+            }).catch(err => console.log(err.message))
     }
 
     ChapterNav = () => {
@@ -246,18 +265,15 @@ class ChapterEditor extends Component {
         const { state, parent } = this;
 
 
-
-        /* if (this.state.redirect) {
-            return <Redirect to={`./${this.state.redirect}`} />
-        } */
-
         if (!state.paragraphs)
             return <ProgressBar />
 
-        const views = ['raw', 'proofread', 'sogou', 'baidu'].filter(key => !state[key].hide)
+        const views = ['raw', 'proofread', 'sogou', 'baidu']
+        .filter(key => !state[key].hide )
+        .filter(key =>  ['raw', 'proofread'].includes(key) || state[`${key}_id`])
 
-        if (state.edit || state.paragraphs.length === 0) {
-            if (["raw", "proofread"].includes(state.edit))
+        if (state.edit.translator || state.paragraphs.length === 0) {
+            if (["raw", "proofread"].includes(state.edit.translator))
                 return (<Box component="div">
                     <TextField
                         autoComplete="off"
@@ -267,9 +283,9 @@ class ChapterEditor extends Component {
                             "If possible use the userscript tools to semi-automatically generate this content" :
                             "Proofread content is shown as priority"
                         }
-                        label={`${state.edit} title`}
-                        value={state[state.edit].title || ""}
-                        onChange={e => this.setState({ [state.edit]: { ...state[state.edit], title: e.target.value }})}
+                        label={`${state.edit.translator} title`}
+                        value={state.edit.title || state[state.edit.translator].title}
+                        onChange={e => this.setState({ edit: { ...state.edit, title: e.target.value } })}
                         margin="normal"
                         fullWidth
                     />
@@ -285,18 +301,18 @@ class ChapterEditor extends Component {
                             "If possible use the userscript tools to semi-automatically generate this content" :
                             "Proofread content is shown as priority"
                         }
-                        label={`${state.edit} content`}
-                        value={state[state.edit].content || ""}
-                        onChange={e => this.setState({ [state.edit]: { ...state[state.edit], content: e.target.value }})}
+                        label={`${state.edit.translator} content`}
+                        value={state.edit.content || state[state.edit.translator].content}
+                        onChange={e => this.setState({ edit: { ...state.edit, content: e.target.value } })}
                         margin="normal"
                         fullWidth
                     />
-                    <Button variant="outlined" onClick={this.submit('raw', state.raw)}>
+                    <Button variant="outlined" onClick={() => this.SubmitChapter(state.edit.translator, state.edit)}>
                         <SaveIcon fontSize="small" />
                         Submit
                 </Button>
 
-                    <Button variant="outlined" onClick={e => this.setState({ edit: false })}>
+                    <Button variant="outlined" onClick={e => this.setState({ edit: {} })}>
                         <SaveIcon fontSize="small" />
                         Cancel
                     </Button>
@@ -305,7 +321,18 @@ class ChapterEditor extends Component {
 
             return (
                 <Grid container style={{ marginTop: "3em" }}>
-                    <Grid item md={12} style={{ textAlign: "left" }}>
+
+                    <Grid item xs={12} style={{ marginBottom: "2em", textAlign: "right" }}>
+                        <Button color="primary"
+                            onClick={() => this.generateTranslateString()}
+                        >
+                            <TranslateIcon fontSize="small" />
+                            Translate command
+
+                                </Button>
+                    </Grid>
+
+                    <Grid item xs={12} style={{ textAlign: "left" }}>
                         <TextField
                             autoComplete="off"
                             type="number"
@@ -314,15 +341,15 @@ class ChapterEditor extends Component {
                             name="Chapter number"
                             placeholder="Chapter number"
 
-                            label={`Chapter ${state.order}`}
+                            label={`Chapter number`}
                             value={state.new ? state.new.order : state.order}
                             onChange={e => this.setState({ new: { url: this.state.new ? this.state.new.url : this.state.url, order: e.target.value } })}
                             margin="normal"
                             fullWidth
                         />
-                        {state.new && state.new.order > 0 &&
+                        {state.new && state.new.order > 0 && state.new.order != state.order &&
 
-                            <Button style={{ marginBottom: "2em" }} onClick={() => this.submit('order', state.new.order)}>
+                            <Button style={{ marginBottom: "2em" }} onClick={() => this.SubmitChapter('order', state.new.order)}>
                                 <SaveIcon fontSize="small" />
                                 Save
                                     {state.chapters.find(c => c.order === parseInt(state.new.order)) &&
@@ -333,7 +360,8 @@ class ChapterEditor extends Component {
 
 
                     </Grid>
-                    <Grid item md={12} style={{ marginBottom: "2em", textAlign: "left" }}>
+
+                    <Grid item xs={12} md={12} style={{ marginBottom: "2em", textAlign: "left" }}>
                         <TextField
                             autoComplete="off"
                             type="url"
@@ -347,7 +375,7 @@ class ChapterEditor extends Component {
                             fullWidth
                         />
                         {state.new && state.new.url !== state.url &&
-                            <Button style={{ marginBottom: "2em" }} onClick={() => this.submit('url', state.new.url)}
+                            <Button style={{ marginBottom: "2em" }} onClick={() => this.SubmitChapter('url', state.new.url)}
                             >
                                 <SaveIcon fontSize="small" />
                                 Save
@@ -355,23 +383,27 @@ class ChapterEditor extends Component {
                         }
                     </Grid>
 
-                    <Grid style={{ textAlign: "center" }} item md={6} xs={12}>
-                        <Button onClick={() => this.setState({ edit: "raw" })}>
+                    <Grid style={{ textAlign: "center" }} item md={6} xs={6}>
+                        <Button onClick={() => this.setState({ edit: { translator: "raw" } })}>
+                            <TranslateIcon fontSize="small" />
                             {state.raw_id ? 'Add' : 'Edit'} RAW
                         </Button>
                     </Grid>
-                    <Grid style={{ textAlign: "center" }} item md={6} xs={12}>
-                        <Button onClick={() => this.setState({ edit: "proofread" })}>
+                    <Grid style={{ textAlign: "center" }} item md={6} xs={6}>
+                        <Button onClick={() => this.setState({ edit: { translator: "proofread" } })}>
+                            <EditIcon fontSize="small" />
                             {state.proofread_id ? 'Add' : 'Edit'} Proofread
                         </Button>
                     </Grid>
                     {state.raw_id &&
-                        < Grid style={{ textAlign: "right", marginTop: "2em" }} item md={6} xs={12}>
-                            <Button color="secondary" onClick={() => this.setState({ edit: false })}>
+                        <Grid style={{ textAlign: "right", marginTop: "2em" }} item md={6} xs={12}>
+                            <Button color="secondary" onClick={() => this.setState({ edit: {} })}>
                                 <KeyboardReturnIcon fontSize="small" />
                                 Return
                             </Button>
+
                         </Grid>
+
                     }
                 </Grid>
             )
@@ -400,7 +432,7 @@ class ChapterEditor extends Component {
 
                 <this.ChapterNav />
                 <div>{state.swipeMode ? 'swipe' : 'noswipe'}</div>
-                <ChapterSnackbar count={state.proofread.count} max={state.max_paragraphs} />
+                <ChapterSnackbar parent={this} count={state.proofread.count} max={state.max_paragraphs} />
 
 
 

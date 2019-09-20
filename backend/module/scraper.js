@@ -123,7 +123,7 @@ const Scraper = async (data, connection) => {
             }).catch((err) => sendJson(err))
     }
 
-    const ScrapeChapter = async (chapter, limit = 15) => {
+    const ScrapeChapter = async (chapter, limit = 3) => {
         console.log(limit, "scrape chapter", chapter.url, "id", chapter.id, "order", chapter.order)
         // get the parser template for this website
         const raw = await GetRaw(chapter.url)
@@ -138,10 +138,10 @@ const Scraper = async (data, connection) => {
         let pattern = new RegExp(raw.regex, "i")
         
         
-        await chapter.contentSave({
-            where: { type: "raw" },
+        await Content.findOrCreate({
+            where: { chapter_id: chapter.id, type: "raw" },
             defaults: { title: title, content: content }
-        }).then(([content, created]) => chapter.setRaw(content))
+        }).then(([nc, created]) => chapter.setRaw(nc))
         
         // check if the next chapter matches the regex
         if (!next.match(pattern)) return sendJson(`Regex for next chapter doesn't match ${next}`)

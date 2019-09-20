@@ -25,11 +25,13 @@ module.exports = (sequelize, type) => {
         },
         title: {
             type: type.STRING,
-            singlespace: true
+            singlespace: true,
+            defaultValue: "",
         },
         content: {
             type: type.TEXT,
             singlespace: true,
+            defaultValue: "",
             /* set(val) {
                 const sanitizeHtml = require('sanitize-html')
                 val = val.replace(/ {2,}/g, ' ')

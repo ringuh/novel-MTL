@@ -36,12 +36,6 @@ module.exports = (sequelize, type) => {
         timestamps: true,
     });
 
-
-    Chapter.prototype.contentSave = function (obj) {
-        obj.where.chapter_id = this.id
-        return sequelize.models.Content.findOrCreate(obj)
-    }
-
     Chapter.prototype.reOrder = function () {
         
         return sequelize.models.Chapter.findAll({
@@ -53,11 +47,14 @@ module.exports = (sequelize, type) => {
             order: [["order", "ASC"],
                     ["id", "ASC"]]
         }).then(chapters => {
-            let runningNr = this.order
+            let runningNr = parseInt(this.order)
             chapters.forEach(c => {
-                ++runningNr
-                if(c.order === runningNr)
+                if(c.order === runningNr){
+                    ++runningNr
                     c.update({order: runningNr}).then(c => c.save())
+                }
+                    
+                
             })
             
             return runningNr

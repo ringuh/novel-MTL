@@ -41,33 +41,27 @@ router.route(["/create", "/:id"])
 				console.log(red(err.message))
 				res.status(500).json({ message: err.message })
 			})
-	}).post(function (req, res, next) {
+	}).post(async function (req, res, next) {
 		console.log(req.method, req.url, req.body, req.params, req.query)
 		if (req.params.id && req.body.id !== parseInt(req.params.id))
 			return res.status(500).json({ message: "/:id the path doesn't match '_id' of post" })
 
-		if (req.params.id) {
-			Novel.findOrCreate({
-				where: { id: req.params.id },
-				defaults: {
-					name: req.body.name,
-					description: req.body.description,
-					raw_url: req.body.raw_url,
-				}
-			}
-			).then(([novel, created]) => {
-				if (created) return res.json({ message: `Novel ${novel.name} created succesfully`, id: novel.id })
+		let novel = null
+		if (req.params.id)
+			novel = await Novel.findByPk(parseInt(req.params.id))
+		else
+			novel = await Novel.create({ name: req.body.name }).catch(err => res.status(500).json({ message: err.message }))
 
-				return novel.update({
-					name: req.body.name,
-					raw_url: req.body.raw_url,
-					description: req.body.description,
-				}).then(nov => res.json({ message: `Novel ${nov.name} updated`, id: nov.id }))
-			}).catch(err => {
-				console.log(cyan(err.message))
-				res.status(500).json({ message: err.message })
-			});
-		}
+		novel.update({
+			name: req.body.name,
+			raw_url: req.body.raw_url,
+			description: req.body.description,
+		}).then(nov =>
+			res.json({ message: `Novel ${nov.name} updated`, id: nov.id })
+		).catch(err => {
+			console.log(cyan(err.message))
+			res.status(500).json({ message: err.message })
+		});
 
 	});
 
@@ -75,7 +69,7 @@ router.route(["/create", "/:id"])
 
 router.route("/:id/chapter")
 	.get(function (req, res, next) {
-		//console.log(req.method, req.url, req.body, req.params, req.query)
+		console.log(req.method, req.url, req.body, req.params, req.query)
 
 		let query = {
 			where: { novel_id: req.params.id },
@@ -88,15 +82,15 @@ router.route("/:id/chapter")
 				{ model: Content, as: 'proofread', required: false },
 			]
 		}
+		if (req.query.limit)
+			query.limit = parseInt(req.query.limit)
 
 		// if no chapter_id query next bunch of chapters from start
-		if (req.query.chapter_id && req.query.chapter_id != -1) {
-			query.where.id = req.query.chapter_id
-		}
+		if (req.query.chapter_id && req.query.chapter_id != -1)
+			query.where.id = { [Sequelize.Op.in]: req.query.chapter_id.split(",") }
 
-		if (req.query.order && req.query.order != -1) {
-			query.where.order = req.query.order
-		}
+		if (req.query.order && req.query.order != -1)
+			query.where.order = { [Sequelize.Op.in]: req.query.order.split(",") }
 
 		// which children to include in JSON
 		if (req.query.includes)
@@ -106,13 +100,12 @@ router.route("/:id/chapter")
 		if (req.query.translator && !req.query.force) {
 			query.where[`${req.query.translator}_id`] = { [Sequelize.Op.is]: null }
 		}
-
+		
 		Chapter.findAll(query).then((chapters) => {
 			return res.json(chapters.map(chapter => chapter.toJson(req.query.content_length)))
+		}).catch((err) => {
+			return res.status(500).json({ message: err.message })
 		})
-			.catch((err) => {
-				return res.status(500).json({ message: err.message })
-			})
 	});
 
 
@@ -135,43 +128,49 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 			return res.status(500).json({ message: err.message })
 		})
 
-	}).post(function (req, res, next) {
-
+	}).post(async function (req, res, next) {
 		console.log(req.method, req.url, req.body, req.params, req.query)
 
-		Chapter.findOne({
-			where: { id: parseInt(req.params.chapter_id) },
-		}).then((chapter) => {
-			console.log("saving")
-			chapter.contentSave({
+		const chapter = await Chapter.findByPk(parseInt(req.params.chapter_id))
+		if (!chapter) return res.status(500).json({ message: `Chapter id ${req.params.chapter_id} not found` })
+
+		// update some other chapter info than translated content
+		if (!req.body.translator) {
+			if (req.body.hasOwnProperty('url'))
+				chapter.url = req.body.url
+			if (req.body.hasOwnProperty('order')) {
+				chapter.order = req.body.order
+				chapter.reOrder()
+			}
+			chapter.save().then(chapter =>
+				res.json({ msg: `Saved ${chapter.id} at ${chapter.url}`, chapter_id: chapter.id })
+			).catch(err => res.status(500).json({ message: err.message }))
+
+		}
+
+		// updating content
+		if (req.body.translator) {
+			Content.findOrCreate({
 				where: {
 					chapter_id: chapter.id,
 					type: req.body.translator
-				},
-				defaults: {
-					content: req.body.content.content,
-					title: req.body.content.title
 				}, raw: false
 			}).then(([content, created]) => {
-				if (!created) {
+				if (req.body.hasOwnProperty('content')) {
 					content.content = req.body.content.content
 					content.title = req.body.content.title
-					content.save().then(() => res.json({
-						msg: `Saved ${chapter.id} at ${chapter.url}`, chapter_id: chapter.id
-					}))
 				}
-				else
-					chapter[`set${capitalize(req.body.translator)}`](content).then(done =>
-						res.json({
-							msg: `Saved ${chapter.id} at ${chapter.url}`, chapter_id: chapter.id
-						})
-					)
 
+				if (created) chapter[`set${capitalize(req.body.translator)}`](content)
+
+				content.save().then(() =>
+					res.json({ msg: `Saved ${chapter.id} at ${chapter.url}`, chapter_id: chapter.id })
+				)
+			}).catch((err) => {
+				console.log(red(err))
+				return res.status(500).json({ message: err.message })
 			})
-		}).catch((err) => {
-			console.log(red(err))
-			return res.status(500).json({ message: err.message })
-		})
+		}
 	});
 
 router.route(["/:novel_id/terms"])

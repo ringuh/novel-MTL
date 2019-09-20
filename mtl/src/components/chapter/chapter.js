@@ -78,7 +78,7 @@ class Chapter extends Component {
             .then(() => {
                 // redirect to novel index if there arent any chapters for this novel
                 if (this.state.chapters.length === 0)
-                    this.setState({ redirect: `/novels/${this.props.match.params.alias}` })
+                    this.setState({ redirect: `/novel/${this.props.match.params.alias}` })
 
                 // check if a chapter can be found based on :order
                 this.setState({ chapter: this.state.order ? this.state.chapters.find(c => c.order === this.state.order) : null })

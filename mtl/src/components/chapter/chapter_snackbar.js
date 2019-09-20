@@ -36,6 +36,18 @@ class ChapterSnackbar extends Component {
         };
     }
 
+    ProofreadToJson = () => {
+        console.log(this.props.parent.state.paragraphs)
+        let ps = this.props.parent.state.paragraphs.filter(p => p.type==='proofread')
+        ps = ps.map(p => p.content).join("\n")
+
+        this.props.parent.SubmitChapter('proofread', {
+            content: ps,
+            title:  this.props.parent.state.proofread.title || this.props.parent.state.title
+        })
+
+    }
+
     Show = bool => {
         this.setState({ hide: !bool })
     }
@@ -47,7 +59,15 @@ class ChapterSnackbar extends Component {
     )
 
     SaveBtn = (
-        <Button color="secondary" size="small">
+        
+        <Button color="secondary" size="small" onClick={() => 
+            this.ProofreadToJson()
+           /*  this.props.parent.SubmitChapter('proofread', 
+                {content: this.props.parent.state.proofread.content,
+                    title: this.props.parent.state.proofread.title || 
+                        `Chapter ${this.props.parent.state.order}`  
+                }) */
+            }>
             Save
         </Button>
     )
@@ -56,7 +76,7 @@ class ChapterSnackbar extends Component {
     render() {
         let { classes, count, max } = this.props;
         let { hide } = this.state
-        max = 3
+
         if (count === max)
             hide = false
 

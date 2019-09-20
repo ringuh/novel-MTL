@@ -11,6 +11,9 @@ module.exports = function (seq, type) {
 			unique: { args: true, msg: "Novel name already in use" },
 			allowNull: false,
 			trim: true,
+			validate: {
+				len: [1,100]
+			},
 			set(val) {
 				this.alias = val
 				this.setDataValue('name', val)				
