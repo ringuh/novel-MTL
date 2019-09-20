@@ -26,7 +26,7 @@
         '<button id="mtl_stop">Stop</button>' +
         '</div>';
     $("#box-logo").append(UI);
-    $("#mtl_command").val('{"url":"http://localhost:3001/api/novel/1/chapter","chapter_id":-1,"limit":100}')
+    //$("#mtl_command").val('{"url":"http://localhost:3001/api/novel/1/chapter","chapter_id":-1,"limit":50}')
 
     const PrintConsole = (str) => $("#mtl_console").val(str + "\n" + $("#mtl_console").val())
     $("#mtl_stop").click(() => {
@@ -71,7 +71,7 @@
         if (chapters.length === index || !tbc)
             return PrintConsole(`Finished translating`)
         //console.log("handle chapters", index, chapters[index])
-        
+
         var chap = chapters[index]
 
 
@@ -89,9 +89,9 @@
                 var textContent = translatedText.join("\n")
                 // error happened-text replaced
                 textContent = textContent.replace(/呀，出错误了！再试下吧。/g, "")
-                    
 
-                
+
+
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
@@ -105,11 +105,11 @@
                 };
                 xhttp.open("POST", server + "/" + chap.id, true);
                 xhttp.setRequestHeader("Content-type", "application/json");
-                
-                var d = JSON.stringify({ translator: translator, 
+
+                var d = JSON.stringify({ translator: translator,
                     content: { title: title.trim(), content: textContent.trim() } })
                 xhttp.send(d);
-                
+
 
                 return true
 
@@ -126,7 +126,7 @@
                     alert("ERROR FOUND")
                     console.log(cont)
                 } */
-                    
+
 
                 observer.disconnect();
                 HandleParts(parts, ++j)
@@ -140,10 +140,10 @@
             target.dispatchEvent(new Event('keyup'));
 
         }
-       
-        
+
+
         var url = new URL(`${server}/${chap.id}`)
-        
+
         var xhttp2 = new XMLHttpRequest();
         xhttp2.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {

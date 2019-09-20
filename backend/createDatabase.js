@@ -66,10 +66,9 @@ var createDB = async () => {
 			description: null,
 		},
 		{
-			name: "农女要翻天：夫君，求压倒",
-			alias: "china A",
-			raw_url: "https://www.kenshu.cc/xiaoshuo/37805/",
-			description: null,
+			name: "Lady Su's Revenge",
+			raw_url: "https://www.kenshu.cc/xiaoshuo/111171/",
+			description: "Reborn poison girl who can cook",
 
 		}, {
 			name: "妃要上天",

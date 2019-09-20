@@ -188,7 +188,7 @@ class TermDrawer extends Component {
                     <Dialog open={state.edit} onClose={() => this.selectTerm()} aria-labelledby="form-dialog-title">
                         <DialogTitle id="form-dialog-title">Add a new term</DialogTitle>
                         <DialogContent>
-                            <DialogContentText> <span>{JSON.stringify(this.state.term)}</span>
+                            <DialogContentText> {/* <span>{JSON.stringify(this.state.term)}</span> */}
                                 You can add a new <strong>english</strong> term to
                                 replace some of the words used in machine translation.
                             Terms do not effect saved <strong>raw</strong> or <strong>proofread</strong> text

@@ -92,7 +92,7 @@ class NovelEditor extends Component {
         // the edit view
         return (
             <Container>
-                <Paper><div>{JSON.stringify(this.state)}</div>
+                <Paper>
                     <Box component="form" p={2}
                         onSubmit={this.handleSubmit}
                         autoComplete="off" >

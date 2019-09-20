@@ -161,8 +161,10 @@ class NovelChapters extends Component {
 
                 <Box m={2}>
                     <TextField multiline fullWidth
-                        onClick={() => { navigator.clipboard.writeText(this.state.translateString); 
-                            alert(`Copied to clipboard: ${this.state.translateString}`)}}
+                        onClick={() => {
+                            navigator.clipboard.writeText(this.state.translateString);
+                            alert(`Copied to clipboard: ${this.state.translateString}`)
+                        }}
                         label="Console"
                         variant="outlined"
                         rows={2}
@@ -211,10 +213,8 @@ class NovelChapters extends Component {
 
 
                         </List>
-                    </Box>}
-                <Typography variant="h5">
-                    {JSON.stringify(novel.chapters)}
-                </Typography>
+                    </Box>
+                }
             </Container>
 
         );

@@ -26,7 +26,7 @@
         '<button id="mtl_stop">Stop</button>' +
         '</div>';
     $(".translate-wrap").prepend(UI);
-    $("#mtl_command").val('{"url":"http://localhost:3001/novel/1/chapter","chapter_id":-1,"limit":100}')
+    //$("#mtl_command").val('{"url":"http://localhost:3001/api/novel/1/chapter","chapter_id":-1,"limit":100}')
 
     const PrintConsole = (str) => $("#mtl_console").val(str + "\n"+ $("#mtl_console").val())
     $("#mtl_stop").click(() => {
@@ -84,7 +84,7 @@
                 var textContent = translatedText.join("\n")
 
                 var d = JSON.stringify({ translator: translator, content: { title: title.trim(), content: textContent.trim() } })
-                
+
                 const xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function() {
                     if (this.readyState == 4 && this.status == 200) {
@@ -103,13 +103,13 @@
             }
 
             const callback = function (mutationsList, observer) {
-                
+
                 let cont = []
                 $(".target-output").each(function(){ cont.push($(this).text())})
                 // removing that random chinese
                 cont.shift()
                 cont = cont.join("\n").trim()
-                
+
                 // there wait for the observer to really update
                 if(cont.length == 0 || translatedText.includes(cont)) return true
 
@@ -123,7 +123,7 @@
 
             const observer = new MutationObserver(callback);
             observer.observe(targetNode, config);
-            
+
             // adding some random chinese to force ZH translation on baidu
             target.value = `放心\n${parts[j]}`
 
@@ -133,7 +133,7 @@
 
 
         var url = new URL(`${server}/${chap.id}`)
-        
+
         var xhttp2 = new XMLHttpRequest();
         xhttp2.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
