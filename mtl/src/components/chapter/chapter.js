@@ -1,9 +1,7 @@
 import React, { Component } from 'react';
-import { Redirect, Link, Route } from 'react-router-dom'
+import { Redirect, Link } from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
-import Box from '@material-ui/core/Box';
-import Button from '@material-ui/core/Button';
 import Breadcrumbs from '@material-ui/core/Breadcrumbs';
 import Typography from '@material-ui/core/Typography';
 import ChapterEditor from './editor'
@@ -88,7 +86,6 @@ class Chapter extends Component {
                     this.setState({
                         redirect: `/novel/${this.props.match.params.alias}/chapter/${this.state.chapters[0].order}`
                     })
-                else document.title = `C${this.state.chapter.order} - ${this.state.name}`
             })
     }
 
@@ -143,7 +140,3 @@ class Chapter extends Component {
 
 export default withStyles(styles)(Chapter);
 
-{/* <Route
-path={`${this.props.match.path}`}
-render={(props) => <ChapterEditor {...props} chapter={state.chapter} chapters={state.chapters} />}
-/> */}

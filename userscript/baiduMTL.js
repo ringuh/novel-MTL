@@ -26,8 +26,7 @@
         '<button id="mtl_stop">Stop</button>' +
         '</div>';
     $(".translate-wrap").prepend(UI);
-    //$("#mtl_command").val('{"url":"http://localhost:3001/api/novel/1/chapter","chapter_id":-1,"limit":100}')
-
+ 
     const PrintConsole = (str) => $("#mtl_console").val(str + "\n"+ $("#mtl_console").val())
     $("#mtl_stop").click(() => {
         PrintConsole("Stop activated")
@@ -147,7 +146,7 @@
         }
         xhttp2.open("GET", url, true);
         xhttp2.setRequestHeader("Content-type", "application/json");
-        xhttp2.send("");
+        xhttp2.send();
 
 
 
@@ -158,8 +157,6 @@
 
         var limit = 1600
         var arr = raw.content.split("\n")
-        //arr.unshift(raw.title ? raw.title: "缺少标题")
-
         var retArr = [raw.title ? raw.title : "缺少标题"]
         var partArr = []
 

@@ -6,7 +6,7 @@ import ProgressBar from '../util/ProgressBar'
 
 const styles = theme => ({
     root: {
-        backgroundColor: "grey"
+
     }
 });
 
@@ -15,9 +15,7 @@ class NovelIndex extends Component {
     constructor(props) {
         super(props);
         console.log("Novel index", props)
-        this.state = {
-
-        };
+        this.state = {  };
     }
 
     //this.handleChange = this.handleChange.bind(this);
@@ -46,24 +44,21 @@ class NovelIndex extends Component {
 
 
     componentDidUpdate() {
-        
+        if(this.props.match.params.alias !== this.state.alias && parseInt(this.props.match.params.alias) !== this.state.id)
+            this.fetchNovel(this.props.match.params.alias)
     }
 
 
 
     render() {
-        const { classes, match } = this.props
+        const { classes } = this.props
         const state = this.state
         
         if (!state.name) return <ProgressBar />
 
 
         return (
-            <div>
-                <h2> {state.name} novellisivut {match.url} vs {match.path} </h2>
-
-
-
+            <div className={classes.root}>
                 <NovelEditor novel={this.state} 
                     getNovel={this.fetchNovel} />
 

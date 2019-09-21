@@ -11,7 +11,7 @@ import TextField from '@material-ui/core/TextField';
 
 
 import AddIcon from '@material-ui/icons/AddCircleOutline';
-import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
+import Drawer from '@material-ui/core/Drawer';
 import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -29,12 +29,17 @@ const styles = theme => ({
             textDecoration: 'none',
         },
     },
-    drawer: {
-        minWidth: "300px"
+    dialog: {
+        "& .MuiDialog-paperWidthSm": {
+            width: "100%",
+            position: "fixed",
+            bottom: 0,
+            margin: 0,
+        },
+
     },
     list: {
         minWidth: "300px",
-        maxWidth: "50%"
     },
     right: {
         flex: 1,
@@ -43,25 +48,77 @@ const styles = theme => ({
 
 });
 
+const defaultTerm = {
+    id: null,
+    edit: true,
+    prompt: false,
+    proofread: false,
+    from: "",
+    to: "",
+    string: ""
+}
+
 
 class TermDrawer extends Component {
     constructor(props) {
         super(props);
-
+        console.log("terms", props)
         this.state = {
-            novel_id: props.novel_id,
+            novel_id: props.parent.props.parent.state.novel_id,
             edit: false,
-            term: {
-                edit: true,
-                prompt: false,
-                from: "",
-                to: ""
-            }
+            term: { ...defaultTerm },
         };
 
     }
 
+    findPrompt = (term) => {
+        console.log(term)
+        const editor = this.props.parent.props.parent
+        const match = new RegExp(`\\b${term.from}\\b`, "gi")
+        const terms = term.to.split("|").map(t => t.trim())
+        editor.state.paragraphs.forEach(p => {
+            if (!p.content.match(match)) return false
+            console.log("FOUND", p.content)
+            p.content = p.content.replace(match, "ANSSI")
+
+        });
+
+        ["baidu", "sogou", "proofread"].forEach(t => {
+            editor.setState({
+                [t]: {
+                    ...editor.state[t],
+                    content: editor.state.paragraphs.filter(p => p.type === t).map(p => p.content).join("\n")
+                }
+            })
+        })
+    }
+
+
+    translate = (terms=[]) => {
+        const editor = this.props.parent.props.parent
+        if (!editor.state.paragraphs) return false;
+        let prompts = []
+        terms.forEach(term => {
+            if (term.prompt) return prompts.push(term);
+            ["baidu", "sogou", "proofread"].forEach(t => {
+                editor.setState({
+                    [t]: {
+                        ...editor.state[t],
+                        content: editor.state[t].content.replace(
+                            new RegExp(`\\b${term.from}\\b`, "gi"),
+                            `<strong title='${term.from}'>${term.to}</strong>`)
+                    }
+                })
+            })
+        })
+        prompts.forEach(term => this.findPrompt(term))
+        editor.editParagraphs(editor.state)
+    }
+
+
     selectTerm = (term) => {
+        console.log("select term")
+        this.props.parent.toggleState('term', false)
         if (term) {
             if (term === 'new')
                 return this.setState({ edit: true, term: { prompt: false, from: "", to: "" } })
@@ -72,7 +129,7 @@ class TermDrawer extends Component {
 
 
 
-        this.setState({ edit: false, term: { prompt: false, from: "", to: "" } })
+        this.setState({ edit: false, term: { ...defaultTerm } })
 
     }
 
@@ -93,100 +150,95 @@ class TermDrawer extends Component {
     }
 
 
+
     componentDidMount() {
         fetch(`/api/novel/${this.state.novel_id}/terms`)
             .then(response => response.json())
             .then(data => this.setState({ ...this.state, terms: data }))
             .then(st => console.log(this.state))
-            .then(st => this.props.translate(this.state.terms))
-
-
-
+            //.then(st => this.props.parent.props.parent.translate(this.state.terms))
+            .then(st => this.translate(this.state.terms))
     }
 
 
 
     render() {
-        const { classes } = this.props;
+        const { classes, parent } = this.props;
         const { state, props } = this;
 
         if (!state.terms) return null
 
         return (
             <Box className={classes.bottom}>
-                <SwipeableDrawer
+                <Drawer
                     className={classes.drawer}
                     anchor="right"
-                    open={props.open}
-                    onClose={() => props.toggle('term', false)}
-                    onOpen={() => props.toggle('term', true)}
+                    open={parent.state.term}
+                    onClose={() => parent.toggleState('term', false)}
+                // onOpen={() => props.toggleState('term', true)}
                 //onOpen={this.props.toggle('chapterDrawer', true)}
                 >
-                    <div
-                        className={classes.list}
-                        role="presentation">
-                        <List>
-                            <ListSubheader
-                                className={classes.subheader}>
+                    <List className={classes.list}>
+                        <ListSubheader
+                            className={classes.subheader}>
 
-                            </ListSubheader>
+                        </ListSubheader>
+                        <ListItem button
+                            onClick={() => this.selectTerm('new')}
+                            dense={true}
+                            divider={true}>
+                            <ListItemIcon>
+                                <AddIcon color="secondary" />
+                            </ListItemIcon>
+
+                            <ListItemText
+                                primary="Add new term" />
+                            <ListItemSecondaryAction>
+                            </ListItemSecondaryAction>
+                        </ListItem>
+
+                        {state.terms.map((val, indx) => {
+                            return (
+                                <ListItem button key={indx}
+                                    onClick={() => this.selectTerm(val)}
+                                    dense={true}
+                                    divider={true}>
+                                    <ListItemText
+                                        primary={val.from}
+                                        secondary={val.to.split('|').map(to => <span key={to}>{to}<br /></span>)} />
+                                    <ListItemSecondaryAction>
+                                        <ListItemText
+                                            primary={val.prompt ? 'Prompt' : 'Auto'} />
+
+
+                                    </ListItemSecondaryAction>
+                                </ListItem>
+                            )
+                        })}
+                        {state.terms.length > 5 &&
                             <ListItem button
                                 onClick={() => this.selectTerm('new')}
                                 dense={true}
                                 divider={true}>
                                 <ListItemIcon>
-                                    <AddIcon />
+                                    <AddIcon color='secondary' />
                                 </ListItemIcon>
 
                                 <ListItemText
                                     primary="Add new term" />
                                 <ListItemSecondaryAction>
                                 </ListItemSecondaryAction>
-                            </ListItem>
+                            </ListItem>}
 
-                            {state.terms.map((val, indx) => {
-                                return (
-                                    <ListItem button key={indx}
-                                        onClick={() => this.selectTerm(val)}
-                                        dense={true}
-                                        divider={true}>
-                                        <ListItemText
-                                            primary={val.from}
-                                            secondary={val.to.split('|').map(to => <span key={to}>{to}<br /></span>)} />
-                                        <ListItemSecondaryAction>
-                                            <ListItemText
-                                                primary={val.prompt ? 'Prompt' : 'Auto'} />
-
-
-                                        </ListItemSecondaryAction>
-                                    </ListItem>
-                                )
-                            })}
-                            {state.terms.length > 5 &&
-                                <ListItem button
-                                    onClick={() => this.selectTerm('new')}
-                                    dense={true}
-                                    divider={true}>
-                                    <ListItemIcon>
-                                        <AddIcon color={'success'} />
-                                    </ListItemIcon>
-
-                                    <ListItemText
-                                        primary="Add new term" />
-                                    <ListItemSecondaryAction>
-                                    </ListItemSecondaryAction>
-                                </ListItem>}
-
-                        </List>
-
-
-                    </div>
-                </SwipeableDrawer>
+                    </List>
+                </Drawer>
 
 
                 {state.edit &&
-                    <Dialog open={state.edit} onClose={() => this.selectTerm()} aria-labelledby="form-dialog-title">
-                        <DialogTitle id="form-dialog-title">Add a new term</DialogTitle>
+                    <Dialog open={state.edit}
+                        className={classes.dialog}
+                        onClose={() => this.selectTerm()}>
+                        <DialogTitle>Add a new term</DialogTitle>
                         <DialogContent>
                             <DialogContentText> {/* <span>{JSON.stringify(this.state.term)}</span> */}
                                 You can add a new <strong>english</strong> term to
@@ -240,6 +292,28 @@ class TermDrawer extends Component {
 
                         </DialogActions>
                     </Dialog>}
+
+
+                {state.prompt &&
+                    <Dialog open={state.prompt}
+                        className={classes.dialog}
+                        onClose={() => false}>
+                        <DialogTitle>Prompt</DialogTitle>
+                        <DialogContent>
+                            <DialogContentText>
+                                paragraph
+                            </DialogContentText>
+
+                        </DialogContent>
+                        <DialogActions>
+
+                            <Button onClick={() => this.selectTerm()} color="primary">
+                                Return
+                            </Button>
+                        </DialogActions>
+                    </Dialog>}
+
+
             </Box>
         );
     }

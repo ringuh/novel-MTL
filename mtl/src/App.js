@@ -11,29 +11,33 @@ import PageNotFound from './components/page_not_found'
 import Footer from './components/page_footer'
 import Header from './components/page_header'
 import Container from '@material-ui/core/Container'
+import Box from '@material-ui/core/Box'
 
 
 
 
 function App() {
   return (
-    <Container className="App" maxWidth="lg">
+    <Box component="div" className="App" >
       <CssBaseline />
-      <Header />
+
       <BrowserRouter>
-        <Switch>
-          <Route exact path="/" component={MainPage} />
-          <Route exact path="/novel" component={NovelList} />
-          <Route exact path="/novel/:alias" component={Novel} />
-          <Route exact path={[
-            `/novel/:alias/chapter`,
-            `/novel/:alias/chapter/:order`
-          ]} component={Chapter} />
-          <Route component={PageNotFound} />
-        </Switch>
+        <Header />
+        <Container maxWidth="lg">
+          <Switch>
+            <Route exact path="/" component={MainPage} />
+            <Route exact path="/novel" component={NovelList} />
+            <Route exact path="/novel/:alias" component={Novel} />
+            <Route exact path={[
+              `/novel/:alias/chapter`,
+              `/novel/:alias/chapter/:order`
+            ]} component={Chapter} />
+            <Route component={PageNotFound} />
+          </Switch>
+        </Container>
       </BrowserRouter>
       <Footer />
-    </Container>
+    </Box>
   );
 }
 

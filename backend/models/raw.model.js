@@ -1,16 +1,6 @@
 module.exports = function (seq, type) {
-
-
-    /* 
-    ROOT:{   
-        image_url: { type: String },
-        description: { type: String },
-        catalog: { type: String },
-        chapters: { type: String }
-   } 
-   */
-
-    const Raw = seq.define('Raw', {
+    //const { Op } = require('sequelize');
+    const Model = seq.define('Raw', {
         url: {
             type: type.STRING,
         },
@@ -27,13 +17,21 @@ module.exports = function (seq, type) {
             type: type.STRING
         },
         root: {
-            type: type.JSON
+            type: type.JSON,
+/* 
+            ROOT:{   
+                image_url: { type: String },
+                description: { type: String },
+                catalog: { type: String },
+                chapters: { type: String }
+            } 
+*/
         },
 
     }, {
-            timestamps: true,
-        });
+        timestamps: true,
+    });
 
-    return Raw
+    return Model
 }
 

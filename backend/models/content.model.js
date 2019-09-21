@@ -1,6 +1,6 @@
-module.exports = (sequelize, type) => {
-
-    const Content = sequelize.define('Content', {
+module.exports = (seq, type) => {
+    //const { Op } = require('sequelize');
+    const Model = seq.define('Content', {
         id: {
             type: type.INTEGER,
             autoIncrement: true,
@@ -32,35 +32,35 @@ module.exports = (sequelize, type) => {
             type: type.TEXT,
             singlespace: true,
             defaultValue: "",
-            /* set(val) {
-                const sanitizeHtml = require('sanitize-html')
-                val = val.replace(/ {2,}/g, ' ')
-                    .replace(/\n{2,}/g, '\n')
-                val = val.split("\n").filter(p => p.trim().length > 0)
-                val = val.map(p => p.trim().replace(/\s+/g, ' ')).join("\n")
-                this.setDataValue('content', sanitizeHtml(val, { allowedTags: [] }))
-            } */
         },
+        quality: {
+            type: type.INTEGER,
+            validate: {
+                min: 0,
+                max: 5,
+            }
+        }
+
     }, {
         timestamps: true,
     });
 
-    Content.prototype.toJson = function () {
+    Model.prototype.toJson = function () {
         let ret = this.dataValues
 
 
         return ret
     }
 
-    Content.associate = models => {
+    Model.associate = models => {
 
-        Content.belongsTo(models.Chapter, {
+        Model.belongsTo(models.Chapter, {
             onDelete: "CASCADE",
             foreignKey: 'chapter_id',
             as: 'chapter',
             allowNull: false
         })
     };
-    return Content
+    return Model
 }
 

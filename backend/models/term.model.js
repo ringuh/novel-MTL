@@ -1,7 +1,9 @@
 
 
-module.exports = (sequelize, type) => {
-    const Term = sequelize.define('Term', {
+module.exports = (seq, type) => {
+    //const { Op } = require('sequelize');
+
+    const Model = seq.define('Term', {
         id: {
             type: type.INTEGER,
             autoIncrement: true,
@@ -9,9 +11,14 @@ module.exports = (sequelize, type) => {
         },
         prompt: {
             type: type.BOOLEAN,
-            defaultValue: false
+            defaultValue: false,
+            allowNull: false
         },
-
+        proofread: {
+            type: type.BOOLEAN,
+            defaultValue: false,
+            allowNull: false
+        },
         from: {
             type: type.STRING,
             validate: {
@@ -30,27 +37,22 @@ module.exports = (sequelize, type) => {
             allowNull: false,
             trim: true,
             singlespace: true,
-
-            /* set(value){
-                const sanitizeHtml = require('sanitize-html')
-                this.setDataValue('to', sanitizeHtml(value, { allowedTags: []}))
-            } */
         }
 
     }, {
-            timestamps: true,
-        });
+        timestamps: true,
+    });
 
-    Term.associate = models => {
-        Term.belongsTo(models.Novel, {
+    Model.associate = models => {
+        Model.belongsTo(models.Novel, {
             onDelete: "CASCADE",
             foreignKey: 'novel_id',
         }),
-        Term.belongsTo(models.User, {
-            onDelete: "CASCADE",
-            foreignKey: 'user_id',
-        })
+            Model.belongsTo(models.User, {
+                onDelete: "CASCADE",
+                foreignKey: 'user_id',
+            })
     };
-    return Term
+    return Model
 }
 

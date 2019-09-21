@@ -172,7 +172,7 @@ class ChapterDrawer extends Component {
                         options={{
                             recognizers: {
                                 press: { time: 1000 },
-                                swipe: { threshold: 200 }
+                                //swipe: { threshold: 200 }
                             }
                         }}
                     >
@@ -231,7 +231,7 @@ class ChapterDrawer extends Component {
                     options={{
                         recognizers: {
                             press: { time: 1000 },
-                            swipe: { threshold: 200 }
+                            //swipe: { threshold: 200 }
                         }
                     }}
                 >

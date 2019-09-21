@@ -1,14 +1,10 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
-import { green } from '@material-ui/core/colors';
-import Box from '@material-ui/core/Box';
 import Grid from '@material-ui/core/Grid';
-import SpellcheckIcon from '@material-ui/icons/SpellcheckRounded';
 import EditIcon from '@material-ui/icons/EditOutlined';
 import Button from '@material-ui/core/Button'
-import ButtonGroup from '@material-ui/core/ButtonGroup'
-import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup'
 import ToggleButton from '@material-ui/lab/ToggleButton'
+import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup'
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 
 

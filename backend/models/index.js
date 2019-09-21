@@ -68,7 +68,7 @@ const initDB = require('../createDatabase')
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
-const force = false
+const force = process.argv.includes("reset") || false
 db.sequelize.sync({ force: force, logging: false }).then(() => force ? initDB(): '')
 
 

@@ -1,6 +1,6 @@
 module.exports = function (seq, type) {
-
-	const Novel = seq.define('Novel', {
+	//const { Op } = require('sequelize');
+	const Model = seq.define('Novel', {
 		id: {
 			type: type.INTEGER,
 			autoIncrement: true,
@@ -51,19 +51,19 @@ module.exports = function (seq, type) {
 			timestamps: true,
 		});
 
-	Novel.associate = models => {
-		Novel.belongsTo(models.User, {
+	Model.associate = models => {
+		Model.belongsTo(models.User, {
 			//onDelete: "CASCADE",
 			foreignKey: 'user_id',
 		}),
 		
-		Novel.hasMany(models.Chapter, {
+		Model.hasMany(models.Chapter, {
 			as: 'chapters',
             foreignKey: 'novel_id',
             allowNull: false
         })
 	};
 	
-	return Novel
+	return Model
 }
 

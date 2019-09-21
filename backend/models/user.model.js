@@ -1,5 +1,6 @@
 module.exports = function (seq, type) {
-  const User = seq.define('User', {
+  //const { Op } = require('sequelize');
+  const Model = seq.define('User', {
     id: {
       type: type.INTEGER,
       autoIncrement: true,
@@ -22,18 +23,23 @@ module.exports = function (seq, type) {
     last_login: { type: type.DATE },
   }, { timestamps: true });
 
-  User.associate = function (models) {
-    User.hasMany(models.Novel, {
+  Model.associate = function (models) {
+    Model.hasMany(models.Novel, {
       as: 'novels',
       foreignKey: 'user_id',
     })
 
-    User.hasMany(models.Term, {
+    Model.hasMany(models.Term, {
       as: 'terms',
+      foreignKey: 'user_id',
+    })
+
+    Model.hasMany(models.Cookie, {
+      as: 'cookies',
       foreignKey: 'user_id',
     })
   };
 
-  return User
+  return Model
 }
 

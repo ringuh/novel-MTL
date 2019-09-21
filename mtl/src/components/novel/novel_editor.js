@@ -42,6 +42,10 @@ class NovelEditor extends Component {
 
     }
 
+    componentWillReceiveProps(){
+        this.setState({...this.props.novel})
+    }
+
     fields = [
         {
             name: "name",

@@ -41,6 +41,7 @@ var createDB = async () => {
 			chapters: "ul.chapter-list > li > span > a"
 		}, //https://www.zhaishuyuan.com/book/20452/
 		// https://www.xbiqugexsw.com/book/245723/ "presidents ex wife"
+		// https://www.ptwxz.com/modules/article/search.php
 	}]
 
 
@@ -61,9 +62,17 @@ var createDB = async () => {
 			raw_url: "https://www.lewenxiaoshuo.com/books/gandiehenaxieganerzi/",
 			description: "Zheng Xian's greatest achievement in his life was to build a castle and keep his dry sons in it properly."
 		}, {
-			name: "weilaizhidangmabuyi",
-			raw_url: "https://www.lewenxiaoshuo.com/books/weilaizhidangmabuyi/",
-			description: null,
+			name: "Forced Marriage VIP Front-Seat: My Superstar Ex-wife is very Popular",
+			raw_url: "https://www.lewenxiaoshuo.com/books/bihunshouxi_yinghouqianqihenqiangshou/",
+			description: `Three years ago, President Qiao did not hesitate to sign the papers when Xia Ning placed the divorce papers in front of him.
+
+			Three years later, she is an up-and-coming star in show biz; watched by the public but knee-deep in scandals.
+			
+			He is a resolute emperor in the business world; powerful and omnipotent.
+			
+			Their paths were supposed to be separate and independent, but—
+			
+			Standing at her door, the legendary ruthless and unyielding diamond bachelor asks for a remarriage. A cute bun appears from behind and gazes at Xia Ning with his big, starry eyes. “Mummy, Daddy will cook, I will warm the bed, please take us in.”`,
 		},
 		{
 			name: "Lady Su's Revenge",

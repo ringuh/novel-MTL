@@ -50,7 +50,7 @@ class ChapterBottomNav extends Component {
 
     render() {
         const { classes, parent } = this.props;
-        const { state, props } = this
+        const { state } = this
 
         return (
             <Box className={classes.bottom}>
@@ -81,17 +81,14 @@ class ChapterBottomNav extends Component {
                     settings={parent.toggleSettings} 
                     chapter={parent.state} />
                 
-                <ChapterDrawer chapter_id={parent.state.chapter_id}
-                    chapters={parent.state.chapters}
-                    novel_id={parent.state.novel_id}
-                    open={this.state.chapterDrawer}
-                    toggle={this.toggleState} />
+                <ChapterDrawer parent={this}/>
 
-                <TermDrawer 
-                    novel_id={parent.state.novel_id}
+                <TermDrawer parent={this}
+                   /*  novel_id={parent.state.novel_id}
                     translate={parent.translate}
                     toggle={this.toggleState}
-                    open={this.state.term} />
+                    open={this.state.term}  */
+                />
 
             </Box>
         );

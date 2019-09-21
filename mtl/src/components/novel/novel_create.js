@@ -19,7 +19,7 @@ const styles = theme => ({
 });
 
 
-export default class NovelCreate extends React.Component {
+class NovelCreate extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -75,12 +75,12 @@ export default class NovelCreate extends React.Component {
 
         return (
             <div>
-                <Button size="large"
+                <Button size="small"
                     onClick={this.toggleOpen}
-                    variant="contained"
-                    color="secondary">
+                    variant="outlined"
+                    color="primary">
                     <AddIcon fontSize="inherit" />
-                    New novel
+                    Create novel
                 </Button>
                 <Dialog open={this.state.openDialog}
                     onClose={this.toggleOpen}
@@ -127,3 +127,4 @@ export default class NovelCreate extends React.Component {
     }
 }
 
+export default withStyles(styles)(NovelCreate)

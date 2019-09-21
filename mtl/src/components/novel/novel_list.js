@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import Divider from '@material-ui/core/Divider';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import Avatar from '@material-ui/core/Avatar';
@@ -12,7 +11,14 @@ import { withStyles } from '@material-ui/core/styles';
 
 
 const styles = theme => ({
-
+    root: {
+        "& a": {
+            color: "var(--pink)",
+        },
+        "& a:hover": {
+            textDecoration: "none",
+        }
+    },
     paragraphs: {
         textAlign: 'left'
     },
@@ -62,9 +68,10 @@ class NovelList extends Component {
 
                 <List className={classes.root}>
                 {state.novels.map((novel) => (
-                    <Link to={`/novel/${novel.alias}`} key={novel.id}>
-                    
-                    <ListItem alignItems="flex-start" >
+                    <ListItem component={Link} key={novel.id} 
+                        to={`/novel/${novel.alias}`} 
+                        divider
+                        alignItems="flex-start" >
                         <ListItemAvatar>
                             <Avatar alt={novel.name} src={novel.image_url} />
                         </ListItemAvatar>
@@ -76,18 +83,18 @@ class NovelList extends Component {
                                         component="span"
                                         variant="body2"
                                         className=""
-                                        color="textPrimary"
+                                        color="textSecondary"
                                     >
-                                        {novel.description}
+                                        {novel.description ? novel.description.substr(0, 400): "description missing"}
+                                        {novel.description && novel.description.length > 400 ? '...': null}
                                     </Typography>
-                                    {" — I'll be in your neighborhood doing errands this…"}
                                 </React.Fragment>
                             }
                         />
                         
                     </ListItem>
-                    <Divider variant="inset" component="li" />
-                    </Link>
+                    
+                
                  ))}
                     
                

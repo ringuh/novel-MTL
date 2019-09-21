@@ -1,42 +1,71 @@
 import React, { /* Component */ } from 'react';
-//import { BrowserRouter, Link } from 'react-router-dom';
+import { withRouter, Link } from 'react-router-dom';
 import AppBar from '@material-ui/core/AppBar';
 import ToolBar from '@material-ui/core/Toolbar'
 import Typography from '@material-ui/core/Typography'
-//import { withStyles } from '@material-ui/core/styles';
+import Button from '@material-ui/core/Button'
+import Breadcrumbs from '@material-ui/core/Breadcrumbs'
+import { withStyles } from '@material-ui/core/styles';
+import HomeIcon from '@material-ui/icons/HomeOutlined'
+import ExitIcon from '@material-ui/icons/ExitToApp'
+import NovelCreate from './novel/novel_create';
 
 const styles = theme => ({
     root: {
-        textAlign: 'left'
+        maxWidth: theme.breakpoints.values.lg,
+        margin: "auto",
+        /* marginLeft: "auto",
+        marginRight: "auto", */
+        /* [theme.breakpoints.up(xs)]: {
+            marginLeft: 'auto',
+            marginRight: 'auto'
+        } */
+        marginBottom: theme.spacing(2),
+        "& .MuiToolbar-root": {
+            justifyContent: "space-between",
+        }
     },
 });
 
 
-const Header = () => {
+const Header = (props) => {
+    const { classes, location } = props
+    if (location.pathname.match(/\/novel\/.*\/chapter/gi))
+        return (<div className={classes.root}></div>)
+
     return (
-        <div>
-            <AppBar
-                className=""
-                color="primary"
-                position="static"
-            >
-                <ToolBar>
-                    {/* <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu">
+
+        <AppBar className={classes.root} color="default" position="static">
+            <ToolBar>
+                {/* <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu">
                     <MenuIcon />
                 </IconButton> */}
-                    
-                    <a href="/">kotivalikko</a>
-                    
-                    <Typography>
-                        qwert
-                    </Typography>
+                <Breadcrumbs separator="">
+                    <a href="/">
+                        <HomeIcon color="secondary" />
+                    </a>
+
+                    <a href="/novel">
+                        <Typography color="secondary">
+                            Novels
+                        </Typography>
+                    </a>
 
                     {/* <Login /> */}
-                </ToolBar>
+                </Breadcrumbs>
+                <Breadcrumbs separator="">
+                    <NovelCreate />
+                    <Button component={Link} to="/logout">
+                        
+                        Log out
+                        <ExitIcon color="secondary" />
+                    </Button>
+                </Breadcrumbs>
+            </ToolBar>
 
-            </AppBar >
-        </div>
+
+        </AppBar >
     )
 }
 
-export default Header;
+export default withRouter(withStyles(styles)(Header));

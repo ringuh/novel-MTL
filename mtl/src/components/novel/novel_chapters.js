@@ -14,14 +14,14 @@ import { green } from '@material-ui/core/colors'
 
 
 const styles = theme => ({
-    form: {
+  /*   form: {
         width: "100%",
         maxWidth: "600px",
         margin: "auto"
     },
     textField: {
         width: "100%"
-    },
+    }, */
 });
 
 
@@ -99,17 +99,6 @@ class NovelChapters extends Component {
         };
     }
 
-    fetchChapters() {
-        return true
-        fetch(`/api/novel/${this.state.id}/chapter?content_length=paragraphs`)
-            .then(response => response.json())
-            .then(data => { console.log(data); return data })
-            .then(data => this.setState({
-                chapters: data,
-                chapter_id: data.length > 0 ? data[data.length - 1].id : this.state.chapter_id
-            }))//.then(()=> console.log(this.state.chapters))
-    }
-
     componentDidMount() {
         this.props.fetchChapters()
         this.generateTranslateString()
@@ -132,7 +121,7 @@ class NovelChapters extends Component {
             return (<ProgressBar color={green[600]} margin='1em 0' />)
 
         return (
-            <Container>
+            <Container className={classes.root}>
                 <Box m={2}>
                     <Button xs={4}
                         color="primary"
@@ -165,7 +154,7 @@ class NovelChapters extends Component {
                             navigator.clipboard.writeText(this.state.translateString);
                             alert(`Copied to clipboard: ${this.state.translateString}`)
                         }}
-                        label="Console"
+                        label="Translation string"
                         variant="outlined"
                         rows={2}
                         value={this.state.translateString} />

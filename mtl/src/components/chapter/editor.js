@@ -49,7 +49,11 @@ class ChapterEditor extends Component {
     constructor(props) {
         super(props);
         console.log("chapter editor", props)
-        const defaultSettings = { swipeMode: true, hideRaw: true, priority: false }
+        const defaultSettings = { 
+            swipeMode: true, 
+            hideRaw: true, 
+            priority: false,
+        }
         this.storage = JSON.parse(localStorage.getItem("chapterSettings") || JSON.stringify(defaultSettings))
         console.log(this.storage)
         this.state = {
@@ -88,8 +92,8 @@ class ChapterEditor extends Component {
             .then(response => response.json())
             .then(data => this.priority(data))
             .then(data => this.editParagraphs(data))
-            //.then(data => this.setState(data))
-            .then(st => console.log(this.state))
+            .then(() => document.title = `C${this.state.order} - ${this.props.parent.state.name}`)
+            .then(() => console.log(this.state))
     }
 
 
@@ -177,7 +181,7 @@ class ChapterEditor extends Component {
 
 
 
-    translate = (terms) => {
+    translate2 = (terms) => {
         if (!this.state.paragraphs) return false;
         ["baidu", "sogou", "proofread"].forEach(t => {
             terms.forEach(term => {
@@ -262,7 +266,7 @@ class ChapterEditor extends Component {
 
     render() {
         const { classes } = this.props;
-        const { state, parent } = this;
+        const { state } = this;
 
 
         if (!state.paragraphs)
@@ -347,7 +351,7 @@ class ChapterEditor extends Component {
                             margin="normal"
                             fullWidth
                         />
-                        {state.new && state.new.order > 0 && state.new.order != state.order &&
+                        {state.new && state.new.order > 0 && state.new.order !== state.order &&
 
                             <Button style={{ marginBottom: "2em" }} onClick={() => this.SubmitChapter('order', state.new.order)}>
                                 <SaveIcon fontSize="small" />
