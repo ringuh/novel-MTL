@@ -39,10 +39,50 @@ var createDB = async () => {
 			description: ".book-intro > div:eq(0)",
 			catalog: "a.catalogbtn",
 			chapters: "ul.chapter-list > li > span > a"
-		}, //https://www.zhaishuyuan.com/book/20452/
+		},
+	},{
+		url: "https://www.zhaishuyuan.com/book/20452/",
+		next: "#center > div.jumptop > a:last",
+		title: "#center > .title > h1",
+		content: "#content",
+		regex: "zhaishuyuan\.com\/chapter\/(\\d).*\/(\\d).*($|\/$)",
+		root: {
+			image_url: "#bookimg > img",
+			description: "#bookintro",
+			catalog: "#bookinfo > div.bookright > div.motion > a:nth-child(1)",
+			chapters: "#readerlists > ul > li:nth-child(3) > a"
+		},
+	} 
+	
+	
+	
+	/* { ######### THIS IS AJAX PAGE
+		url: "https://www.xbiqugexsw.com/book/245723/",
+		next: ".bottem1>a:last",
+		title: ".bookname > h1",
+		content: "#content",
+		regex: "xbiqugexsw\.com\/book\/.*\/.*\.html",
+		root: {
+			image_url: "#fmimg > img",
+			description: "#intro",
+			catalog: null,
+			chapters: "#list > dl > dd > a"
+		},
+	}, */
+
+	/* { #### AJAX PAGE, POSSIBLE THOUGH
+		url: "https://www.ptwxz.com/bookinfo/3/3785.html",
+		next: ".bottomlink>a:last",
+		title: "#content > h1",
+		content: "#content",
+		regex: "ptwxz\.com\/html\/(\\d).*\/(\\d).*\/(\\d).*\.html",
+		root: null 
+	} */
+
+		//https://www.zhaishuyuan.com/book/20452/
 		// https://www.xbiqugexsw.com/book/245723/ "presidents ex wife"
 		// https://www.ptwxz.com/modules/article/search.php
-	}]
+	]
 
 
 
@@ -58,9 +98,8 @@ var createDB = async () => {
 			raw_url: "https://www.kenshu.cc/xiaoshuo/51204/",
 			description: "Transmigrated to 14 year old from same family. Shitty family",
 		}, {
-			name: "gandiehenaxieganerzi",
-			raw_url: "https://www.lewenxiaoshuo.com/books/gandiehenaxieganerzi/",
-			description: "Zheng Xian's greatest achievement in his life was to build a castle and keep his dry sons in it properly."
+			name: "Indominable Master of Elixirs",
+			raw_url: "https://www.zhaishuyuan.com/book/21072",
 		}, {
 			name: "Forced Marriage VIP Front-Seat: My Superstar Ex-wife is very Popular",
 			raw_url: "https://www.lewenxiaoshuo.com/books/bihunshouxi_yinghouqianqihenqiangshou/",
@@ -80,9 +119,8 @@ var createDB = async () => {
 			description: "Reborn poison girl who can cook",
 
 		}, {
-			name: "妃要上天",
-			alias: "china B",
-			raw_url: "https://www.kenshu.cc/xiaoshuo/43495/",
+			name: "Ultimate little village doctor",
+			raw_url: "https://www.zhaishuyuan.com/book/20452/",
 			description: null,
 		},
 

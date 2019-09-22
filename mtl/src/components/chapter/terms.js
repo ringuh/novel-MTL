@@ -33,7 +33,7 @@ const styles = theme => ({
         "& .MuiDialog-paperWidthSm": {
             width: "100%",
             position: "fixed",
-            bottom: 0,
+            top: 0,
             margin: 0,
         },
 
@@ -77,10 +77,9 @@ class TermDrawer extends Component {
         const match = new RegExp(`\\b${term.from}\\b`, "gi")
         const terms = term.to.split("|").map(t => t.trim())
         editor.state.paragraphs.forEach(p => {
-            if (!p.content.match(match)) return false
-            console.log("FOUND", p.content)
-            p.content = p.content.replace(match, "ANSSI")
-
+            if (!p.original.match(match)) return false
+            p.content = p.original.replace(match, `<strong title='${term.from}'>${term.to}</strong>`)
+            console.log(p.content)
         });
 
         ["baidu", "sogou", "proofread"].forEach(t => {
@@ -94,25 +93,14 @@ class TermDrawer extends Component {
     }
 
 
-    translate = (terms=[]) => {
+    translate = (terms = []) => {
         const editor = this.props.parent.props.parent
         if (!editor.state.paragraphs) return false;
-        let prompts = []
-        terms.forEach(term => {
-            if (term.prompt) return prompts.push(term);
-            ["baidu", "sogou", "proofread"].forEach(t => {
-                editor.setState({
-                    [t]: {
-                        ...editor.state[t],
-                        content: editor.state[t].content.replace(
-                            new RegExp(`\\b${term.from}\\b`, "gi"),
-                            `<strong title='${term.from}'>${term.to}</strong>`)
-                    }
-                })
-            })
-        })
-        prompts.forEach(term => this.findPrompt(term))
+        let prompts = [];
+
+        terms.forEach(term => this.findPrompt(term))
         editor.editParagraphs(editor.state)
+        console.log(editor.state.paragraphs)
     }
 
 

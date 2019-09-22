@@ -49,9 +49,9 @@ class ChapterEditor extends Component {
     constructor(props) {
         super(props);
         console.log("chapter editor", props)
-        const defaultSettings = { 
-            swipeMode: true, 
-            hideRaw: true, 
+        const defaultSettings = {
+            swipeMode: true,
+            hideRaw: true,
             priority: false,
         }
         this.storage = JSON.parse(localStorage.getItem("chapterSettings") || JSON.stringify(defaultSettings))
@@ -60,7 +60,8 @@ class ChapterEditor extends Component {
             chapters: props.chapters,
             swipeMode: this.storage.swipeMode,
             priority: this.storage.priority,
-            edit: {}
+            edit: {},
+            new: {},
         };
     }
 
@@ -124,28 +125,31 @@ class ChapterEditor extends Component {
 
     editParagraphs(json) {
         let max_paragraphs = 0
-
+        console.log("pps", this.state.paragraphs)
         /*  check the content of all 4 possible translations and split them by paragraph 
             calculate the maximum number of paragraphs as we wanna show all nth-paragraphs at same place 
         */
         const paragraphs = ['raw', 'baidu', 'sogou', 'proofread'].map(key => {
             if (!json[key]) {
-                json[key] = { hide: false, content: '', title: '' }
-                return { type: key, paragraphs: [], priority: false }
+                json[key] = { hide: false, content: '', original: '', title: '' }
+                return { type: key, paragraphs: [], originals:[], priority: false }
             }
 
-            //do smth 
 
             // get the content
-            let ps = json[key].content.replace(/\n{2,}/g, '\n');
-            ps = ps.split('\n')
-            ps = ps.filter(el => el.trim() !== '')
+            let content = json[key].content.replace(/\n{2,}/g, '\n');
+            // save the original content for translations if this is the first load
+            json[key].original = json[key].original || content;
+            let ps = content.split('\n').filter(el => el.trim() !== '')
+            let originals = json[key].original.split('\n').filter(el => el.trim() !== '')
+            
+
             // split content into paragraphs and remove double-spaces and empty parts
 
             // record the max number of paragraphs
             max_paragraphs = ps.length > max_paragraphs ? ps.length : max_paragraphs;
 
-            return { type: key, paragraphs: ps, priority: json[key].priority }
+            return { type: key, paragraphs: ps, originals: originals, priority: json[key].priority }
         })
         json.max_paragraphs = max_paragraphs
         json.paragraphs = []
@@ -156,13 +160,14 @@ class ChapterEditor extends Component {
                 let p = {
                     type: translation.type,
                     content: translation.paragraphs[i] || '',
+                    original: translation.originals[i] || '',
                     row: i,
                     hide: translation.priority || translation.type === 'raw' ? false : true
                 }
 
                 // maybe hide empty translations?
                 //if(["baidu", "sogou"].includes(translation.type) && translation.paragraphs.length === 0)
-                    
+
                 json.paragraphs.push(p)
 
             }
@@ -181,7 +186,7 @@ class ChapterEditor extends Component {
 
 
 
-    translate2 = (terms) => {
+   /*  translate2 = (terms) => {
         if (!this.state.paragraphs) return false;
         ["baidu", "sogou", "proofread"].forEach(t => {
             terms.forEach(term => {
@@ -196,7 +201,8 @@ class ChapterEditor extends Component {
 
         })
         this.editParagraphs(this.state)
-    }
+        console.log(this.state.paragraphs)
+    } */
 
 
     SubmitChapter = (attr, val) => {
@@ -273,8 +279,8 @@ class ChapterEditor extends Component {
             return <ProgressBar />
 
         const views = ['raw', 'proofread', 'sogou', 'baidu']
-        .filter(key => !state[key].hide )
-        .filter(key =>  ['raw', 'proofread'].includes(key) || state[`${key}_id`])
+            .filter(key => !state[key].hide)
+            .filter(key => ['raw', 'proofread'].includes(key) || state[`${key}_id`])
 
         if (state.edit.translator || state.paragraphs.length === 0) {
             if (["raw", "proofread"].includes(state.edit.translator))
@@ -346,8 +352,8 @@ class ChapterEditor extends Component {
                             placeholder="Chapter number"
 
                             label={`Chapter number`}
-                            value={state.new ? state.new.order : state.order}
-                            onChange={e => this.setState({ new: { url: this.state.new ? this.state.new.url : this.state.url, order: e.target.value } })}
+                            value={state.new.order || state.order}
+                            onChange={e => this.setState({ new: { ...this.state.new, order: e.target.value } })}
                             margin="normal"
                             fullWidth
                         />
@@ -373,8 +379,8 @@ class ChapterEditor extends Component {
                             name="url"
                             placeholder="RAW url (optional)"
                             label={`RAW URL (optional)`}
-                            value={state.new ? state.new.url : state.url}
-                            onChange={e => this.setState({ new: { order: this.state.new ? this.state.new.order : this.state.order, url: e.target.value } })}
+                            value={state.new.url ? state.new.url : (state.url || "")}
+                            onChange={e => this.setState({ new: { ...this.state.new, url: e.target.value } })}
                             margin="normal"
                             fullWidth
                         />

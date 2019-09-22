@@ -14,14 +14,14 @@ import { green } from '@material-ui/core/colors'
 
 
 const styles = theme => ({
-  /*   form: {
-        width: "100%",
-        maxWidth: "600px",
-        margin: "auto"
-    },
-    textField: {
-        width: "100%"
-    }, */
+    /*   form: {
+          width: "100%",
+          maxWidth: "600px",
+          margin: "auto"
+      },
+      textField: {
+          width: "100%"
+      }, */
 });
 
 
@@ -30,7 +30,8 @@ class NovelChapters extends Component {
         super(props);
         console.log("chapter list", props)
         this.state = {
-            id: props.novel.id,
+            id: props.novel.state.id,
+            progress: false,
             wsFeed: []
         };
 
@@ -63,6 +64,8 @@ class NovelChapters extends Component {
             limit: limit,
             overwrite: overwrite
         }))
+        this.setState({ progress: true })
+
 
     }
 
@@ -87,9 +90,13 @@ class NovelChapters extends Component {
                 var json = JSON.parse(message.data);
 
                 this.writeConsole(json.msg)
-
-                if (json.command === "reload_chapters")
+                if (json.cmd === "reload_novel")
+                    this.props.novel.fetchNovel()
+                else if (json.cmd === "reload_chapters")
                     this.props.fetchChapters()
+
+                if (["reload_novel", "scrape_ended"].includes(json.cmd))
+                    this.setState({ progress: false })
 
             } catch (e) {
                 console.log(e)
@@ -117,19 +124,20 @@ class NovelChapters extends Component {
 
         const { classes, novel } = this.props
 
-        if (!novel.chapters)
+        if (!novel.state.chapters)
             return (<ProgressBar color={green[600]} margin='1em 0' />)
 
         return (
             <Container className={classes.root}>
                 <Box m={2}>
                     <Button xs={4}
+                        disabled={this.state.progress}
                         color="primary"
                         size="medium"
                         onClick={() => this.handleSubmit(-1)}>
                         <CloudDownloadIcon color="secondary" />
                         <Box ml={1}>
-                            {(novel.chapters.length === 0) ?
+                            {(novel.state.chapters.length === 0) ?
                                 ("Initialize from RAW directory") :
                                 ("Scrape from the latest chapter")
 
@@ -160,11 +168,11 @@ class NovelChapters extends Component {
                         value={this.state.translateString} />
                 </Box>
 
-                {novel.chapters && novel.chapters.length > 0 &&
+                {novel.state.chapters && novel.state.chapters.length > 0 &&
                     <Box>
                         <List>
-                            {novel.chapters.map((chapter) => (
-                                <Link to={`/novel/${novel.alias}/chapter/${chapter.order}`} key={chapter.id}>
+                            {novel.state.chapters.map((chapter) => (
+                                <Link to={`/novel/${novel.state.alias}/chapter/${chapter.order}`} key={chapter.id}>
                                     <ListItem alignItems="flex-start" >
 
                                         <ListItemText component="a" href="/novel"

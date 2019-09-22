@@ -44,7 +44,8 @@ class NovelIndex extends Component {
 
 
     componentDidUpdate() {
-        if(this.props.match.params.alias !== this.state.alias && parseInt(this.props.match.params.alias) !== this.state.id)
+        if(this.props.match.params.alias !== this.state.alias 
+            && parseInt(this.props.match.params.alias) !== this.state.id)
             this.fetchNovel(this.props.match.params.alias)
     }
 
@@ -62,7 +63,7 @@ class NovelIndex extends Component {
                 <NovelEditor novel={this.state} 
                     getNovel={this.fetchNovel} />
 
-                <NovelChapters novel={this.state}
+                <NovelChapters novel={this}
                     fetchChapters={this.fetchChapters} />
 
 

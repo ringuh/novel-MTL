@@ -27,7 +27,7 @@ const GetRaw = async (url) => {
 const GetChapter = async (novel, chapter_id) => {
     let whereStr = chapter_id === -1 ?
         { novel_id: novel.id } : { id: chapter_id, novel_id: novel.id }
-    let orderArr = [ 
+    let orderArr = [
         ["order", "DESC"],
         ["id", "ASC"]
     ]
@@ -37,7 +37,7 @@ const GetChapter = async (novel, chapter_id) => {
         order: orderArr
     })
 
-    
+
     return Chapter.findOne({
         where: whereStr,
         order: orderArr
@@ -95,20 +95,29 @@ const Scraper = async (data, connection) => {
 
         // parse the DOM
         let $ = await ReadDom(novel.raw_url)
-        let image = $(raw.root.image_url).attr('src')
-        let desc = htmlToText.fromString($(raw.root.description).html())
+        let image = null
+        let desc = null
+        let next = null
 
-        // if raw.root exists presume that novel name and chapter-list are on separate page
-        if (raw.root.catalog)
-            $ = await ReadDom(urlTool.resolve(
-                novel.raw_url, $(raw.root.catalog).attr("href")))
-        // parse the URL for the first chapter
-        let next = $(raw.root.chapters).attr("href")
-        next = urlTool.resolve(novel.raw_url, next)
+        if (raw.root) {
+            image = $(raw.root.image_url).attr('src')
+            desc = htmlToText.fromString($(raw.root.description).html())
+            // if raw.root.catalog exists presume that novel name and chapter-list are on separate page
+            if (raw.root.catalog)
+                $ = await ReadDom(urlTool.resolve(
+                    novel.raw_url, $(raw.root.catalog).attr("href")))
+            // parse the URL for the first chapter
+            next = raw.root.chapters ? urlTool.resolve(novel.raw_url, $(raw.root.chapters).attr("href")) : null
+        }
+
+
+
+        
 
         // check the chapter URL against regex
         let pattern = new RegExp(raw.regex, "i")
-        if (next.match(pattern))
+        // generate empty chapter if no root info
+        if (!raw.root || next.match(pattern))
             Chapter.findOrCreate({
                 where: { novel_id: novel.id, url: next }
             }).then(([chapter, created]) => {
@@ -116,14 +125,14 @@ const Scraper = async (data, connection) => {
 
 
                 // initialize the descriptions if chapter was created
-                novel.image_url = image
+                novel.image_url = image || novel.image_url
                 novel.description = novel.description || desc
                 novel.save()
-                sendJson({ command: "reload_chapters", msg: "Novel initialized. Reloading chapters" })
-            }).catch((err) => sendJson(err))
+                sendJson({ cmd: "reload_novel", msg: "Novel initialized. Reloading chapters" })
+            }).catch((err) => sendJson({ cmd: "scrape_ended", msg: err.message}))
     }
 
-    const ScrapeChapter = async (chapter, limit = 3) => {
+    const ScrapeChapter = async (chapter, limit = global.config.limit) => {
         console.log(limit, "scrape chapter", chapter.url, "id", chapter.id, "order", chapter.order)
         // get the parser template for this website
         const raw = await GetRaw(chapter.url)
@@ -131,29 +140,34 @@ const Scraper = async (data, connection) => {
 
         // parse the DOM
         let $ = await ReadDom(chapter.url)
-
         let title = htmlToText.fromString($(raw.title).html())
         let content = htmlToText.fromString($(raw.content).html())
         let next = urlTool.resolve(chapter.url, $(raw.next).attr("href"))
         let pattern = new RegExp(raw.regex, "i")
-        
-        
+
+        /* var fs = require('fs');
+        fs.appendFile('mynewfile1.html', $("html").html(), function (err) {
+        if (err) throw err;
+        console.log('Saved!');
+        }); */
+
         await Content.findOrCreate({
             where: { chapter_id: chapter.id, type: "raw" },
             defaults: { title: title, content: content }
         }).then(([nc, created]) => chapter.setRaw(nc))
-        
+
         // check if the next chapter matches the regex
-        if (!next.match(pattern)) return sendJson(`Regex for next chapter doesn't match ${next}`)
+        if (!next.match(pattern)) return sendJson({ cmd: "scrape_ended", msg: `Regex for next chapter doesn't match ${next}`})
 
         Chapter.findOrCreate({
             where: { novel_id: chapter.novel_id, url: next },
             defaults: { order: chapter.order + 1 }
-        }).then(([chapter, created]) => {
-            if (created) sendJson({ command: "reload_chapters", msg: `Added new chapter ${next} (+${limit})` })
+        }).then(async ([chapter, created]) => {
+            if (created) sendJson({ cmd: "reload_chapters", msg: `Added new chapter ${next} (+${limit})` })
             if (limit > 1) // delay the parsing speed to avoid issues with being detected
-                setTimeout(() => ScrapeChapter(chapter, --limit), 1000)
-        }).catch((err) => sendJson(err))
+                setTimeout(async () => ScrapeChapter(chapter, --limit), 1000)
+            else sendJson({cmd: "scrape_ended", msg: "Mission finished"})
+        }).catch((err) => sendJson({ cmd: "scrape_ended", msg: err.message}))
 
 
 
@@ -161,8 +175,13 @@ const Scraper = async (data, connection) => {
 
     };
 
-
-    Init()
+    try{
+        Init()
+    } catch(err) {
+        console.log(cyan(err.message))
+        sendJson({ cmd: "scrape_ended", msg: err.message})
+    }
+    
 
 }
 

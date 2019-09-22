@@ -48,7 +48,8 @@ class MainPage extends React.Component {
                     <Typography variant="subtitle2" align="justify" color="error" paragraph>
                         Supported chinese RAW sources:
                                 <li><a href="https://www.kenshu.cc/xiaoshuo/111171/"> kenshu.cc </a></li>
-
+                                
+                                <li><a href="https://www.zhaishuyuan.com/book/20452/"> zhaishuyuan.com </a></li>
                         <li><a href="https://www.lewenxiaoshuo.com/books/gandiehenaxieganerzi/"> lewenxiaoshuo.com </a></li>
                     </Typography>
                     <Typography component="ol" variant="body1" align="justify" color="textSecondary">
