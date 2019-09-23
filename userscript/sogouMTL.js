@@ -16,6 +16,7 @@
     var chapters = [];
     var server = null;
     const translator = "sogou"
+    let translateStr = { key: "translateStr", value: sessionStorage.getItem('translateStr') || '' }
 
 
     var UI = '<div id="rimlu_mtl">' +
@@ -25,6 +26,7 @@
         '<button id="mtl_stop">Stop</button>' +
         '</div>';
     $("#box-logo").append(UI);
+    setTimeout(() => $("#mtl_command").val(translateStr.value), 500)
 
     const PrintConsole = (str) => $("#mtl_console").val(str + "\n" + $("#mtl_console").val())
     $("#mtl_stop").click(() => {
@@ -35,7 +37,9 @@
     $("#mtl_start").click(() => {
         tbc = true
 
-        var json = JSON.parse($("#mtl_command").val())
+        var json = $("#mtl_command").val()
+        sessionStorage.setItem(translateStr.key, json)
+        json = JSON.parse(json)
         server = json.url
         delete json.url
         json.translator = translator

@@ -17,7 +17,10 @@
     var tbc = true;
     var chapters = [];
     var server = null;
+    var timer = null;
+    const TIMEOUT = 30000;
     const translator = "baidu"
+    let translateStr = { key: "translateStr", value: sessionStorage.getItem('translateStr') || '' }
 
     var UI = '<div id="rimlu_mtl" style="margin-bottom: 1em">' +
         '<textarea id="mtl_console" placeholder="Console for showing progress" style="width: 100%;height: 200px;"></textarea>' +
@@ -25,7 +28,9 @@
         '<button id="mtl_start">Parse</button>' +
         '<button id="mtl_stop">Stop</button>' +
         '</div>';
+    
     $(".translate-wrap").prepend(UI);
+    setTimeout(() => $("#mtl_command").val(translateStr.value), 500)
  
     const PrintConsole = (str) => $("#mtl_console").val(str + "\n"+ $("#mtl_console").val())
     $("#mtl_stop").click(() => {
@@ -36,7 +41,10 @@
     $("#mtl_start").click(() => {
         tbc = true
 
-        var json = JSON.parse($("#mtl_command").val())
+        window.history.pushState("", "", "/#zh/en/");
+        var json = $("#mtl_command").val()
+        sessionStorage.setItem(translateStr.key, json)
+        json = JSON.parse(json)
         server = json.url
         delete json.url
         json.translator = translator
@@ -88,7 +96,7 @@
                 xhttp.onreadystatechange = function() {
                     if (this.readyState == 4 && this.status == 200) {
                         console.log("translation response", JSON.parse(this.responseText))
-                        PrintConsole(`Translated chapter ${chap.id} @ ${chap.url}`)
+                        PrintConsole(`Translated chapter ${chap.order} (id:${chap.id}) @ ${chap.url}`)
                         HandleChapter(chapters, ++index)
                     }
                 };
@@ -100,6 +108,7 @@
                 return true
 
             }
+            
 
             const callback = function (mutationsList, observer) {
 
@@ -111,17 +120,27 @@
 
                 // there wait for the observer to really update
                 if(cont.length == 0 || translatedText.includes(cont)) return true
-
+                clearTimeout(timer);
                 translatedText.push(cont)
-
+                window.history.pushState("", "", "/#zh/en/");
                 $(".target-output").html("")
                 observer.disconnect();
                 HandleParts(parts, ++j)
             };
 
-
+           
             const observer = new MutationObserver(callback);
+            // baidu is slow. wait 30 seconds and attempt to translate again
+            timer = setTimeout(() => { 
+                observer.disconnect(); 
+                console.log("TIMED OUT. lets try again")
+                tbc = false
+                setTimeout(() => $("#mtl_start").click(), 4000)
+                
+                //HandleParts(parts, ++j)
+            }, TIMEOUT)
             observer.observe(targetNode, config);
+            
 
             // adding some random chinese to force ZH translation on baidu
             target.value = `放心\n${parts[j]}`

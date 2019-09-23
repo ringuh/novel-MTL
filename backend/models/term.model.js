@@ -12,7 +12,11 @@ module.exports = (seq, type) => {
         prompt: {
             type: type.BOOLEAN,
             defaultValue: false,
-            allowNull: false
+            allowNull: false,
+            set(val){
+                if(this.getDataValue('to').includes('|')) val = true
+                this.setDataValue('prompt', val)
+            }
         },
         proofread: {
             type: type.BOOLEAN,
@@ -20,9 +24,9 @@ module.exports = (seq, type) => {
             allowNull: false
         },
         from: {
-            type: type.STRING,
+            type: type.TEXT,
             validate: {
-                len: [1, 100],
+                len: [1, 500],
                 notEmpty: true
             },
             allowNull: false,
@@ -37,6 +41,11 @@ module.exports = (seq, type) => {
             allowNull: false,
             trim: true,
             singlespace: true,
+            set(val) {
+                if(val.includes("|"))
+                    setTimeout(() =>this.setDataValue('prompt', true), 2000)
+                this.setDataValue("to", val)
+            }
         }
 
     }, {

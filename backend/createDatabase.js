@@ -40,7 +40,7 @@ var createDB = async () => {
 			catalog: "a.catalogbtn",
 			chapters: "ul.chapter-list > li > span > a"
 		},
-	},{
+	}, {
 		url: "https://www.zhaishuyuan.com/book/20452/",
 		next: "#center > div.jumptop > a:last",
 		title: "#center > .title > h1",
@@ -52,32 +52,44 @@ var createDB = async () => {
 			catalog: "#bookinfo > div.bookright > div.motion > a:nth-child(1)",
 			chapters: "#readerlists > ul > li:nth-child(3) > a"
 		},
-	} 
-	
-	
-	
-	/* { ######### THIS IS AJAX PAGE
-		url: "https://www.xbiqugexsw.com/book/245723/",
-		next: ".bottem1>a:last",
-		title: ".bookname > h1",
+	}, {
+		url: "https://www.101novel.net/txt/194209.html",
+		next: "#thumb > a:nth-child(3)",
+		title: "#bgdiv > table > tbody > tr:nth-child(1) > td > div > h1",
 		content: "#content",
-		regex: "xbiqugexsw\.com\/book\/.*\/.*\.html",
+		regex: "101novel\.net\/ck101\/(\\d).*\/(\\d).*\.html",
 		root: {
-			image_url: "#fmimg > img",
-			description: "#intro",
-			catalog: null,
-			chapters: "#list > dl > dd > a"
+			image_url: "#detail-box > div > div.ui_bg6 > div.box_intro > div.pic > img",
+			description: "div.intro",
+			catalog: "#detail-box > div > div.ui_bg6 > div.box_intro > div.box_info > div > span.btopt > a",
+			chapters: "#defaulthtml4 > table > tbody > tr:nth-child(1) > td:nth-child(1) > div > a"
 		},
-	}, */
+	}
 
-	/* { #### AJAX PAGE, POSSIBLE THOUGH
-		url: "https://www.ptwxz.com/bookinfo/3/3785.html",
-		next: ".bottomlink>a:last",
-		title: "#content > h1",
-		content: "#content",
-		regex: "ptwxz\.com\/html\/(\\d).*\/(\\d).*\/(\\d).*\.html",
-		root: null 
-	} */
+
+
+		/* { ######### THIS IS AJAX PAGE
+			url: "https://www.xbiqugexsw.com/book/245723/",
+			next: ".bottem1>a:last",
+			title: ".bookname > h1",
+			content: "#content",
+			regex: "xbiqugexsw\.com\/book\/.*\/.*\.html",
+			root: {
+				image_url: "#fmimg > img",
+				description: "#intro",
+				catalog: null,
+				chapters: "#list > dl > dd > a"
+			},
+		}, */
+
+		/* { #### AJAX PAGE, POSSIBLE THOUGH
+			url: "https://www.ptwxz.com/bookinfo/3/3785.html",
+			next: ".bottomlink>a:last",
+			title: "#content > h1",
+			content: "#content",
+			regex: "ptwxz\.com\/html\/(\\d).*\/(\\d).*\/(\\d).*\.html",
+			root: null 
+		} */
 
 		//https://www.zhaishuyuan.com/book/20452/
 		// https://www.xbiqugexsw.com/book/245723/ "presidents ex wife"
@@ -112,8 +124,7 @@ var createDB = async () => {
 			Their paths were supposed to be separate and independent, but—
 			
 			Standing at her door, the legendary ruthless and unyielding diamond bachelor asks for a remarriage. A cute bun appears from behind and gazes at Xia Ning with his big, starry eyes. “Mummy, Daddy will cook, I will warm the bed, please take us in.”`,
-		},
-		{
+		}, {
 			name: "Lady Su's Revenge",
 			raw_url: "https://www.kenshu.cc/xiaoshuo/111171/",
 			description: "Reborn poison girl who can cook",
@@ -122,7 +133,10 @@ var createDB = async () => {
 			name: "Ultimate little village doctor",
 			raw_url: "https://www.zhaishuyuan.com/book/20452/",
 			description: null,
-		},
+		}, {
+			name: "General's Little Peasant Wife",
+			raw_url: "https://www.101novel.net/txt/194209.html",
+		}
 
 	]
 

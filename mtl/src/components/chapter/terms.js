@@ -8,7 +8,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import TextField from '@material-ui/core/TextField';
-
+import InfoIcon from '@material-ui/icons/InfoOutlined';
 
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import Drawer from '@material-ui/core/Drawer';
@@ -33,9 +33,11 @@ const styles = theme => ({
         "& .MuiDialog-paperWidthSm": {
             width: "100%",
             position: "fixed",
+            maxHeight: "calc(100% - 32px)",
             top: 0,
             margin: 0,
         },
+
 
     },
     list: {
@@ -71,34 +73,44 @@ class TermDrawer extends Component {
 
     }
 
-    findPrompt = (term) => {
-        console.log(term)
-        const editor = this.props.parent.props.parent
-        const match = new RegExp(`\\b${term.from}\\b`, "gi")
-        const terms = term.to.split("|").map(t => t.trim())
-        editor.state.paragraphs.forEach(p => {
-            if (!p.original.match(match)) return false
-            p.content = p.original.replace(match, `<strong title='${term.from}'>${term.to}</strong>`)
-            console.log(p.content)
-        });
 
-        ["baidu", "sogou", "proofread"].forEach(t => {
-            editor.setState({
-                [t]: {
-                    ...editor.state[t],
-                    content: editor.state.paragraphs.filter(p => p.type === t).map(p => p.content).join("\n")
-                }
-            })
-        })
-    }
 
 
     translate = (terms = []) => {
         const editor = this.props.parent.props.parent
         if (!editor.state.paragraphs) return false;
-        let prompts = [];
+        let paragraphs = editor.state.paragraphs.map(p => { return { ...p, content: p.original } })
 
-        terms.forEach(term => this.findPrompt(term))
+        let findPrompt = (term) => {
+            console.log(term)
+            const match = new RegExp(`\\b${term.from}\\b`, "gi")
+            const terms = term.to.split("|").map(t => t.trim())
+            paragraphs.forEach(p => {
+                if (!p.content.match(match) || (!p.proofread && p.type === 'proofread' )) return false
+                let arr = p.content.split(/<strong (.*?)<\/strong>/)
+                for (var i in arr){
+                    if(arr[i].startsWith("title=")) arr[i] = `<strong ${arr[i]}</strong>`
+                    else if(!term.prompt) arr[i] = arr[i].replace(match, `<strong title='${term.from}'>${term.to}</strong>`)
+                    //else 
+                }
+                    
+                p.content = arr.join("")
+                console.log(p.content)
+            });
+
+            ["baidu", "sogou", "proofread"].forEach(t => {
+                editor.setState({
+                    [t]: {
+                        ...editor.state[t],
+                        content: paragraphs.filter(p => p.type === t).map(p => p.content).join("\n")
+                    }
+                })
+            })
+        }
+
+        // split piped terms to be translated as individuals
+        terms.forEach(fullTerm => fullTerm.from.split("|").forEach(
+            term => findPrompt({...fullTerm, from: term.trim()})))
         editor.editParagraphs(editor.state)
         console.log(editor.state.paragraphs)
     }
@@ -192,8 +204,8 @@ class TermDrawer extends Component {
                                     dense={true}
                                     divider={true}>
                                     <ListItemText
-                                        primary={val.from}
-                                        secondary={val.to.split('|').map(to => <span key={to}>{to}<br /></span>)} />
+                                        primary={val.from.split('|').map(from => <span key={from}>{from}<br/></span>)}
+                                        secondary={val.to.split('|').map(to => <span key={to}>{to}<br/></span>)} />
                                     <ListItemSecondaryAction>
                                         <ListItemText
                                             primary={val.prompt ? 'Prompt' : 'Auto'} />
@@ -226,13 +238,18 @@ class TermDrawer extends Component {
                     <Dialog open={state.edit}
                         className={classes.dialog}
                         onClose={() => this.selectTerm()}>
-                        <DialogTitle>Add a new term</DialogTitle>
+                        <DialogTitle onClick={() => this.setState({ info: !state.info })}>
+                            Add a new term
+                            <InfoIcon fontSize="small" color="secondary" />
+                        </DialogTitle>
                         <DialogContent>
-                            <DialogContentText> {/* <span>{JSON.stringify(this.state.term)}</span> */}
-                                You can add a new <strong>english</strong> term to
-                                replace some of the words used in machine translation.
-                            Terms do not effect saved <strong>raw</strong> or <strong>proofread</strong> text
-                        </DialogContentText>
+                            {state.info &&
+                                <DialogContentText> {/* <span>{JSON.stringify(this.state.term)}</span> */}
+                                    You can add a new <strong>english</strong> term to
+                                    replace some of the words used in machine translation.
+                                    Terms do not effect saved <strong>raw</strong> or <strong>proofread</strong> text
+                                </DialogContentText>
+                            }
                             <TextField fullWidth
                                 onChange={(e) => this.setState({ term: { ...this.state.term, from: e.target.value } })}
                                 autoFocus
@@ -247,20 +264,21 @@ class TermDrawer extends Component {
 
                             <Divider />
                             <TextField
-                                onChange={(e) => this.setState({ term: { ...this.state.term, to: e.target.value } })}
+                                onChange={(e) => this.setState({ term: { ...state.term, to: e.target.value } })}
                                 margin="dense"
                                 id="name"
                                 label="Translation"
-                                placeholder="eg. kill | murder | separated by pipes"
+                                //placeholder="eg. kill | murder | separated by pipes"
+                                placeholder="eg. kill"
                                 type="text"
                                 value={state.term.to}
                                 fullWidth
                             />
 
-                            <Switch
+                            {/* <Switch
                                 checked={state.term.prompt}
-                                //onChange={(e) => this.setState({ ...this.state, term: { ...this.state.term, prompt: !state.term.prompt } })}
-                                value={state.term.prompt} /> Prompt
+                                onChange={(e) => this.setState({ term: { ...state.term, prompt: !state.term.prompt } })}
+                                value={state.term.prompt} /> Prompt */}
                         </DialogContent>
                         <DialogActions>
                             {state.term.id &&
@@ -289,7 +307,7 @@ class TermDrawer extends Component {
                         <DialogTitle>Prompt</DialogTitle>
                         <DialogContent>
                             <DialogContentText>
-                                paragraph
+                                {state.prompt}
                             </DialogContentText>
 
                         </DialogContent>
