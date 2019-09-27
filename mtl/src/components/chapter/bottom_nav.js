@@ -60,9 +60,9 @@ class ChapterBottomNav extends Component {
                         value="recents"
                         icon={<ListIcon />}
                         onClick={() => this.toggleState('chapterDrawer', true)} />
-                    <BottomNavigationAction icon={<FavoriteIcon />}
+                    {/* <BottomNavigationAction icon={<FavoriteIcon />}
                         label="Favorites"
-                        value="favorites" />
+                        value="favorites" /> */}
                     <BottomNavigationAction icon={<TranslateIcon />}
                         label="Nearby"
                         value="nearby"

@@ -136,6 +136,9 @@ var createDB = async () => {
 		}, {
 			name: "General's Little Peasant Wife",
 			raw_url: "https://www.101novel.net/txt/194209.html",
+		}, {
+			name: "Venerable Swordsman",
+			raw_url: "https://www.kenshu.cc/xiaoshuo/135319/"
 		}
 
 	]

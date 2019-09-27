@@ -73,47 +73,53 @@ class TermDrawer extends Component {
 
     }
 
-
-
-
-    translate = (terms = []) => {
+    Translate = (terms = []) => {
         const editor = this.props.parent.props.parent
         if (!editor.state.paragraphs) return false;
         let paragraphs = editor.state.paragraphs.map(p => { return { ...p, content: p.original } })
 
-        let findPrompt = (term) => {
-            console.log(term)
-            const match = new RegExp(`\\b${term.from}\\b`, "gi")
-            const terms = term.to.split("|").map(t => t.trim())
-            paragraphs.forEach(p => {
-                if (!p.content.match(match) || (!p.proofread && p.type === 'proofread' )) return false
-                let arr = p.content.split(/<strong (.*?)<\/strong>/)
-                for (var i in arr){
-                    if(arr[i].startsWith("title=")) arr[i] = `<strong ${arr[i]}</strong>`
-                    else if(!term.prompt) arr[i] = arr[i].replace(match, `<strong title='${term.from}'>${term.to}</strong>`)
-                    //else 
-                }
-                    
-                p.content = arr.join("")
-                console.log(p.content)
-            });
-
-            ["baidu", "sogou", "proofread"].forEach(t => {
-                editor.setState({
-                    [t]: {
-                        ...editor.state[t],
-                        content: paragraphs.filter(p => p.type === t).map(p => p.content).join("\n")
-                    }
-                })
-            })
+        let contents = {
+            proofread: editor.state.proofread.original,
+            sogou: editor.state.sogou.original,
+            baidu: editor.state.baidu.original
         }
+        // dont try translating empty content
+        let options = ['proofread', 'sogou', 'baidu'].filter(t => contents[t].length > 0)
+        
+        // auto translates
+        terms.filter(t => !t.prompt).forEach(term => {
+            for(var j in options){
+                var key = options[j]
+                // only translate the terms that are ment to translate proofread content
+                if(key === 'proofread' && !term.proofread) continue
+                let from = term.from.split("|").map(f => f.trim()).join("|")
+                const match = new RegExp(`\\b${from}\\b`, "gi")
+                // before splitting check if there is any match
+                
+                if(!contents[key].match(match)) continue
+                let arr = contents[key].split(/<strong (.*?)<\/strong>/)
+                for(var i in arr){
+                    if (arr[i].startsWith("title=")) arr[i] = `<strong ${arr[i]}</strong>`
+                    else arr[i] = arr[i].replace(match, `<strong title='${term.from}'> ${term.to} </strong>`)
+                }
 
-        // split piped terms to be translated as individuals
-        terms.forEach(fullTerm => fullTerm.from.split("|").forEach(
-            term => findPrompt({...fullTerm, from: term.trim()})))
+                contents[key] = arr.join("")
+
+            }
+        });
+
+        editor.setState({ 
+            proofread: { ...editor.state.proofread, content: contents.proofread },
+            sogou: { ...editor.state.sogou, content: contents.sogou },
+            baidu: { ...editor.state.baidu, content: contents.baidu }
+        })
         editor.editParagraphs(editor.state)
-        console.log(editor.state.paragraphs)
+
     }
+
+
+
+
 
 
     selectTerm = (term) => {
@@ -157,7 +163,7 @@ class TermDrawer extends Component {
             .then(data => this.setState({ ...this.state, terms: data }))
             .then(st => console.log(this.state))
             //.then(st => this.props.parent.props.parent.translate(this.state.terms))
-            .then(st => this.translate(this.state.terms))
+            .then(st => this.Translate(this.state.terms))
     }
 
 
@@ -204,8 +210,8 @@ class TermDrawer extends Component {
                                     dense={true}
                                     divider={true}>
                                     <ListItemText
-                                        primary={val.from.split('|').map(from => <span key={from}>{from}<br/></span>)}
-                                        secondary={val.to.split('|').map(to => <span key={to}>{to}<br/></span>)} />
+                                        primary={val.from.split('|').map(from => <span key={from}>{from}<br /></span>)}
+                                        secondary={val.to.split('|').map(to => <span key={to}>{to}<br /></span>)} />
                                     <ListItemSecondaryAction>
                                         <ListItemText
                                             primary={val.prompt ? 'Prompt' : 'Auto'} />

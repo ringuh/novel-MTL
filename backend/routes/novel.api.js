@@ -74,7 +74,7 @@ router.route("/:id/chapter")
 		let query = {
 			where: { novel_id: req.params.id },
 			//attributes: ["id", "novel_id", "order", "title", "url", "updatedAt", "createdAt"],
-			order: [["order"], ['id']],
+			order: [["order", req.query.order == -1 ? "DESC" : "ASC"], ['id']],
 			include: [ // dont offer RAWless chapters for translators
 				{ model: Content, as: 'raw', required: req.query.translator ? true : false },
 				{ model: Content, as: 'baidu', required: false },
@@ -90,8 +90,8 @@ router.route("/:id/chapter")
 			query.where.id = { [Sequelize.Op.in]: req.query.chapter_id.split(",") }
 
 		if (req.query.order && req.query.order != -1)
-			query.where.order = { [Sequelize.Op.in]: req.query.order.split(",") }
-
+			query.where.order = { [Sequelize.Op.in]: req.query.order.split(",") };
+		
 		// which children to include in JSON
 		if (req.query.includes)
 			query.include = query.include.filter(inc => req.query.includes.split(",").includes(inc.as))
@@ -100,7 +100,7 @@ router.route("/:id/chapter")
 		if (req.query.translator && !req.query.force) {
 			query.where[`${req.query.translator}_id`] = { [Sequelize.Op.is]: null }
 		}
-		
+
 		Chapter.findAll(query).then((chapters) => {
 			return res.json(chapters.map(chapter => chapter.toJson(req.query.content_length)))
 		}).catch((err) => {

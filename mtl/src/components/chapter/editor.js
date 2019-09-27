@@ -94,6 +94,7 @@ class ChapterEditor extends Component {
             .then(data => this.priority(data))
             .then(data => this.editParagraphs(data))
             .then(() => document.title = `C${this.state.order} - ${this.props.parent.state.name}`)
+            .then(() => localStorage.setItem(`novel${this.state.novel_id}`, this.state.order))
             .then(() => console.log(this.state))
     }
 
@@ -183,28 +184,6 @@ class ChapterEditor extends Component {
     }
 
 
-
-
-
-   /*  translate2 = (terms) => {
-        if (!this.state.paragraphs) return false;
-        ["baidu", "sogou", "proofread"].forEach(t => {
-            terms.forEach(term => {
-                this.setState({
-                    ...this.state, [t]: {
-                        ...this.state[t],
-                        content: this.state[t].content.replace(
-                            new RegExp(term.from, "gi"), `<strong title='${term.from}'>${term.to}</strong>`)
-                    }
-                })
-            })
-
-        })
-        this.editParagraphs(this.state)
-        console.log(this.state.paragraphs)
-    } */
-
-
     SubmitChapter = (attr, val) => {
         console.log(this.state.edit)
         let json = { [attr]: val }
@@ -243,7 +222,10 @@ class ChapterEditor extends Component {
                 onChange={() => this.setState({ paragraphs: null })}
             >
                 {this.state.chapters.map(c =>
-                    <MenuItem key={c.id} component={Link} to={`${c.order}`} value={c.id}>{`${c.order} - ${c.title} ${c.id}`}</MenuItem>
+                    <MenuItem key={c.id} component={Link}
+                        disabled={c.id === this.state.id}
+                        autoFocus={c.id === this.state.id}
+                        to={`${c.order}`} value={c.id}>{`${c.order} - ${c.title}`}</MenuItem>
                 )}
 
 

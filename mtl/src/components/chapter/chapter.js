@@ -82,10 +82,13 @@ class Chapter extends Component {
                 this.setState({ chapter: this.state.order ? this.state.chapters.find(c => c.order === this.state.order) : null })
 
                 // if no chapter is found or :order is missing pick the first unread
-                if (!this.state.chapter)
+                if (!this.state.chapter){
+                    let potential = localStorage.getItem(`novel${this.state.id}`) || this.state.chapters[0].order
                     this.setState({
-                        redirect: `/novel/${this.props.match.params.alias}/chapter/${this.state.chapters[0].order}`
+                        redirect: `/novel/${this.props.match.params.alias}/chapter/${potential}`
                     })
+                }
+                    
             })
     }
 

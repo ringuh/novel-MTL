@@ -8,6 +8,7 @@ import TextField from '@material-ui/core/TextField';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import SaveIcon from '@material-ui/icons/Save';
 import EditIcon from '@material-ui/icons/Edit';
+import ReaderIcon from '@material-ui/icons/ChromeReaderModeOutlined'
 //import GetAppIcon from '@material-ui/icons/GetAppOutlined'
 import { Grid, Paper, Box, Container } from '@material-ui/core';
 
@@ -15,35 +16,35 @@ import { Grid, Paper, Box, Container } from '@material-ui/core';
 
 const styles = theme => ({
     transparentBar: {
-      backgroundColor: 'transparent !important',
-      boxShadow: 'none',
-      paddingTop: '25px',
-      color: '#FFFFFF'
+        backgroundColor: 'transparent !important',
+        boxShadow: 'none',
+        paddingTop: '25px',
+        color: '#FFFFFF'
     },
     avatar: {
         display: "block",
-        maxWidth:"100%",
-        maxHeight:"100%",
+        maxWidth: "100%",
+        maxHeight: "100%",
         width: "auto",
         height: "auto",
         padding: "1em"
     }
-  });
+});
 
 
 class NovelEditor extends Component {
     constructor(props) {
         super(props);
         console.log("novel editor", props)
-        this.state = {...props.novel};
+        this.state = { ...props.novel };
 
         this.formChange = this.formChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
 
     }
 
-    componentWillReceiveProps(){
-        this.setState({...this.props.novel})
+    componentWillReceiveProps() {
+        this.setState({ ...this.props.novel })
     }
 
     fields = [
@@ -69,7 +70,7 @@ class NovelEditor extends Component {
 
     formChange(e) {
         this.setState({
-           [e.target.name]: e.target.value,
+            [e.target.name]: e.target.value,
         })
 
 
@@ -81,12 +82,12 @@ class NovelEditor extends Component {
         this.setState({ progress: true })
 
         axios.post(`/api/novel/${this.state.id}`, this.state)
-        .then(res => {
-            if(!res.data.id) throw res.data
-        }).catch(err => console.log(err))
-        .then(()=> this.props.getNovel())
-        .then(() => this.setState({...this.props.novel}))
-        .finally(() => this.setState({ progress: false, edit: false }))
+            .then(res => {
+                if (!res.data.id) throw res.data
+            }).catch(err => console.log(err))
+            .then(() => this.props.getNovel())
+            .then(() => this.setState({ ...this.props.novel }))
+            .finally(() => this.setState({ progress: false, edit: false }))
     }
 
     render() {
@@ -102,7 +103,7 @@ class NovelEditor extends Component {
                         autoComplete="off" >
                         <Grid container>
                             <Grid item xs={2}>
-                                <img className={classes.avatar} 
+                                <img className={classes.avatar}
                                     alt={state.name}
                                     src={state.image_url} />
                             </Grid>
@@ -159,6 +160,16 @@ class NovelEditor extends Component {
                             </Grid>
                         </Grid>
                     </Box>
+                    <Box style={{ float: "left" }}>
+                        <Button component="a" 
+                            color="secondary"
+                            href={`${this.props.novel.alias}/chapter`}
+                           >
+                            <ReaderIcon />
+                            Read
+                        </Button>
+                    </Box>
+
                 </Paper>
             </Container>
         );

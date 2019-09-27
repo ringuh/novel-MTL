@@ -28,10 +28,10 @@
         '<button id="mtl_start">Parse</button>' +
         '<button id="mtl_stop">Stop</button>' +
         '</div>';
-    
+
     $(".translate-wrap").prepend(UI);
     setTimeout(() => $("#mtl_command").val(translateStr.value), 500)
- 
+
     const PrintConsole = (str) => $("#mtl_console").val(str + "\n"+ $("#mtl_console").val())
     $("#mtl_stop").click(() => {
         PrintConsole("Stop activated")
@@ -108,7 +108,7 @@
                 return true
 
             }
-            
+
 
             const callback = function (mutationsList, observer) {
 
@@ -128,19 +128,19 @@
                 HandleParts(parts, ++j)
             };
 
-           
+
             const observer = new MutationObserver(callback);
             // baidu is slow. wait 30 seconds and attempt to translate again
-            timer = setTimeout(() => { 
-                observer.disconnect(); 
+            timer = setTimeout(() => {
+                observer.disconnect();
                 console.log("TIMED OUT. lets try again")
                 tbc = false
                 setTimeout(() => $("#mtl_start").click(), 4000)
-                
+
                 //HandleParts(parts, ++j)
             }, TIMEOUT)
             observer.observe(targetNode, config);
-            
+
 
             // adding some random chinese to force ZH translation on baidu
             target.value = `放心\n${parts[j]}`
