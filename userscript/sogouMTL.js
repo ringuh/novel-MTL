@@ -17,6 +17,7 @@
     var server = null;
     const translator = "sogou"
     let translateStr = { key: "translateStr", value: sessionStorage.getItem('translateStr') || '' }
+    let jwt = sessionStorage.getItem('jwt')
 
 
     var UI = '<div id="rimlu_mtl">' +
@@ -38,7 +39,16 @@
         tbc = true
 
         var json = $("#mtl_command").val()
+        json = JSON.parse(json)
+        if(json.jwt) sessionStorage.setItem("jwt", json.jwt)
+        delete json.jwt
+        json = JSON.stringify(json)
         sessionStorage.setItem(translateStr.key, json)
+        $("#mtl_command").val(json)
+
+        jwt = sessionStorage.getItem("jwt")
+        if(!jwt) return alert("JWT token missing. repaste the string")
+        
         json = JSON.parse(json)
         server = json.url
         delete json.url
@@ -50,7 +60,7 @@
         url.search = new URLSearchParams(json).toString();
 
 
-        var xhttp = new XMLHttpRequest();
+        const xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
                 chapters = JSON.parse(this.responseText)
@@ -62,6 +72,7 @@
         };
         xhttp.open("GET", url, true);
         xhttp.setRequestHeader("Content-type", "application/json");
+        xhttp.setRequestHeader("Authorization", "Bearer "+jwt);
         xhttp.send(JSON.stringify(json));
 
 
@@ -91,7 +102,7 @@
                 // error happened-text replaced
                 textContent = textContent.replace(/呀，出错误了！再试下吧。/g, "")
 
-                var xhttp = new XMLHttpRequest();
+                const xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
                         console.log("translation response", JSON.parse(this.responseText))
@@ -102,6 +113,7 @@
                 };
                 xhttp.open("POST", server + "/" + chap.id, true);
                 xhttp.setRequestHeader("Content-type", "application/json");
+                xhttp.setRequestHeader("Authorization", "Bearer "+jwt);
 
                 var d = JSON.stringify({ translator: translator,
                     content: { title: title.trim(), content: textContent.trim() } })
@@ -136,7 +148,7 @@
 
         var url = new URL(`${server}/${chap.id}`)
 
-        var xhttp2 = new XMLHttpRequest();
+        const xhttp2 = new XMLHttpRequest();
         xhttp2.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
                 let result = JSON.parse(this.responseText)
@@ -149,6 +161,7 @@
         }
         xhttp2.open("GET", url, true);
         xhttp2.setRequestHeader("Content-type", "application/json");
+        xhttp2.setRequestHeader("Authorization", "Bearer "+jwt);
         xhttp2.send();
     };
 

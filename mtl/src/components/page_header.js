@@ -9,6 +9,7 @@ import { withStyles } from '@material-ui/core/styles';
 import HomeIcon from '@material-ui/icons/HomeOutlined'
 import ExitIcon from '@material-ui/icons/ExitToApp'
 import NovelCreate from './novel/novel_create';
+import Login from './login'
 
 const styles = theme => ({
     root: {
@@ -33,37 +34,47 @@ const Header = (props) => {
     if (location.pathname.match(/\/novel\/.*\/chapter/gi))
         return (<div className={classes.root}></div>)
 
-    return (
+    // not logged
+    if (!global.user)
+        return (
+            <AppBar className={classes.root} color="default" position="static">
+                <ToolBar>
+                    <Breadcrumbs separator="">
+                        <a href="/">
+                            <HomeIcon color="secondary" />
+                        </a>
+                    </Breadcrumbs>
+                    <Breadcrumbs separator="">
+                        <Login />
+                    </Breadcrumbs>
+                </ToolBar>
 
+
+            </AppBar >
+        )
+
+    // logged in
+    return (
         <AppBar className={classes.root} color="default" position="static">
             <ToolBar>
-                {/* <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu">
-                    <MenuIcon />
-                </IconButton> */}
                 <Breadcrumbs separator="">
-                    <a href="/">
-                        <HomeIcon color="secondary" />
-                    </a>
+                    <a href="/"> <HomeIcon color="secondary" /> </a>
 
                     <a href="/novel">
                         <Typography color="secondary">
                             Novels
                         </Typography>
                     </a>
-
-                    {/* <Login /> */}
                 </Breadcrumbs>
                 <Breadcrumbs separator="">
                     <NovelCreate />
+
                     <Button component={Link} to="/logout">
-                        
-                        Log out
-                        <ExitIcon color="secondary" />
+                        Log out <ExitIcon color="secondary" />
                     </Button>
+
                 </Breadcrumbs>
             </ToolBar>
-
-
         </AppBar >
     )
 }

@@ -8,7 +8,7 @@ import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import Avatar from '@material-ui/core/Avatar';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-
+import axios from 'axios'
 
 const styles = theme => ({
     root: {
@@ -48,10 +48,14 @@ class NovelList extends Component {
     }
 
     componentDidMount() {
-        fetch('/api/novel')
-            .then(response => response.json())
-            .then(data => { console.log("novels", data); return data})
-            .then(data => this.setState({ novels: data }));
+        /*  fetch('/api/novel')
+             .then(response => response.json())
+             .then(data => { console.log("novels", data); return data})
+             .then(data => this.setState({ novels: data })); */
+        axios.get('/api/novel').then(response => response.data)
+            .then(data => { console.log("novels", data); return data })
+            .then(data => this.setState({ novels: data }))
+            .catch(err => console.log(err.response))
     }
 
 
@@ -67,37 +71,37 @@ class NovelList extends Component {
                 <h2>Novel listing</h2>
 
                 <List className={classes.root}>
-                {state.novels.map((novel) => (
-                    <ListItem component={Link} key={novel.id} 
-                        to={`/novel/${novel.alias}`} 
-                        divider
-                        alignItems="flex-start" >
-                        <ListItemAvatar>
-                            <Avatar alt={novel.name} src={novel.image_url} />
-                        </ListItemAvatar>
-                        <ListItemText
-                            primary={novel.name}
-                            secondary={
-                                <React.Fragment>
-                                    <Typography
-                                        component="span"
-                                        variant="body2"
-                                        className=""
-                                        color="textSecondary"
-                                    >
-                                        {novel.description ? novel.description.substr(0, 400): "description missing"}
-                                        {novel.description && novel.description.length > 400 ? '...': null}
-                                    </Typography>
-                                </React.Fragment>
-                            }
-                        />
-                        
-                    </ListItem>
-                    
-                
-                 ))}
-                    
-               
+                    {state.novels.map((novel) => (
+                        <ListItem component={Link} key={novel.id}
+                            to={`/novel/${novel.alias}`}
+                            divider
+                            alignItems="flex-start" >
+                            <ListItemAvatar>
+                                <Avatar alt={novel.name} src={novel.image_url} />
+                            </ListItemAvatar>
+                            <ListItemText
+                                primary={novel.name}
+                                secondary={
+                                    <React.Fragment>
+                                        <Typography
+                                            component="span"
+                                            variant="body2"
+                                            className=""
+                                            color="textSecondary"
+                                        >
+                                            {novel.description ? novel.description.substr(0, 400) : "description missing"}
+                                            {novel.description && novel.description.length > 400 ? '...' : null}
+                                        </Typography>
+                                    </React.Fragment>
+                                }
+                            />
+
+                        </ListItem>
+
+
+                    ))}
+
+
                 </List>
 
             </div>

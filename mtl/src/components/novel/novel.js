@@ -3,6 +3,7 @@ import { withStyles } from '@material-ui/core/styles';
 import NovelEditor from './novel_editor'
 import NovelChapters from './novel_chapters'
 import ProgressBar from '../util/ProgressBar'
+import axios from 'axios'
 
 const styles = theme => ({
     root: {
@@ -15,7 +16,7 @@ class NovelIndex extends Component {
     constructor(props) {
         super(props);
         console.log("Novel index", props)
-        this.state = {  };
+        this.state = {};
     }
 
     //this.handleChange = this.handleChange.bind(this);
@@ -26,25 +27,40 @@ class NovelIndex extends Component {
 
     }
 
-    fetchNovel = (alias=this.state.id) => {
-        return fetch(`/api/novel/${alias}`)
-            .then(response => response.json())
-            .then(data => { console.log("novelinfo", data); return data  })
+    fetchNovel = (alias = this.state.id) => {
+        return axios.get(`/api/novel/${alias}`)
+            .then(response => response.data)
+            .then(data => { console.log("novelinfo", data); return data })
             .then(data => this.setState({ ...this.state, ...data }))
             .then(() => document.title = `${this.state.name}`)
             .then(() => this.fetchChapters())
+
+        return fetch(`/api/novel/${alias}`)
+            .then(response => response.json())
+            .then(data => { console.log("novelinfo", data); return data })
+            .then(data => this.setState({ ...this.state, ...data }))
+            .then(() => document.title = `${this.state.name}`)
+            .then(() => this.fetchChapters())
+
+
+
     }
 
     fetchChapters = () => {
+        return axios.get(`/api/novel/${this.state.id}/chapter?content_length=paragraphs`)
+            .then(response => response.data)
+            //.then(data => { console.log(data); return data })
+            .then(data => this.setState({ chapters: data }))
+
         return fetch(`/api/novel/${this.state.id}/chapter?content_length=paragraphs`)
             .then(response => response.json())
-            .then(data => { console.log(data); return data })
+            //.then(data => { console.log(data); return data })
             .then(data => this.setState({ chapters: data }))
     }
 
 
     componentDidUpdate() {
-        if(this.props.match.params.alias !== this.state.alias 
+        if (this.props.match.params.alias !== this.state.alias
             && parseInt(this.props.match.params.alias) !== this.state.id)
             this.fetchNovel(this.props.match.params.alias)
     }
@@ -54,13 +70,13 @@ class NovelIndex extends Component {
     render() {
         const { classes } = this.props
         const state = this.state
-        
+
         if (!state.name) return <ProgressBar />
 
 
         return (
             <div className={classes.root}>
-                <NovelEditor novel={this.state} 
+                <NovelEditor novel={this.state}
                     getNovel={this.fetchNovel} />
 
                 <NovelChapters novel={this}

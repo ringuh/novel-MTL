@@ -2,20 +2,21 @@ const Scraper = require('../module/scraper')
 const router = require('express').Router()
 const chalk = require('chalk'); // colors
 const slugify = require('slugify')
-
+const jwt = require('jsonwebtoken')
 router.use(require('express').json())
 
 
 
 const { cyan, yellow, red, blue } = chalk.bold;
-const { Term, Novel, Chapter, Content, Sequelize } = require('../models')
+const { User, Term, Novel, Chapter, Content, Sequelize } = require('../models')
 
 const capitalize = (s) => {
 	if (typeof s !== 'string') return ''
 	return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-router.get("/", (req, res) => {
+router.get("/", Authenticated, (req, res) => {
+	console.log("getting novels")
 	//console.log(req.method, req.url, req.body, req.params, req.query)
 	Novel.findAll({
 		attributes: ["id", "name", "image_url", "description", 'alias'],
@@ -28,9 +29,37 @@ router.get("/", (req, res) => {
 	})
 })
 
-router.route(["/create", "/:id"])
-	.get(function (req, res, next) {
+router.route(["/auth"])
+	.post(function (req, res, next) {
 		//console.log(req.method, req.url, req.body, req.params, req.query)
+
+		User.findOrCreate({
+			where: {
+				googleId: req.body.googleId
+			}, defaults: {
+				name: `${req.body.profileObj.givenName}-${Math.random().toString(36).substring(2, 15)}`,
+				icon: req.body.profileObj.imageUrl
+			}
+		}).then(([user, created]) => {			
+			let token = jwt.sign(user.dataValues, global.config.jwt, { algorithm: 'RS256', expiresIn: 1000*120 })
+			res.json({ message: "Logged in", jwt: token })
+		}).catch(err => {
+			console.log(err); 
+			res.status(500).json({ message: err.message })
+		})
+	});
+function Authenticated(req,res,next){
+	if(!req.user) return res.status(520).json({ message: "Login required"})
+	next()
+}
+function Author(req,res,next){
+	if(!req.user) return res.status(500).json({ message: "Login required"})
+	next()
+}
+
+router.route(["/create", "/:id"])
+	.get(Authenticated, function (req, res) {
+		
 		let query = { alias: req.params.id }
 		if (parseInt(req.params.id)) query = { id: parseInt(req.params.id) }
 
@@ -41,16 +70,16 @@ router.route(["/create", "/:id"])
 				console.log(red(err.message))
 				res.status(500).json({ message: err.message })
 			})
-	}).post(async function (req, res, next) {
-		console.log(req.method, req.url, req.body, req.params, req.query)
+	}).post(Authenticated, async function (req, res, next) {
+		
 		if (req.params.id && req.body.id !== parseInt(req.params.id))
 			return res.status(500).json({ message: "/:id the path doesn't match '_id' of post" })
-
+		
 		let novel = null
 		if (req.params.id)
 			novel = await Novel.findByPk(parseInt(req.params.id))
 		else
-			novel = await Novel.create({ name: req.body.name }).catch(err => res.status(500).json({ message: err.message }))
+			novel = await Novel.create({ name: req.body.name, user_id: req.user.id }).catch(err => res.status(500).json({ message: err.message }))
 
 		novel.update({
 			name: req.body.name,
@@ -68,8 +97,7 @@ router.route(["/create", "/:id"])
 
 
 router.route("/:id/chapter")
-	.get(function (req, res, next) {
-		console.log(req.method, req.url, req.body, req.params, req.query)
+	.get(Authenticated, function (req, res, next) {
 
 		let query = {
 			where: { novel_id: req.params.id },
@@ -91,7 +119,7 @@ router.route("/:id/chapter")
 
 		if (req.query.order && req.query.order != -1)
 			query.where.order = { [Sequelize.Op.in]: req.query.order.split(",") };
-		
+
 		// which children to include in JSON
 		if (req.query.includes)
 			query.include = query.include.filter(inc => req.query.includes.split(",").includes(inc.as))
@@ -110,8 +138,8 @@ router.route("/:id/chapter")
 
 
 router.route(["/:novel_id/chapter/:chapter_id"])
-	.get(function (req, res, next) {
-		//console.log(req.method, req.url, req.body, req.params, req.query)
+	.get(Authenticated, function (req, res, next) {
+		
 		let query = {
 			where: { id: parseInt(req.params.chapter_id) },
 			include: ['raw', 'baidu', 'proofread', 'sogou']
@@ -128,7 +156,7 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 			return res.status(500).json({ message: err.message })
 		})
 
-	}).post(async function (req, res, next) {
+	}).post(Authenticated, async function (req, res, next) {
 		console.log(req.method, req.url, req.body, req.params, req.query)
 
 		const chapter = await Chapter.findByPk(parseInt(req.params.chapter_id))
@@ -174,7 +202,7 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 	});
 
 router.route(["/:novel_id/terms"])
-	.get(function (req, res, next) {
+	.get(Authenticated, function (req, res, next) {
 		//console.log(req.method, req.url, req.body, req.params, req.query)
 		let query = {
 			where: { novel_id: parseInt(req.params.novel_id) },
@@ -187,8 +215,8 @@ router.route(["/:novel_id/terms"])
 			console.log(red(err))
 			return res.status(500).json({ message: err.message })
 		})
-	}).post(function (req, res, next) {
-		console.log(req.method, req.url, req.body, req.params, req.query)
+	}).post(Authenticated, function (req, res, next) {
+		//console.log(req.method, req.url, req.body, req.params, req.query)
 
 		if (req.body.prompt === 'delete')
 			Term.destroy({

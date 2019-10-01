@@ -139,7 +139,18 @@ var createDB = async () => {
 		}, {
 			name: "Venerable Swordsman",
 			raw_url: "https://www.kenshu.cc/xiaoshuo/135319/"
-		}
+		},
+		{
+			name: "Fields of Gold",
+			raw_url: "https://www.kenshu.cc/xiaoshuo/49172/"
+		},{
+			name: "Newly-married, husband playing tricks",
+			raw_url: "https://www.kenshu.cc/xiaoshuo/37008/"
+		},{
+			name: "The Expensive Ex-wife",
+			raw_url: "https://www.101novel.net/txt/35994.html"
+		},
+		
 
 	]
 

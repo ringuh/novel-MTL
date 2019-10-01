@@ -46,6 +46,14 @@ module.exports = function (seq, type) {
 			cut: 500,
 			trim: true
 		},
+		modify: {
+			type: type.STRING,
+			allowNull: false,
+			defaultValue: 'owner',
+			validate: {
+				isIn: [['all', 'owner', 'group']]
+			}
+		}
 	},
 		{
 			timestamps: true,

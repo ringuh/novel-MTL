@@ -4,6 +4,7 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css'
 import MainPage from './components/main_page'
+import Logout from './components/logout'
 import Novel from './components/novel/novel'
 import NovelList from './components/novel/novel_list'
 import Chapter from './components/chapter/chapter'
@@ -24,16 +25,24 @@ function App() {
       <BrowserRouter>
         <Header />
         <Container maxWidth="lg">
-          <Switch>
-            <Route exact path="/" component={MainPage} />
-            <Route exact path="/novel" component={NovelList} />
-            <Route exact path="/novel/:alias" component={Novel} />
-            <Route exact path={[
-              `/novel/:alias/chapter`,
-              `/novel/:alias/chapter/:order`
-            ]} component={Chapter} />
-            <Route component={PageNotFound} />
-          </Switch>
+          {global.user &&
+            <Switch>
+              <Route exact path="/" component={MainPage} />
+              <Route exact path="/novel" component={NovelList} />
+              <Route exact path="/novel/:alias" component={Novel} />
+              <Route exact path={[
+                `/novel/:alias/chapter`,
+                `/novel/:alias/chapter/:order`
+              ]} component={Chapter} />
+              <Route exact path="/logout" component={Logout} />
+              <Route component={PageNotFound} />
+            </Switch>
+          }{!global.user &&
+            <Switch>
+              <Route exact path="/" component={MainPage} />
+              <Route component={PageNotFound} />
+            </Switch>
+          }
         </Container>
       </BrowserRouter>
       <Footer />

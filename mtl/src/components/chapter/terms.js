@@ -158,8 +158,8 @@ class TermDrawer extends Component {
 
 
     componentDidMount() {
-        fetch(`/api/novel/${this.state.novel_id}/terms`)
-            .then(response => response.json())
+        axios.get(`/api/novel/${this.state.novel_id}/terms`)
+            .then(response => response.data)
             .then(data => this.setState({ ...this.state, terms: data }))
             .then(st => console.log(this.state))
             //.then(st => this.props.parent.props.parent.translate(this.state.terms))

@@ -69,7 +69,8 @@ class ChapterEditor extends Component {
         let r = JSON.stringify({
             url: `${global.config.server.api}/novel/${this.props.chapter.novel_id}/chapter`,
             chapter_id: [this.props.chapter.id],
-            force: true
+            force: true,
+            jwt: localStorage.getItem("jwt")
         })
         navigator.clipboard.writeText(r);
         alert(`Copied to clipboard: ${r}`);
@@ -89,8 +90,8 @@ class ChapterEditor extends Component {
     componentDidMount() {
         if (!this.props.chapter.id) return false
 
-        fetch(`/api/novel/${this.props.chapter.novel_id}/chapter/${this.props.chapter.id}`)
-            .then(response => response.json())
+        axios.get(`/api/novel/${this.props.chapter.novel_id}/chapter/${this.props.chapter.id}`)
+            .then(response => response.data)
             .then(data => this.priority(data))
             .then(data => this.editParagraphs(data))
             .then(() => document.title = `C${this.state.order} - ${this.props.parent.state.name}`)

@@ -45,24 +45,13 @@ class NovelCreate extends React.Component {
     handleSubmit() {
         var subm = async () => {
             this.setState({progress: true})
-            let res = await axios.post('/api/novel/create', { name: this.state.name });
-            console.log(res.data)
             
-            console.log(res.data.error || res.data.message)
-
-            this.setState({ 
-                progress: false,
-                message: res.data.error || res.data.message,
-                error: res.data.error ? true: false })
-
-            if (res.data.id) {
-                setTimeout(() => {
-                    this.setState({ id: res.data.id })
-                }, 1000)
-            }
-
-            
-
+            axios.post('/api/novel/create', { name: this.state.name })
+                .then(res => {
+                    setTimeout(() => this.setState({ id: res.data.id, message: res.data.message }), 1000)
+                }).catch((err) => {
+                    this.setState({ message: err.response.data.message, error: true, progress: false })
+                })
         };
         subm();
     }

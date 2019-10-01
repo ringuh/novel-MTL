@@ -8,6 +8,7 @@ import ChapterEditor from './editor'
 import RedirectMe from '../util/RedirectMe'
 import ProgressBar from '../util/ProgressBar';
 import InfoIcon from '@material-ui/icons/Info';
+import axios from 'axios';
 const styles = theme => ({
     root: {
 
@@ -60,17 +61,18 @@ class Chapter extends Component {
     }
 
     fetchNovel = (alias = this.state.id) => {
-        return fetch(`/api/novel/${alias}`)
-            .then(response => response.json())
+        return axios.get(`/api/novel/${alias}`)
+            .then(response => response.data)
             .then(data => { console.log("novelinfo", data); return data })
             .then(data => this.setState({ ...this.state, ...data }))
             .then(() => document.title = `${this.state.name}`)
             .then(() => this.fetchChapters())
+
     }
 
     fetchChapters = () => {
-        return fetch(`/api/novel/${this.state.id}/chapter?content_length=paragraphs`)
-            .then(response => response.json())
+        return axios.get(`/api/novel/${this.state.id}/chapter?content_length=paragraphs`)
+            .then(response => response.data)
             //.then(data => { console.log(data); return data })
             .then(data => this.setState({ chapters: data }))
             .then(() => {

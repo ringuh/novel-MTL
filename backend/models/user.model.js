@@ -8,7 +8,8 @@ module.exports = function (seq, type) {
     },
     name: {
       type: type.STRING,
-      unique: true
+      unique: true,
+      allowNull: false,
     },
     googleId: {
       type: type.STRING,
@@ -22,6 +23,11 @@ module.exports = function (seq, type) {
     role: { type: type.STRING },
     last_login: { type: type.DATE },
   }, { timestamps: true });
+
+
+
+
+
 
   Model.associate = function (models) {
     Model.hasMany(models.Novel, {
@@ -39,6 +45,8 @@ module.exports = function (seq, type) {
       foreignKey: 'user_id',
     })
   };
+
+  
 
   return Model
 }
