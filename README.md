@@ -1,2 +1,4 @@
 # novel-MTL
-semiautomated machine translations for china novels
+
+more info at https://mtl.pienirinkula.com 
+
