@@ -35,15 +35,6 @@ class NovelIndex extends Component {
             .then(() => document.title = `${this.state.name}`)
             .then(() => this.fetchChapters())
 
-        return fetch(`/api/novel/${alias}`)
-            .then(response => response.json())
-            .then(data => { console.log("novelinfo", data); return data })
-            .then(data => this.setState({ ...this.state, ...data }))
-            .then(() => document.title = `${this.state.name}`)
-            .then(() => this.fetchChapters())
-
-
-
     }
 
     fetchChapters = () => {
@@ -52,10 +43,7 @@ class NovelIndex extends Component {
             //.then(data => { console.log(data); return data })
             .then(data => this.setState({ chapters: data }))
 
-        return fetch(`/api/novel/${this.state.id}/chapter?content_length=paragraphs`)
-            .then(response => response.json())
-            //.then(data => { console.log(data); return data })
-            .then(data => this.setState({ chapters: data }))
+        
     }
 
 
@@ -73,7 +61,6 @@ class NovelIndex extends Component {
 
         if (!state.name) return <ProgressBar />
 
-
         return (
             <div className={classes.root}>
                 <NovelEditor novel={this.state}
@@ -81,17 +68,7 @@ class NovelIndex extends Component {
 
                 <NovelChapters novel={this}
                     fetchChapters={this.fetchChapters} />
-
-
-
-
-
-
-
-
             </div>
-
-
         );
     }
 }

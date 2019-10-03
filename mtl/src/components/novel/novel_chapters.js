@@ -73,7 +73,6 @@ class NovelChapters extends Component {
 
     writeConsole(line) {
         this.setState({ wsFeed: [line.toString(), ...this.state.wsFeed] })
-
     }
 
     initWS() {
@@ -131,45 +130,50 @@ class NovelChapters extends Component {
 
         return (
             <Container className={classes.root}>
-                <Box m={2}>
-                    <Button xs={4}
-                        disabled={this.state.progress}
-                        color="primary"
-                        size="medium"
-                        onClick={() => this.handleSubmit(-1)}>
-                        <CloudDownloadIcon color="secondary" />
-                        <Box ml={1}>
-                            {(novel.state.chapters.length === 0) ?
-                                ("Initialize from RAW directory") :
-                                ("Scrape from the latest chapter")
+                {novel.state.editor &&
+                    <Container>
+                        <Box m={2}>
 
-                            }</Box>
+                            <Button xs={4}
+                                disabled={this.state.progress}
+                                color="primary"
+                                size="medium"
+                                onClick={() => this.handleSubmit(-1)}>
+                                <CloudDownloadIcon color="secondary" />
+                                <Box ml={1}>
+                                    {(novel.state.chapters.length === 0) ?
+                                        ("Initialize from RAW directory") :
+                                        ("Scrape from the latest chapter")
 
-                    </Button>
-                </Box>
+                                    }</Box>
 
-                <Box m={2}>
+                            </Button>
 
-                    <TextField multiline fullWidth
-                        ref={this.consoleBox}
-                        label="Console"
-                        variant="outlined"
-                        rows={4}
-                        value={this.state.wsFeed.join('\n')} />
-                </Box>
+                        </Box>
 
-                <Box m={2}>
-                    <TextField multiline fullWidth
-                        onClick={() => {
-                            navigator.clipboard.writeText(this.state.translateString);
-                            alert(`Copied to clipboard: ${this.state.translateString}`)
-                        }}
-                        label="Translation string"
-                        variant="outlined"
-                        rows={2}
-                        value={this.state.translateString} />
-                </Box>
+                        <Box m={2}>
 
+                            <TextField multiline fullWidth
+                                ref={this.consoleBox}
+                                label="Console"
+                                variant="outlined"
+                                rows={4}
+                                value={this.state.wsFeed.join('\n')} />
+                        </Box>
+
+                        <Box m={2}>
+                            <TextField multiline fullWidth
+                                onClick={() => {
+                                    navigator.clipboard.writeText(this.state.translateString);
+                                    alert(`Copied to clipboard: ${this.state.translateString}`)
+                                }}
+                                label="Translation string"
+                                variant="outlined"
+                                rows={2}
+                                value={this.state.translateString} />
+                        </Box>
+                    </Container>
+                }
                 {novel.state.chapters && novel.state.chapters.length > 0 &&
                     <Box>
                         <List>

@@ -1,13 +1,11 @@
-const Scraper = require('../module/scraper')
 const router = require('express').Router()
 const chalk = require('chalk'); // colors
-const slugify = require('slugify')
 const jwt = require('jsonwebtoken')
 router.use(require('express').json())
 
 
 
-const { cyan, yellow, red, blue } = chalk.bold;
+const { cyan, red } = chalk.bold;
 const { User, Term, Novel, Chapter, Content, Sequelize } = require('../models')
 
 const capitalize = (s) => {
@@ -16,7 +14,7 @@ const capitalize = (s) => {
 }
 
 router.get("/", Authenticated, (req, res) => {
-	console.log("getting novels")
+	
 	//console.log(req.method, req.url, req.body, req.params, req.query)
 	Novel.findAll({
 		attributes: ["id", "name", "image_url", "description", 'alias'],
@@ -30,7 +28,7 @@ router.get("/", Authenticated, (req, res) => {
 })
 
 router.route(["/auth"])
-	.post(function (req, res, next) {
+	.post(function (req, res) {
 		//console.log(req.method, req.url, req.body, req.params, req.query)
 
 		User.findOrCreate({
@@ -41,43 +39,50 @@ router.route(["/auth"])
 				icon: req.body.profileObj.imageUrl
 			}
 		}).then(([user, created]) => {			
-			let token = jwt.sign(user.dataValues, global.config.jwt, { algorithm: 'RS256', expiresIn: 1000*120 })
+			let token = jwt.sign({ id: user.id, icon:user.icon, name: user.name }, global.config.jwt, { algorithm: 'RS256', expiresIn: "30d" })
 			res.json({ message: "Logged in", jwt: token })
 		}).catch(err => {
 			console.log(err); 
 			res.status(500).json({ message: err.message })
 		})
 	});
-function Authenticated(req,res,next){
+
+async function Authenticated(req,res,next){
 	if(!req.user) return res.status(520).json({ message: "Login required"})
 	next()
 }
-function Author(req,res,next){
-	if(!req.user) return res.status(500).json({ message: "Login required"})
-	next()
-}
+const NovelEditor = [Authenticated, async (req,res,next) =>{
+	const novel = await Novel.findByPk(req.params.novel_id)
+	
+	if(req.user.role === "admin" || novel.user_id === req.user.id){
+		req.novel = novel
+		return next()
+	}
+		
+	
+	return res.status(521).json({ message: "Access denied"})	
+}];
 
-router.route(["/create", "/:id"])
+router.route(["/create", "/:novel_id"])
 	.get(Authenticated, function (req, res) {
 		
-		let query = { alias: req.params.id }
-		if (parseInt(req.params.id)) query = { id: parseInt(req.params.id) }
-
+		let query = { alias: req.params.novel_id }
+		if (parseInt(req.params.novel_id)) query = { id: parseInt(req.params.novel_id) }
 
 		Novel.findOne({ where: query })
-			.then(novel => res.json(novel))
+			.then(novel => res.json(novel.toJson(req.user)))
 			.catch(err => {
 				console.log(red(err.message))
 				res.status(500).json({ message: err.message })
 			})
-	}).post(Authenticated, async function (req, res, next) {
+	}).post(NovelEditor, async function (req, res) {
 		
-		if (req.params.id && req.body.id !== parseInt(req.params.id))
-			return res.status(500).json({ message: "/:id the path doesn't match '_id' of post" })
+		if (req.params.novel_id && req.body.id !== parseInt(req.params.novel_id))
+			return res.status(500).json({ message: "/:novel_id the path doesn't match 'id' of post" })
 		
 		let novel = null
-		if (req.params.id)
-			novel = await Novel.findByPk(parseInt(req.params.id))
+		if (req.params.novel_id)
+			novel = await Novel.findByPk(parseInt(req.params.novel_id))
 		else
 			novel = await Novel.create({ name: req.body.name, user_id: req.user.id }).catch(err => res.status(500).json({ message: err.message }))
 
@@ -96,11 +101,11 @@ router.route(["/create", "/:id"])
 
 
 
-router.route("/:id/chapter")
-	.get(Authenticated, function (req, res, next) {
+router.route("/:novel_id/chapter")
+	.get(Authenticated, function (req, res) {
 
 		let query = {
-			where: { novel_id: req.params.id },
+			where: { novel_id: req.params.novel_id },
 			//attributes: ["id", "novel_id", "order", "title", "url", "updatedAt", "createdAt"],
 			order: [["order", req.query.order == -1 ? "DESC" : "ASC"], ['id']],
 			include: [ // dont offer RAWless chapters for translators
@@ -138,7 +143,7 @@ router.route("/:id/chapter")
 
 
 router.route(["/:novel_id/chapter/:chapter_id"])
-	.get(Authenticated, function (req, res, next) {
+	.get(Authenticated, function (req, res) {
 		
 		let query = {
 			where: { id: parseInt(req.params.chapter_id) },
@@ -156,8 +161,8 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 			return res.status(500).json({ message: err.message })
 		})
 
-	}).post(Authenticated, async function (req, res, next) {
-		console.log(req.method, req.url, req.body, req.params, req.query)
+	}).post(NovelEditor, async function (req, res) {
+		//console.log(req.method, req.url, req.body, req.params, req.query)
 
 		const chapter = await Chapter.findByPk(parseInt(req.params.chapter_id))
 		if (!chapter) return res.status(500).json({ message: `Chapter id ${req.params.chapter_id} not found` })
@@ -202,7 +207,7 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 	});
 
 router.route(["/:novel_id/terms"])
-	.get(Authenticated, function (req, res, next) {
+	.get(Authenticated, function (req, res) {
 		//console.log(req.method, req.url, req.body, req.params, req.query)
 		let query = {
 			where: { novel_id: parseInt(req.params.novel_id) },
@@ -215,10 +220,10 @@ router.route(["/:novel_id/terms"])
 			console.log(red(err))
 			return res.status(500).json({ message: err.message })
 		})
-	}).post(Authenticated, function (req, res, next) {
+	}).post(Authenticated, function (req, res) {
 		//console.log(req.method, req.url, req.body, req.params, req.query)
 
-		if (req.body.prompt === 'delete')
+		if (req.body.delete)
 			Term.destroy({
 				where: {
 					id: req.body.id

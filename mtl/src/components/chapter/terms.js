@@ -85,20 +85,20 @@ class TermDrawer extends Component {
         }
         // dont try translating empty content
         let options = ['proofread', 'sogou', 'baidu'].filter(t => contents[t].length > 0)
-        
+
         // auto translates
         terms.filter(t => !t.prompt).forEach(term => {
-            for(var j in options){
+            for (var j in options) {
                 var key = options[j]
                 // only translate the terms that are ment to translate proofread content
-                if(key === 'proofread' && !term.proofread) continue
+                if (key === 'proofread' && !term.proofread) continue
                 let from = term.from.split("|").map(f => f.trim()).join("|")
                 const match = new RegExp(`\\b${from}\\b`, "gi")
                 // before splitting check if there is any match
-                
-                if(!contents[key].match(match)) continue
+
+                if (!contents[key].match(match)) continue
                 let arr = contents[key].split(/<strong (.*?)<\/strong>/)
-                for(var i in arr){
+                for (var i in arr) {
                     if (arr[i].startsWith("title=")) arr[i] = `<strong ${arr[i]}</strong>`
                     else arr[i] = arr[i].replace(match, `<strong title='${term.from}'> ${term.to} </strong>`)
                 }
@@ -108,7 +108,7 @@ class TermDrawer extends Component {
             }
         });
 
-        editor.setState({ 
+        editor.setState({
             proofread: { ...editor.state.proofread, content: contents.proofread },
             sogou: { ...editor.state.sogou, content: contents.sogou },
             baidu: { ...editor.state.baidu, content: contents.baidu }
@@ -140,22 +140,17 @@ class TermDrawer extends Component {
     }
 
 
-    saveTerm = (term, del) => {
-        let json = { ...term }
-        if (del) json.prompt = del
+    editTerm = (term, deleteTerm = false) => {
+        let json = { ...term, delete: deleteTerm }
 
-        term.post = true
         axios.post(`/api/novel/${this.state.novel_id}/terms`, json)
             .then(res => {
                 if (res.data.id) {
                     this.selectTerm()
                     this.componentDidMount()
                 }
-
             })
     }
-
-
 
     componentDidMount() {
         axios.get(`/api/novel/${this.state.novel_id}/terms`)
@@ -290,14 +285,14 @@ class TermDrawer extends Component {
                             {state.term.id &&
                                 <div className={classes.right}>
                                     <Button
-                                        onClick={() => this.saveTerm(state.term, 'delete')} color="secondary">
+                                        onClick={() => this.editTerm(state.term, true)} color="secondary">
                                         Delete
                                 </Button></div>}
                             <Button onClick={() => this.selectTerm()} color="primary">
                                 Cancel
                             </Button>
                             {JSON.stringify(state.term) !== state.term.string &&
-                                <Button onClick={() => this.saveTerm(state.term)} color="secondary">
+                                <Button onClick={() => this.editTerm(state.term)} color="secondary">
                                     Save
                             </Button>
                             }

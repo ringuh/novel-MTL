@@ -114,21 +114,18 @@ class ChapterSettings extends Component {
                             >Show Raw</ToggleButton>
                         </ToggleButtonGroup>
                     </Grid>
+                    {parent.state.editor &&
+                        <Grid container item xs={12} className={classes.row}>
+                            <Button fullWidth
+                                variant="outlined"
+                                onClick={() => parent.props.parent.setState({ edit: { translator: 'chapter' } })}
+                                value={true}
+                            >
+                                <EditIcon fontSize="small" />
+                                Edit chapter </Button>
 
-                    <Grid container item xs={12} className={classes.row}>
-                        <Button fullWidth
-                            variant="outlined"
-                            onClick={() => parent.props.parent.setState({ edit: { translator: 'chapter' } })}
-                            value={true}
-                        >
-                            <EditIcon fontSize="small" /> 
-                        Edit chapter </Button>
-
-                    </Grid>
-
-
-
-                    <Grid container item xs={5}>Autosave as proofread</Grid>
+                        </Grid>
+                    }
 
                 </Grid>
             </SwipeableDrawer>

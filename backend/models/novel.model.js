@@ -12,11 +12,11 @@ module.exports = function (seq, type) {
 			allowNull: false,
 			trim: true,
 			validate: {
-				len: [1,100]
+				len: [1, 100]
 			},
 			set(val) {
 				this.alias = val
-				this.setDataValue('name', val)				
+				this.setDataValue('name', val)
 			}
 			//slugify: true
 		},
@@ -41,7 +41,7 @@ module.exports = function (seq, type) {
 		description: {
 			type: type.TEXT,
 			validate: {
-				len: [0,500]
+				len: [0, 500]
 			},
 			cut: 500,
 			trim: true
@@ -59,19 +59,29 @@ module.exports = function (seq, type) {
 			timestamps: true,
 		});
 
+	Model.prototype.toJson = function (user) {
+		let ret = this.dataValues
+		console.log(user.role)
+		if (user.role === 'admin' || ret.user_id === user.id)
+			ret.editor = true
+
+		return ret
+	}
+
+
 	Model.associate = models => {
 		Model.belongsTo(models.User, {
 			//onDelete: "CASCADE",
 			foreignKey: 'user_id',
 		}),
-		
-		Model.hasMany(models.Chapter, {
-			as: 'chapters',
-            foreignKey: 'novel_id',
-            allowNull: false
-        })
+
+			Model.hasMany(models.Chapter, {
+				as: 'chapters',
+				foreignKey: 'novel_id',
+				allowNull: false
+			})
 	};
-	
+
 	return Model
 }
 

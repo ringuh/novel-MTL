@@ -84,6 +84,7 @@ class MainPage extends React.Component {
                     </Typography>
 
                     <iframe style={{marginTop: "4em"}} width="100%" height="400" src="https://www.youtube.com/embed/WQSEIgDn5x4"
+                        title="Youtube guide"
                         frameBorder="0"
                         allow="fullscreen; accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture">
                     </iframe>

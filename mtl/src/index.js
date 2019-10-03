@@ -14,12 +14,12 @@ const parseJwt = function (token) {
     if (jwt.exp > (Date.now() / 1000))
         return jwt;
 
-    localStorage.deleteItem('jwt')
+    localStorage.removeItem('jwt')
     return null
 }
 axios.interceptors.request.use(
     config => {
-        console.log("interceptor", config)
+        //console.log("interceptor", config)
         const token = localStorage.getItem('jwt')
         if (token) config.headers.Authorization = `Bearer ${token}`
         return config

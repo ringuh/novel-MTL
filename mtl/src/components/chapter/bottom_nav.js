@@ -35,6 +35,7 @@ class ChapterBottomNav extends Component {
         super(props);
         console.log("chapter bottom nav", props)
         this.state = {
+            editor: props.parent.state.editor,
             chapter_id: props.chapter_id,
             novel_id: props.novel_id,
             term: false,

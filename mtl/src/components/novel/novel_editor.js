@@ -152,12 +152,14 @@ class NovelEditor extends Component {
                                     })()}
                                 </Grid>
                             </Grid>
+                            {this.state.editor &&
                             <Grid item xs={1}>
                                 <Button onClick={() => this.setState({ edit: !this.state.edit })}
                                     color="secondary">
                                     <EditIcon color="primary" fontSize="large" />
                                 </Button>
                             </Grid>
+                            }
                         </Grid>
                     </Box>
                     <Box style={{ float: "left" }}>

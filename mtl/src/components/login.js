@@ -20,6 +20,7 @@ class Login extends React.Component {
             this.setState({ progress: true })
             let res = await axios.post('/api/novel/auth', google);
             if(res.data.jwt) localStorage.setItem("jwt", res.data.jwt)
+            
             window.location.reload();
             //this.setState({redirect: !this.state.redirect})
         };

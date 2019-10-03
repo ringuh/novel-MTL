@@ -15,7 +15,7 @@ app.use(function (req, res, next) {
     console.log(req.method, req.url, token && token.startsWith('Bearer ') )
     if (token && token.startsWith('Bearer ')) {
         token = token.slice(7, token.length)
-        console.log(token ? "token was fine" : "no token")
+        
         jwt.verify(token, global.config.jwt_pub, { algorithms: ['RS256'] }, (err, decoded) => {
             if (err) {
                 console.log(err)
@@ -24,7 +24,6 @@ app.use(function (req, res, next) {
                     message: 'Authorization is not valid'
                 });
             } else {
-                console.log(decoded)
                 const { User } = require('./models')
                 User.findByPk(decoded.id).then(user => {
                     req.user = user
@@ -34,9 +33,6 @@ app.use(function (req, res, next) {
         })
     }
     else return next()
-    
-
-
 });
 
 app.use(cors(/* { allowedHeaders: ['Authorization'] } */));

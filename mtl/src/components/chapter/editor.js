@@ -57,6 +57,7 @@ class ChapterEditor extends Component {
         this.storage = JSON.parse(localStorage.getItem("chapterSettings") || JSON.stringify(defaultSettings))
         console.log(this.storage)
         this.state = {
+            editor: props.editor,
             chapters: props.chapters,
             swipeMode: this.storage.swipeMode,
             priority: this.storage.priority,
@@ -265,7 +266,7 @@ class ChapterEditor extends Component {
             .filter(key => !state[key].hide)
             .filter(key => ['raw', 'proofread'].includes(key) || state[`${key}_id`])
 
-        if (state.edit.translator || state.paragraphs.length === 0) {
+        if (state.editor && (state.edit.translator || state.paragraphs.length === 0)) {
             if (["raw", "proofread"].includes(state.edit.translator))
                 return (<Box component="div">
                     <TextField
@@ -424,7 +425,7 @@ class ChapterEditor extends Component {
                 </Grid>
 
                 <this.ChapterNav />
-                <div>{state.swipeMode ? 'swipe' : 'noswipe'}</div>
+                
                 <ChapterSnackbar parent={this} count={state.proofread.count} max={state.max_paragraphs} />
 
 
