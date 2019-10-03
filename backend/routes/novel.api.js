@@ -14,7 +14,7 @@ const capitalize = (s) => {
 }
 
 router.get("/", Authenticated, (req, res) => {
-	
+
 	//console.log(req.method, req.url, req.body, req.params, req.query)
 	Novel.findAll({
 		attributes: ["id", "name", "image_url", "description", 'alias'],
@@ -38,34 +38,34 @@ router.route(["/auth"])
 				name: `${req.body.profileObj.givenName}-${Math.random().toString(36).substring(2, 15)}`,
 				icon: req.body.profileObj.imageUrl
 			}
-		}).then(([user, created]) => {			
-			let token = jwt.sign({ id: user.id, icon:user.icon, name: user.name }, global.config.jwt, { algorithm: 'RS256', expiresIn: "30d" })
+		}).then(([user, created]) => {
+			let token = jwt.sign({ id: user.id, icon: user.icon, name: user.name }, global.config.jwt, { algorithm: 'RS256', expiresIn: "30d" })
 			res.json({ message: "Logged in", jwt: token })
 		}).catch(err => {
-			console.log(err); 
+			console.log(err);
 			res.status(500).json({ message: err.message })
 		})
 	});
 
-async function Authenticated(req,res,next){
-	if(!req.user) return res.status(520).json({ message: "Login required"})
+async function Authenticated(req, res, next) {
+	if (!req.user) return res.status(520).json({ message: "Login required" })
 	next()
 }
-const NovelEditor = [Authenticated, async (req,res,next) =>{
+const NovelEditor = [Authenticated, async (req, res, next) => {
 	const novel = await Novel.findByPk(req.params.novel_id)
-	
-	if(req.user.role === "admin" || novel.user_id === req.user.id){
+
+	if (req.user.role === "admin" || novel.user_id === req.user.id) {
 		req.novel = novel
 		return next()
 	}
-		
-	
-	return res.status(521).json({ message: "Access denied"})	
+
+
+	return res.status(521).json({ message: "Access denied" })
 }];
 
 router.route(["/create", "/:novel_id"])
 	.get(Authenticated, function (req, res) {
-		
+
 		let query = { alias: req.params.novel_id }
 		if (parseInt(req.params.novel_id)) query = { id: parseInt(req.params.novel_id) }
 
@@ -75,14 +75,17 @@ router.route(["/create", "/:novel_id"])
 				console.log(red(err.message))
 				res.status(500).json({ message: err.message })
 			})
-	}).post(NovelEditor, async function (req, res) {
-		
+	}).post(Authenticated, async function (req, res) {
+
 		if (req.params.novel_id && req.body.id !== parseInt(req.params.novel_id))
 			return res.status(500).json({ message: "/:novel_id the path doesn't match 'id' of post" })
-		
+
 		let novel = null
-		if (req.params.novel_id)
+		if (req.params.novel_id) {
 			novel = await Novel.findByPk(parseInt(req.params.novel_id))
+			if (req.user.role !== "admin" && novel.user_id !== req.user.id)
+				return res.status(521).json({ message: "Access denied" })
+		}
 		else
 			novel = await Novel.create({ name: req.body.name, user_id: req.user.id }).catch(err => res.status(500).json({ message: err.message }))
 
@@ -144,7 +147,7 @@ router.route("/:novel_id/chapter")
 
 router.route(["/:novel_id/chapter/:chapter_id"])
 	.get(Authenticated, function (req, res) {
-		
+
 		let query = {
 			where: { id: parseInt(req.params.chapter_id) },
 			include: ['raw', 'baidu', 'proofread', 'sogou']
