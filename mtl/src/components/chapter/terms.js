@@ -92,19 +92,18 @@ class TermDrawer extends Component {
                 var key = options[j]
                 // only translate the terms that are ment to translate proofread content
                 if (key === 'proofread' && !term.proofread) continue
-                let from = term.from.split("|").map(f => f.trim()).join("|")
-                const match = new RegExp(`\\b${from}\\b`, "gi")
-                // before splitting check if there is any match
-
-                if (!contents[key].match(match)) continue
-                let arr = contents[key].split(/<strong (.*?)<\/strong>/)
-                for (var i in arr) {
-                    if (arr[i].startsWith("title=")) arr[i] = `<strong ${arr[i]}</strong>`
-                    else arr[i] = arr[i].replace(match, `<strong title='${term.from}'> ${term.to} </strong>`)
-                }
-
-                contents[key] = arr.join("")
-
+                term.from.split("|").map(f => f.trim()).forEach(from => {
+                    const match = new RegExp(`\\b${from}\\b`, "gi")
+                    // before splitting check if there is any match
+                    if (contents[key].match(match)) {
+                        let arr = contents[key].split(/<strong (.*?)<\/strong>/)
+                        for (var i in arr) {
+                            if (arr[i].startsWith("title=")) arr[i] = `<strong ${arr[i]}</strong>`
+                            else arr[i] = arr[i].replace(match, `<strong title='${term.from}'>${term.to}</strong>`)
+                        }
+                        contents[key] = arr.join("")
+                    }
+                })
             }
         });
 
@@ -123,7 +122,6 @@ class TermDrawer extends Component {
 
 
     selectTerm = (term) => {
-        console.log("select term")
         this.props.parent.toggleState('term', false)
         if (term) {
             if (term === 'new')

@@ -13,8 +13,8 @@ module.exports = (seq, type) => {
             type: type.BOOLEAN,
             defaultValue: false,
             allowNull: false,
-            set(val){
-                if(this.getDataValue('to').includes('|')) val = true
+            set(val) {
+                if (this.getDataValue('to').includes('|')) val = true
                 this.setDataValue('prompt', val)
             }
         },
@@ -31,6 +31,11 @@ module.exports = (seq, type) => {
             },
             allowNull: false,
             trim: true,
+            set(val) {
+                let arr = val.split("|").map(v => v.trim())
+                arr.sort((a, b) => b.length - a.length)
+                this.setDataValue('from', arr.join(" | "))
+            }
         },
 
         to: {
@@ -42,8 +47,8 @@ module.exports = (seq, type) => {
             trim: true,
             singlespace: true,
             set(val) {
-                if(val.includes("|"))
-                    setTimeout(() =>this.setDataValue('prompt', true), 2000)
+                if (val.includes("|"))
+                    setTimeout(() => this.setDataValue('prompt', true), 2000)
                 this.setDataValue("to", val)
             }
         }
