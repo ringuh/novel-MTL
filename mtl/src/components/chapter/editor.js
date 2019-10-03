@@ -128,7 +128,7 @@ class ChapterEditor extends Component {
 
     editParagraphs(json) {
         let max_paragraphs = 0
-        console.log("pps", this.state.paragraphs)
+        
         /*  check the content of all 4 possible translations and split them by paragraph 
             calculate the maximum number of paragraphs as we wanna show all nth-paragraphs at same place 
         */
