@@ -94,7 +94,8 @@ class TermDrawer extends Component {
                 let b = a.replace(/\s/g, '')
                 if (a === b) return a
                 return [a, b]
-            }).flat().forEach(from => {
+                // REDUCE because .flat() didnt work on all mobile browsers
+            }).reduce((acc, val) => acc.concat(val), []).forEach(from => {
                 for (var j in options) {
                     var key = options[j]
                     // only translate the terms that are ment to translate proofread content
@@ -105,7 +106,7 @@ class TermDrawer extends Component {
                         let arr = contents[key].split(/<strong (.*?)<\/strong>/)
                         for (var i in arr) {
                             if (arr[i].startsWith("title=")) arr[i] = `<strong ${arr[i]}</strong>`
-                            else arr[i] = arr[i].replace(match, `<strong title='${term.from}'>${term.to}</strong>`)
+                            else arr[i] = arr[i].replace(match, `<strong title='${from}'>${term.to}</strong>`)
                         }
                         contents[key] = arr.join("")
                     }
@@ -267,7 +268,7 @@ class TermDrawer extends Component {
                                         term: { ...state.term, from: `${state.term.from} | ` }
                                     })}> <AddSimpleIcon /> </Button>
                             }
-                            
+
                             <TextField fullWidth
                                 onChange={(e) => this.setState({ term: { ...this.state.term, from: e.target.value } })}
                                 autoFocus
