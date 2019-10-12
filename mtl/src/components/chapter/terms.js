@@ -88,13 +88,20 @@ class TermDrawer extends Component {
 
         // auto translates
         terms.filter(t => !t.prompt).forEach(term => {
-            for (var j in options) {
-                var key = options[j]
-                // only translate the terms that are ment to translate proofread content
-                if (key === 'proofread' && !term.proofread) continue
-                term.from.split("|").map(f => f.trim()).forEach(from => {
+            term.from.split("|").map(f => {
+                // names are often mis translated into one pile "Yu Mu chen" -> "Yumuchen"
+                // so automatically offer the one pile version
+                let a = f.trim()
+                let b = a.replace(/\s/g, '')
+                if (a === b) return a
+                return [a, b]
+            }).flat().forEach(from => {
+                for (var j in options) {
+                    var key = options[j]
+                    // only translate the terms that are ment to translate proofread content
+                    if (key === 'proofread' && !term.proofread) continue
                     const match = new RegExp(`\\b${from}\\b`, "gi")
-                    // before splitting check if there is any match
+                    // before splitting check if there is any match before doing any splitting
                     if (contents[key].match(match)) {
                         let arr = contents[key].split(/<strong (.*?)<\/strong>/)
                         for (var i in arr) {
@@ -103,8 +110,12 @@ class TermDrawer extends Component {
                         }
                         contents[key] = arr.join("")
                     }
-                })
-            }
+                }
+            })
+
+
+
+
         });
 
         editor.setState({
@@ -203,8 +214,8 @@ class TermDrawer extends Component {
                                     dense={true}
                                     divider={true}>
                                     <ListItemText
-                                        primary={val.from.split('|').map(from => <span key={from}>{from}<br /></span>)}
-                                        secondary={val.to.split('|').map(to => <span key={to}>{to}<br /></span>)} />
+                                        /* primary={val.from.split('|').map(from => <span key={from}>{from}<br /></span>)} */
+                                        primary={val.to.split('|').map(to => <span key={to}>{to}<br /></span>)} />
                                     <ListItemSecondaryAction>
                                         <ListItemText
                                             primary={val.prompt ? 'Prompt' : 'Auto'} />
@@ -236,6 +247,7 @@ class TermDrawer extends Component {
                 {state.edit &&
                     <Dialog open={state.edit}
                         className={classes.dialog}
+                        scroll={"paper"}
                         onClose={() => this.selectTerm()}>
                         <DialogTitle onClick={() => this.setState({ info: !state.info })}>
                             Add a new term

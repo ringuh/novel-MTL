@@ -18,6 +18,7 @@
     const translator = "sogou"
     let translateStr = { key: "translateStr", value: sessionStorage.getItem('translateStr') || '' }
     let jwt = sessionStorage.getItem('jwt')
+    const delay = 1500
 
 
     var UI = '<div id="rimlu_mtl">' +
@@ -48,7 +49,7 @@
 
         jwt = sessionStorage.getItem("jwt")
         if(!jwt) return alert("JWT token missing. repaste the string")
-        
+
         json = JSON.parse(json)
         server = json.url
         delete json.url
@@ -92,8 +93,11 @@
 
         var translatedText = []
 
-        var HandleParts = (parts, j = 0) => {
+        var HandleParts = async (parts, j = 0) => {
             //console.log("handling", j, "of", parts.length)
+            let slowDown = new Promise((resolve, reject) => setTimeout(() => resolve(true), delay))
+            await slowDown;
+
             if (j == parts.length) {
 
                 var title = translatedText[0].replace(/呀，出错误了！再试下吧。/g, "")
@@ -125,7 +129,7 @@
             }
 
             const callback = function (mutationsList, observer) {
-               
+
                 const cont = $("#translation-to").text()
                 // there wait for the observer to really update
                 if (translatedText.includes(cont)) return true
@@ -166,7 +170,7 @@
     };
 
     var SplitTxt = (raw) => {
-       
+
         var limit = 1500
         var arr = raw.content.split("\n")
         //arr.unshift(`+-+- ${raw.title} -+-+`)

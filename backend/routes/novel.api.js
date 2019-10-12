@@ -214,6 +214,7 @@ router.route(["/:novel_id/terms"])
 		//console.log(req.method, req.url, req.body, req.params, req.query)
 		let query = {
 			where: { novel_id: parseInt(req.params.novel_id) },
+			order: [["id", "ASC"]]
 		}
 
 
