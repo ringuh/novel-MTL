@@ -9,7 +9,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import TextField from '@material-ui/core/TextField';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
-
+import AddSimpleIcon from '@material-ui/icons/AddOutlined';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import Drawer from '@material-ui/core/Drawer';
 import Divider from '@material-ui/core/Divider';
@@ -18,7 +18,6 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
-import Switch from '@material-ui/core/Switch';
 import ListSubheader from '@material-ui/core/ListSubheader';
 
 
@@ -261,6 +260,14 @@ class TermDrawer extends Component {
                                     Terms do not effect saved <strong>raw</strong> or <strong>proofread</strong> text
                                 </DialogContentText>
                             }
+                            {state.term.from.length > 0 &&
+                                <Button color="primary"
+                                    fontSize="small"
+                                    onClick={(e) => this.setState({
+                                        term: { ...state.term, from: `${state.term.from} | ` }
+                                    })}> <AddSimpleIcon /> </Button>
+                            }
+                            
                             <TextField fullWidth
                                 onChange={(e) => this.setState({ term: { ...this.state.term, from: e.target.value } })}
                                 autoFocus
@@ -272,7 +279,7 @@ class TermDrawer extends Component {
                                 value={state.term.from}
 
                             />
-
+                            
                             <Divider />
                             <TextField
                                 onChange={(e) => this.setState({ term: { ...state.term, to: e.target.value } })}
