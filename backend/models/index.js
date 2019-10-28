@@ -14,7 +14,6 @@ const sequelize = new Sequelize(
     global.config.db.options)
 sequelizeTransforms(sequelize, {
     slugify: (val, def) => {
-        console.log("slugifying")
         return def.slugify ? slugify(val, { lower: true }): val
     },
     cut: (val, def) => {

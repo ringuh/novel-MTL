@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import { withStyles } from '@material-ui/core/styles';
-import { Button, Box } from '@material-ui/core';
+import { ButtonGroup, Button, Box } from '@material-ui/core';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogTitle from '@material-ui/core/DialogTitle';
@@ -45,6 +45,9 @@ const styles = theme => ({
     right: {
         flex: 1,
         justifyContent: "start"
+    },
+    selected: {
+        backgroundColor: 'red'
     }
 
 });
@@ -68,6 +71,7 @@ class TermDrawer extends Component {
             novel_id: props.parent.props.parent.state.novel_id,
             edit: false,
             term: { ...defaultTerm },
+            list: 'translation' //  isIn: [["raw", "proofread", "translation"]]
         };
 
     }
@@ -86,7 +90,7 @@ class TermDrawer extends Component {
         let options = ['proofread', 'sogou', 'baidu'].filter(t => contents[t].length > 0)
 
         // auto translates
-        terms.filter(t => !t.prompt).forEach(term => {
+        terms.filter(t => !t.prompt && t.type !== 'raw').forEach(term => {
             term.from.split("|").map(f => {
                 // names are often mis translated into one pile "Yu Mu chen" -> "Yumuchen"
                 // so automatically offer the one pile version
@@ -99,7 +103,7 @@ class TermDrawer extends Component {
                 for (var j in options) {
                     var key = options[j]
                     // only translate the terms that are ment to translate proofread content
-                    if (key === 'proofread' && !term.proofread) continue
+                    if (key === "proofread" && term.type !== 'proofread') continue
                     const match = new RegExp(`\\b${from}\\b`, "gi")
                     // before splitting check if there is any match before doing any splitting
                     if (contents[key].match(match)) {
@@ -151,7 +155,8 @@ class TermDrawer extends Component {
 
     editTerm = (term, deleteTerm = false) => {
         let json = { ...term, delete: deleteTerm }
-
+        console.log(term)
+       
         axios.post(`/api/novel/${this.state.novel_id}/terms`, json)
             .then(res => {
                 if (res.data.id) {
@@ -178,6 +183,8 @@ class TermDrawer extends Component {
 
         if (!state.terms) return null
 
+        const types = ['raw', 'translation']
+
         return (
             <Box className={classes.bottom}>
                 <Drawer
@@ -191,7 +198,14 @@ class TermDrawer extends Component {
                     <List className={classes.list}>
                         <ListSubheader
                             className={classes.subheader}>
-
+                            <ButtonGroup fullWidth size="small" variant="outlined">
+                                {types.map(type =>
+                                    <Button key={type}
+                                        className={state.list === type ? 'MuiButton-containedSecondary' : ''}
+                                        onClick={() => this.setState({ list: type })}
+                                    >{type.toUpperCase()}</Button>
+                                )}
+                            </ButtonGroup>
                         </ListSubheader>
                         <ListItem button
                             onClick={() => this.selectTerm('new')}
@@ -207,7 +221,7 @@ class TermDrawer extends Component {
                             </ListItemSecondaryAction>
                         </ListItem>
 
-                        {state.terms.map((val, indx) => {
+                        {state.terms.filter(t => t.type === state.list).map((val, indx) => {
                             return (
                                 <ListItem button key={indx}
                                     onClick={() => this.selectTerm(val)}
@@ -225,7 +239,7 @@ class TermDrawer extends Component {
                                 </ListItem>
                             )
                         })}
-                        {state.terms.length > 5 &&
+                        {state.terms.filter(t => t.type === state.list).length > 5 &&
                             <ListItem button
                                 onClick={() => this.selectTerm('new')}
                                 dense={true}
@@ -250,7 +264,7 @@ class TermDrawer extends Component {
                         scroll={"paper"}
                         onClose={() => this.selectTerm()}>
                         <DialogTitle onClick={() => this.setState({ info: !state.info })}>
-                            Add a new term
+                            Add a new term for {state.list}
                             <InfoIcon fontSize="small" color="secondary" />
                         </DialogTitle>
                         <DialogContent>
@@ -261,26 +275,29 @@ class TermDrawer extends Component {
                                     Terms do not effect saved <strong>raw</strong> or <strong>proofread</strong> text
                                 </DialogContentText>
                             }
-                            {state.term.from.length > 0 &&
-                                <Button color="primary"
-                                    fontSize="small"
-                                    onClick={(e) => this.setState({
-                                        term: { ...state.term, from: `${state.term.from} | ` }
-                                    })}> <AddSimpleIcon /> </Button>
-                            }
 
                             <TextField fullWidth
                                 onChange={(e) => this.setState({ term: { ...this.state.term, from: e.target.value } })}
                                 autoFocus
                                 margin="dense"
-                                id="name"
+                                id="term_from"
                                 label="Term to translate"
                                 placeholder="eg. tribulation"
                                 type="text"
                                 value={state.term.from}
 
                             />
-                            
+                            {state.term.from.length > 0 &&
+                                <Button color="primary"
+                                    fontSize="small"
+                                    onClick={(e) => {
+                                        this.setState({
+                                            term: { ...state.term, from: `${state.term.from} | ` }
+                                        });
+                                        document.getElementById("term_from").focus()
+                                    }}> <AddSimpleIcon /> </Button>
+                            }
+
                             <Divider />
                             <TextField
                                 onChange={(e) => this.setState({ term: { ...state.term, to: e.target.value } })}
@@ -310,7 +327,7 @@ class TermDrawer extends Component {
                                 Cancel
                             </Button>
                             {JSON.stringify(state.term) !== state.term.string &&
-                                <Button onClick={() => this.editTerm(state.term)} color="secondary">
+                                <Button onClick={() => this.editTerm({ ...state.term, type: state.list })} color="secondary">
                                     Save
                             </Button>
                             }
@@ -319,7 +336,8 @@ class TermDrawer extends Component {
                     </Dialog>}
 
 
-                {state.prompt &&
+                {
+                    state.prompt &&
                     <Dialog open={state.prompt}
                         className={classes.dialog}
                         onClose={() => false}>
@@ -336,10 +354,11 @@ class TermDrawer extends Component {
                                 Return
                             </Button>
                         </DialogActions>
-                    </Dialog>}
+                    </Dialog>
+                }
 
 
-            </Box>
+            </Box >
         );
     }
 }

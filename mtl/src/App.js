@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter, Switch, Route } from 'react-router-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import './App.css';
-import 'bootstrap/dist/css/bootstrap.min.css'
 import MainPage from './components/main_page'
 import Logout from './components/logout'
 import Novel from './components/novel/novel'

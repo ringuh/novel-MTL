@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
+import { red, green, cyan } from '@material-ui/core/colors'
 import TextField from '@material-ui/core/TextField'
 
 import Grid from '@material-ui/core/Grid';
@@ -17,20 +18,18 @@ const styles = theme => ({
         backgroundColor: 'red'
     },
     raw: {
-        color: "var(--red)",
+        color: red[700],
     },
     proofread: {
         padding: '1em',
-        //color: "#4caf50"
-        color: "var(--secondary)"
     },
     baidu: {
         padding: '1em',
-        color: "var(--cyan)"
+        color: cyan[700]
     },
     sogou: {
         padding: '1em',
-        color: "var(--green)"
+        color: green[700]
     },
     border: {
         border: "1px solid black"

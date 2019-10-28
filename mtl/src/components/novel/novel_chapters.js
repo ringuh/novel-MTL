@@ -43,8 +43,7 @@ class NovelChapters extends Component {
     generateTranslateString() {
         let str = {
             url: `${global.config.server.api}/novel/${this.state.id}/chapter`,
-            limit: 50,
-
+            limit: 100,
             jwt: localStorage.getItem('jwt')
         }
         this.setState({ translateString: JSON.stringify(str) })

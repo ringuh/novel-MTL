@@ -9,7 +9,7 @@
 // @require http://code.jquery.com/jquery-3.4.1.min.js
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     const target = document.querySelector('textarea')
@@ -22,7 +22,7 @@
     const translator = "baidu"
     let translateStr = { key: "translateStr", value: sessionStorage.getItem('translateStr') || '' }
     let jwt = sessionStorage.getItem('jwt')
-    
+
 
     var UI = '<div id="rimlu_mtl" style="margin-bottom: 1em">' +
         '<textarea id="mtl_console" placeholder="Console for showing progress" style="width: 100%;height: 200px;"></textarea>' +
@@ -34,7 +34,7 @@
     $(".translate-wrap").prepend(UI);
     setTimeout(() => $("#mtl_command").val(translateStr.value), 500)
 
-    const PrintConsole = (str) => $("#mtl_console").val(str + "\n"+ $("#mtl_console").val())
+    const PrintConsole = (str) => $("#mtl_console").val(str + "\n" + $("#mtl_console").val())
     $("#mtl_stop").click(() => {
         PrintConsole("Stop activated")
         tbc = false
@@ -46,20 +46,20 @@
         window.history.pushState("", "", "/#zh/en/");
         var json = $("#mtl_command").val()
         json = JSON.parse(json)
-        if(json.jwt) sessionStorage.setItem("jwt", json.jwt)
+        if (json.jwt) sessionStorage.setItem("jwt", json.jwt)
         delete json.jwt
         json = JSON.stringify(json)
         sessionStorage.setItem(translateStr.key, json)
         $("#mtl_command").val(json)
-        
+
         jwt = sessionStorage.getItem("jwt")
-        if(!jwt) return alert("JWT token missing. repaste the string")
+        if (!jwt) return alert("JWT token missing. repaste the string")
         json = JSON.parse(json)
         server = json.url
         delete json.url
         json.translator = translator
         json.includes = "raw"
-        
+
 
         var url = new URL(server)
         url.search = new URLSearchParams(json).toString();
@@ -76,13 +76,13 @@
         };
         xhttp.open("GET", url, true);
         xhttp.setRequestHeader("Content-type", "application/json");
-        xhttp.setRequestHeader("Authorization", "Bearer "+jwt);
+        xhttp.setRequestHeader("Authorization", "Bearer " + jwt);
         xhttp.send(JSON.stringify(json));
 
     });
 
     var HandleChapter = (chapters, index = 0) => {
-        if(chapters.length === index || !tbc)
+        if (chapters.length === index || !tbc)
             return PrintConsole(`Finished translating`)
         console.log("handle chapters", index, chapters[index])
         target.value = null
@@ -96,16 +96,23 @@
 
         var HandleParts = (parts, j = 0) => {
             //console.log("handling", j, "of", parts.length)
-            if (j == parts.length){
+            if (j == parts.length) {
 
                 var title = translatedText[0].trim()
                 translatedText.shift()
                 var textContent = translatedText.join("\n")
 
-                var d = JSON.stringify({ translator: translator, content: { title: title.trim(), content: textContent.trim() } })
+                var d = JSON.stringify({
+                    translator: translator,
+                    content: {
+                        title: title.trim(),
+                        content: textContent.trim(),
+                        hash: chap.raw.hash
+                    }
+                })
 
                 const xhttp = new XMLHttpRequest();
-                xhttp.onreadystatechange = function() {
+                xhttp.onreadystatechange = function () {
                     if (this.readyState == 4 && this.status == 200) {
                         console.log("translation response", JSON.parse(this.responseText))
                         PrintConsole(`Translated chapter ${chap.order} (id:${chap.id}) @ ${chap.url}`)
@@ -114,7 +121,7 @@
                 };
                 xhttp.open("POST", server + "/" + chap.id, true);
                 xhttp.setRequestHeader("Content-type", "application/json");
-                xhttp.setRequestHeader("Authorization", "Bearer "+jwt);
+                xhttp.setRequestHeader("Authorization", "Bearer " + jwt);
                 xhttp.send(d);
 
 
@@ -126,13 +133,13 @@
             const callback = function (mutationsList, observer) {
 
                 let cont = []
-                $(".target-output").each(function(){ cont.push($(this).text())})
+                $(".target-output").each(function () { cont.push($(this).text()) })
                 // removing that random chinese
                 cont.shift()
                 cont = cont.join("\n").trim()
 
                 // there wait for the observer to really update
-                if(cont.length == 0 || translatedText.includes(cont)) return true
+                if (cont.length == 0 || translatedText.includes(cont)) return true
                 clearTimeout(timer);
                 translatedText.push(cont)
                 window.history.pushState("", "", "/#zh/en/");
@@ -162,27 +169,10 @@
             //target.dispatchEvent(new Event('keyup'));
         }
 
-
-        var url = new URL(`${server}/${chap.id}`)
-
-        const xhttp2 = new XMLHttpRequest();
-        xhttp2.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                let result = JSON.parse(this.responseText)
-                console.log("chapter data", result)
-                if (result.raw && result.raw.content.length > 0) {
-                    var parts = SplitTxt(result.raw);
-                    HandleParts(parts)
-                }
-            };
+        if (chap.raw && chap.raw.content.length) {
+            var parts = SplitTxt(chap.raw);
+            HandleParts(parts)
         }
-        xhttp2.open("GET", url, true);
-        xhttp2.setRequestHeader("Content-type", "application/json");
-        xhttp2.setRequestHeader("Authorization", "Bearer "+jwt);
-        xhttp2.send();
-
-
-
 
     };
 

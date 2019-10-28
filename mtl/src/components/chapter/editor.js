@@ -19,7 +19,7 @@ import Paragraph from './paragraph'
 import ChapterSnackbar from './chapter_snackbar'
 import ForwardIcon from '@material-ui/icons/ArrowForwardIos'
 import BackIcon from '@material-ui/icons/ArrowBackIos'
-
+import LazyLoad from 'react-lazyload';
 
 
 
@@ -128,14 +128,14 @@ class ChapterEditor extends Component {
 
     editParagraphs(json) {
         let max_paragraphs = 0
-        
+
         /*  check the content of all 4 possible translations and split them by paragraph 
             calculate the maximum number of paragraphs as we wanna show all nth-paragraphs at same place 
         */
         const paragraphs = ['raw', 'baidu', 'sogou', 'proofread'].map(key => {
             if (!json[key]) {
                 json[key] = { hide: false, content: '', original: '', title: '' }
-                return { type: key, paragraphs: [], originals:[], priority: false }
+                return { type: key, paragraphs: [], originals: [], priority: false }
             }
 
 
@@ -145,7 +145,7 @@ class ChapterEditor extends Component {
             json[key].original = json[key].original || content;
             let ps = content.split('\n').filter(el => el.trim() !== '')
             let originals = json[key].original.split('\n').filter(el => el.trim() !== '')
-            
+
 
             // split content into paragraphs and remove double-spaces and empty parts
 
@@ -222,19 +222,21 @@ class ChapterEditor extends Component {
             <Select fullWidth style={{ margin: "1.5em auto", border: "1px solid black", backgroundColor: 'var(--gray)' }}
                 value={this.state.id}
                 onChange={() => this.setState({ paragraphs: null })}
-            >
-                {this.state.chapters.map(c =>
-                    <MenuItem key={c.id} component={Link}
+            >{this.state.chapters.map(c =>
+                <LazyLoad key={c.id} height={80} offset={100}>
+                    <MenuItem component={Link}
                         disabled={c.id === this.state.id}
                         autoFocus={c.id === this.state.id}
-                        to={`${c.order}`} value={c.id}>{`${c.order} - ${c.title}`}</MenuItem>
-                )}
-
-
+                        to={`${c.order}`} value={c.id}>
+                        {`${c.order} - ${c.title}`}
+                    </MenuItem>
+                </LazyLoad>
+            )}
             </Select>
 
 
-            {next &&
+            {
+                next &&
                 <Button component={Link} fullWidth
                     variant="outlined"
                     color="primary"
@@ -244,7 +246,7 @@ class ChapterEditor extends Component {
                     <ForwardIcon />
                 </Button>
             }
-        </Box>
+        </Box >
 
     }
 
@@ -425,7 +427,7 @@ class ChapterEditor extends Component {
                 </Grid>
 
                 <this.ChapterNav />
-                
+
                 <ChapterSnackbar parent={this} count={state.proofread.count} max={state.max_paragraphs} />
 
 

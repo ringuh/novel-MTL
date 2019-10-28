@@ -18,15 +18,20 @@ module.exports = (seq, type) => {
                 this.setDataValue('prompt', val)
             }
         },
-        proofread: {
-            type: type.BOOLEAN,
-            defaultValue: false,
-            allowNull: false
+        type: {
+            type: type.STRING,
+            validate: {
+                notEmpty: true,
+                isIn: [["raw", "proofread", "translation"]]
+            },
+            defaultValue: "translation",
+            allowNull: false,
+            lowercase: true
         },
         from: {
             type: type.TEXT,
             validate: {
-                len: [1, 500],
+                len: [1, 1000],
                 notEmpty: true
             },
             allowNull: false,
@@ -37,11 +42,10 @@ module.exports = (seq, type) => {
                 this.setDataValue('from', arr.join(" | "))
             }
         },
-
         to: {
             type: type.TEXT,
             validate: {
-                len: [0, 500],
+                len: [0, 1000],
             },
             allowNull: false,
             trim: true,
@@ -52,7 +56,6 @@ module.exports = (seq, type) => {
                 this.setDataValue("to", val)
             }
         }
-
     }, {
         timestamps: true,
     });

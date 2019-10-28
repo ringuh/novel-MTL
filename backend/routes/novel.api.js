@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const chalk = require('chalk'); // colors
 const jwt = require('jsonwebtoken')
+const crypto = require('crypto')
 router.use(require('express').json())
 
 
@@ -105,43 +106,107 @@ router.route(["/create", "/:novel_id"])
 
 
 router.route("/:novel_id/chapter")
-	.get(Authenticated, function (req, res) {
+	.get(Authenticated, async function (req, res) {
 
 		let query = {
 			where: { novel_id: req.params.novel_id },
 			//attributes: ["id", "novel_id", "order", "title", "url", "updatedAt", "createdAt"],
-			order: [["order", req.query.order == -1 ? "DESC" : "ASC"], ['id']],
+			order: [["order", req.query.reverse ? "DESC" : "ASC"], ['id']],
 			include: [ // dont offer RAWless chapters for translators
-				{ model: Content, as: 'raw', required: req.query.translator ? true : false },
+				{ model: Content, as: 'raw', required: false },
 				{ model: Content, as: 'baidu', required: false },
 				{ model: Content, as: 'sogou', required: false },
 				{ model: Content, as: 'proofread', required: false },
 			]
 		}
+
+		if (req.query.translator)
+			query.include = [
+				{ model: Content, as: 'raw', required: true },
+				{ model: Content, as: req.query.translator, required: false },
+			]
+
 		if (req.query.limit)
 			query.limit = parseInt(req.query.limit)
 
 		// if no chapter_id query next bunch of chapters from start
-		if (req.query.chapter_id && req.query.chapter_id != -1)
+		if (req.query.chapter_id)
 			query.where.id = { [Sequelize.Op.in]: req.query.chapter_id.split(",") }
 
-		if (req.query.order && req.query.order != -1)
-			query.where.order = { [Sequelize.Op.in]: req.query.order.split(",") };
+		if (req.query.order) {
+			let rqo = req.query.order
+			let [min, max] = rqo.split("-").map(n => parseInt(n))
+			if (max) query.where.order = { [Sequelize.Op.between]: [min, max] };
+			else query.where.order = { [Sequelize.Op.in]: req.query.order.split(",") };
+
+		}
 
 		// which children to include in JSON
-		if (req.query.includes)
+		if (!req.query.translator && req.query.includes)
 			query.include = query.include.filter(inc => req.query.includes.split(",").includes(inc.as))
 
 		// if there is translator and not FORCE only pick the chapters missing translation
-		if (req.query.translator && !req.query.force) {
+		if (req.query.translator && !req.query.force && !req.query.terms) {
 			query.where[`${req.query.translator}_id`] = { [Sequelize.Op.is]: null }
 		}
 
-		Chapter.findAll(query).then((chapters) => {
-			return res.json(chapters.map(chapter => chapter.toJson(req.query.content_length)))
-		}).catch((err) => {
+		let chapters = await Chapter.findAll(query).then(
+			chapters => chapters.map(chapter => chapter.toJson(req.query.content_length))
+		).catch((err) => {
 			return res.status(500).json({ message: err.message })
 		})
+
+		if (req.query.terms) {
+			let qr = {
+				where: { novel_id: parseInt(req.params.novel_id), type: 'raw' },
+				order: [[Sequelize.fn('length', Sequelize.col('to')), 'DESC']]
+			}
+
+			let terms = await Term.findAll(qr).map(n => n.dataValues)
+			const hash = crypto.createHmac('sha256', "not_so_secret_key")
+				.update(JSON.stringify(terms))
+				.digest('hex');
+
+			let chaps = chapters.map(chapter => {
+				// ignore chapters that have the same hash
+				// unless force cmd
+				const contentHash = chapter[req.query.translator] ? chapter[req.query.translator].hash : null
+
+				chapter.respond = req.query.force ? true : false
+				if (contentHash === hash) return chapter
+
+				let termsInChapter = []
+
+				terms.forEach(term => {
+					term.from.split("|").forEach(from => {
+						// presume that all FROM is chinese, thus impossible to replace already replaced
+						const match = new RegExp(`${from}`, "gi")
+						if (chapter.raw.content.match(match)) {
+							chapter.raw.content = chapter.raw.content.replace(match, term.to)
+							//chapter.raw.hash = hash
+							if (!termsInChapter.includes(term))
+								termsInChapter.push(term)
+						}
+					})
+				})
+
+				if (termsInChapter) {
+					const chapterHash = crypto.createHmac('sha256', "not_so_secret_key")
+						.update(JSON.stringify(termsInChapter))
+						.digest('hex');
+					
+					if(chapterHash !== contentHash){
+						chapter.respond = true
+						chapter.raw.hash = chapterHash
+					}
+				}
+
+				return chapter
+			}).filter(chapter => chapter.respond)
+
+			res.json(chaps)
+		}
+		else res.json(chapters)
 	});
 
 
@@ -195,6 +260,7 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 				if (req.body.hasOwnProperty('content')) {
 					content.content = req.body.content.content
 					content.title = req.body.content.title
+					content.hash = req.body.content.hash
 				}
 
 				if (created) chapter[`set${capitalize(req.body.translator)}`](content)
@@ -212,9 +278,13 @@ router.route(["/:novel_id/chapter/:chapter_id"])
 router.route(["/:novel_id/terms"])
 	.get(Authenticated, function (req, res) {
 		//console.log(req.method, req.url, req.body, req.params, req.query)
+
 		let query = {
 			where: { novel_id: parseInt(req.params.novel_id) },
-			order: [["id", "ASC"]]
+			//order: [["id", "ASC"]]
+			order: [
+				[Sequelize.fn('length', Sequelize.col('to')), 'DESC']
+			]
 		}
 
 
@@ -238,29 +308,28 @@ router.route(["/:novel_id/terms"])
 					return res.status(500).json({ message: err.message })
 				})
 
-		else
+		else {
+			let trm = {
+				from: req.body.from,
+				to: req.body.to,
+				prompt: req.body.prompt,
+				novel_id: req.params.novel_id,
+				type: req.body.type
+			}
 			Term.findOrCreate({
 				where: {
 					id: req.body.id || 0
-				}, defaults: {
-					from: req.body.from,
-					to: req.body.to,
-					prompt: req.body.prompt,
-					novel_id: req.params.novel_id
-				}, raw: false
+				}, defaults: trm, raw: false
 			})
 				.then(([term, created]) => {
 					if (created) return term
-
-					term.from = req.body.from
-					term.to = req.body.to
-					term.prompt = req.body.prompt
-					return term.save()
+					return term.update(trm)
 				}).then(r => res.json(r))
 				.catch((err) => {
 					console.log(red(err))
 					return res.status(500).json({ message: err.message })
 				})
+		}
 	});
 
 

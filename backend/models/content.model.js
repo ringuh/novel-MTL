@@ -39,6 +39,9 @@ module.exports = (seq, type) => {
                 min: 0,
                 max: 5,
             }
+        },
+        hash: {
+            type: type.STRING
         }
 
     }, {

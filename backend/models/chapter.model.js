@@ -63,7 +63,7 @@ module.exports = (seq, type) => {
         const conts = ['raw', 'baidu', 'sogou', 'proofread'].filter(c => ret[c])
         for (var i in conts) {
             ret.title = ret[conts[i]].title || ret.title
-
+            
             if (length_only === "paragraphs")
                 ret[conts[i]] = ret[conts[i]].content ? ret[conts[i]].content.split("\n").length : null
             else if (length_only)

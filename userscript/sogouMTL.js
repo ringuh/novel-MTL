@@ -41,14 +41,14 @@
 
         var json = $("#mtl_command").val()
         json = JSON.parse(json)
-        if(json.jwt) sessionStorage.setItem("jwt", json.jwt)
+        if (json.jwt) sessionStorage.setItem("jwt", json.jwt)
         delete json.jwt
         json = JSON.stringify(json)
         sessionStorage.setItem(translateStr.key, json)
         $("#mtl_command").val(json)
 
         jwt = sessionStorage.getItem("jwt")
-        if(!jwt) return alert("JWT token missing. repaste the string")
+        if (!jwt) return alert("JWT token missing. repaste the string")
 
         json = JSON.parse(json)
         server = json.url
@@ -73,7 +73,7 @@
         };
         xhttp.open("GET", url, true);
         xhttp.setRequestHeader("Content-type", "application/json");
-        xhttp.setRequestHeader("Authorization", "Bearer "+jwt);
+        xhttp.setRequestHeader("Authorization", "Bearer " + jwt);
         xhttp.send(JSON.stringify(json));
 
 
@@ -94,12 +94,12 @@
         var translatedText = []
 
         var HandleParts = async (parts, j = 0) => {
-            //console.log("handling", j, "of", parts.length)
-            let slowDown = new Promise((resolve, reject) => setTimeout(() => resolve(true), delay))
+            console.log("handling", j, "of", parts.length)
+            let slowDown = new Promise((resolve, reject) =>
+                setTimeout(() => resolve(console.log("slow down", delay)), delay))
             await slowDown;
 
             if (j == parts.length) {
-
                 var title = translatedText[0].replace(/呀，出错误了！再试下吧。/g, "")
                 translatedText.shift()
                 var textContent = translatedText.join("\n")
@@ -117,10 +117,16 @@
                 };
                 xhttp.open("POST", server + "/" + chap.id, true);
                 xhttp.setRequestHeader("Content-type", "application/json");
-                xhttp.setRequestHeader("Authorization", "Bearer "+jwt);
+                xhttp.setRequestHeader("Authorization", "Bearer " + jwt);
 
-                var d = JSON.stringify({ translator: translator,
-                    content: { title: title.trim(), content: textContent.trim() } })
+                var d = JSON.stringify({
+                    translator: translator,
+                    content: {
+                        title: title.trim(),
+                        content: textContent.trim(),
+                        hash: chap.raw.hash
+                    }
+                })
                 xhttp.send(d);
 
 
@@ -129,44 +135,26 @@
             }
 
             const callback = function (mutationsList, observer) {
-
                 const cont = $("#translation-to").text()
                 // there wait for the observer to really update
                 if (translatedText.includes(cont)) return true
                 translatedText.push(cont)
 
-
                 observer.disconnect();
                 HandleParts(parts, ++j)
-            };
 
+            };
 
             const observer = new MutationObserver(callback);
             observer.observe(targetNode, config);
-
             target.value = parts[j]
             target.dispatchEvent(new Event('keyup'));
-
         }
 
-
-        var url = new URL(`${server}/${chap.id}`)
-
-        const xhttp2 = new XMLHttpRequest();
-        xhttp2.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                let result = JSON.parse(this.responseText)
-                console.log("chapter data", result)
-                if (result.raw && result.raw.content.length > 0) {
-                    var parts = SplitTxt(result.raw);
-                    HandleParts(parts)
-                }
-            };
+        if (chap.raw && chap.raw.content.length) {
+            var parts = SplitTxt(chap.raw);
+            HandleParts(parts)
         }
-        xhttp2.open("GET", url, true);
-        xhttp2.setRequestHeader("Content-type", "application/json");
-        xhttp2.setRequestHeader("Authorization", "Bearer "+jwt);
-        xhttp2.send();
     };
 
     var SplitTxt = (raw) => {
@@ -190,7 +178,6 @@
         }
 
         retArr.push(partArr.join("\n"))
-
 
         return retArr
     };

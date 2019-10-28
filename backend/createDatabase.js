@@ -64,7 +64,7 @@ var createDB = async () => {
 			catalog: "#detail-box > div > div.ui_bg6 > div.box_intro > div.box_info > div > span.btopt > a",
 			chapters: "#defaulthtml4 > table > tbody > tr:nth-child(1) > td:nth-child(1) > div > a"
 		},
-	}
+	},
 
 
 
@@ -149,7 +149,11 @@ var createDB = async () => {
 		},{
 			name: "The Expensive Ex-wife",
 			raw_url: "https://www.101novel.net/txt/35994.html"
-		},
+		},{
+			name: "Evil Consort in the Great Era",
+			raw_url: "https://www.kenshu.cc/xiaoshuo/114073/",
+			description: "Poison Qi girl from zombieworld as prime ministers abandoned daughter"
+		}
 		
 
 	]
