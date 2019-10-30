@@ -5,12 +5,12 @@ import { withStyles } from '@material-ui/core/styles';
 import {
     Box, Container, Button,
     Typography, TextField,
-    List, ListItem, Divider, ListItemText
+    List, ListItem, ListItemText, ListSubheader
 } from '@material-ui/core'
 import CloudDownloadIcon from '@material-ui/icons/CloudDownloadOutlined';
 import ProgressBar from '../util/ProgressBar'
 import { green } from '@material-ui/core/colors'
-
+import LazyLoad from 'react-lazyload'
 
 
 const styles = theme => ({
@@ -22,6 +22,9 @@ const styles = theme => ({
       textField: {
           width: "100%"
       }, */
+    listItem: {
+        textDecoration: "none"
+    }
 });
 
 
@@ -43,7 +46,10 @@ class NovelChapters extends Component {
     generateTranslateString() {
         let str = {
             url: `${global.config.server.api}/novel/${this.state.id}/chapter`,
-            limit: 100,
+            limit: 1000,
+            orderX: "0-1000",
+            termsX: true,
+            reverseX: true,
             jwt: localStorage.getItem('jwt')
         }
         this.setState({ translateString: JSON.stringify(str) })
@@ -176,10 +182,14 @@ class NovelChapters extends Component {
                 {novel.state.chapters && novel.state.chapters.length > 0 &&
                     <Box>
                         <List>
+                            <ListSubheader>Chapters: {novel.state.chapters.length}</ListSubheader>
                             {novel.state.chapters.map((chapter) => (
-                                <Link to={`/novel/${novel.state.alias}/chapter/${chapter.order}`} key={chapter.id}>
-                                    <ListItem alignItems="flex-start" >
-
+                                <LazyLoad height={70} offset={100} once key={chapter.id}>
+                                    <ListItem component={Link}
+                                        className={classes.listItem}
+                                        divider
+                                        to={`/novel/${novel.state.alias}/chapter/${chapter.order}`}
+                                        alignItems="flex-start" >
                                         <ListItemText component="a" href="/novel"
                                             primary={`${chapter.order}. ${chapter.title}`}
                                             secondary={
@@ -197,6 +207,10 @@ class NovelChapters extends Component {
                                             }
                                         />
                                         <ListItemText
+                                            secondaryTypographyProps={{
+                                                color: (chapter.raw != chapter.sogou || chapter.raw != chapter.baidu) ?
+                                                    "secondary" : "textSecondary"
+                                            }}
                                             secondary={
                                                 [chapter.raw || 'missing',
                                                 chapter.sogou || 'sogou',
@@ -209,8 +223,7 @@ class NovelChapters extends Component {
 
 
                                     </ListItem>
-                                    <Divider variant="inset" component="li" />
-                                </Link>
+                                </LazyLoad>
                             ))}
 
 

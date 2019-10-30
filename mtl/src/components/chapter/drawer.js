@@ -6,7 +6,6 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
-import LazyLoad from 'react-lazyload';
 
 const styles = theme => ({
     list: {
@@ -55,23 +54,20 @@ class ChapterDrawer extends Component {
                     </ListSubheader>
 
                     {chapter.chapters.map((val, indx) => {
-                        return <LazyLoad height={50} offset={100} key={val.id}>
-                            <ListItem button
-                                component={Link}
-                                to={`${val.order}`}
-                                dense={true}
-                                divider={true}
-                                autoFocus={val.id === chapter.id}
-                                selected={val.id === chapter.id}>
+                        return <ListItem button key={val.id}
+                            component={Link}
+                            to={`${val.order}`}
+                            dense={true}
+                            divider={true}
+                            autoFocus={val.id === chapter.id}
+                            selected={val.id === chapter.id}>
                                 <ListItemText
                                     primary={`Chapter ${val.order}`}
                                     secondary={val.title} />
-
-                            </ListItem>
-                        </LazyLoad>
+                        </ListItem>
                     })}
                 </List>
-            </Drawer>
+            </Drawer >
         );
     }
 }

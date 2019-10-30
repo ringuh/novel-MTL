@@ -219,20 +219,14 @@ class ChapterEditor extends Component {
                     <BackIcon /> {`Chapter ${prev.order}` || `${prev.order}. ${prev.title}`}
                 </Button>
             }
-            <Select fullWidth style={{ margin: "1.5em auto", border: "1px solid black", backgroundColor: 'var(--gray)' }}
-                value={this.state.id}
-                onChange={() => this.setState({ paragraphs: null })}
-            >{this.state.chapters.map(c =>
-                <LazyLoad key={c.id} height={80} offset={100}>
-                    <MenuItem component={Link}
-                        disabled={c.id === this.state.id}
-                        autoFocus={c.id === this.state.id}
-                        to={`${c.order}`} value={c.id}>
-                        {`${c.order} - ${c.title}`}
-                    </MenuItem>
-                </LazyLoad>
-            )}
-            </Select>
+
+            <Typography
+                style={{ margin: "0.5em auto" }}
+                variant="h5"
+                color="textSecondary"
+            >
+                {`${this.state.order}. ${this.state.title}`}
+            </Typography>
 
 
             {

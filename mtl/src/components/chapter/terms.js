@@ -89,6 +89,13 @@ class TermDrawer extends Component {
         // dont try translating empty content
         let options = ['proofread', 'sogou', 'baidu'].filter(t => contents[t].length > 0)
 
+        terms = [...terms, ...terms.filter(t => t.type === 'raw').map(t => {
+            return {
+                to: t.to,
+                from: t.to,
+                type: 'hilight_raw'
+            }
+        })]
         // auto translates
         terms.filter(t => !t.prompt && t.type !== 'raw').forEach(term => {
             term.from.split("|").map(f => {
@@ -156,7 +163,7 @@ class TermDrawer extends Component {
     editTerm = (term, deleteTerm = false) => {
         let json = { ...term, delete: deleteTerm }
         console.log(term)
-       
+
         axios.post(`/api/novel/${this.state.novel_id}/terms`, json)
             .then(res => {
                 if (res.data.id) {
